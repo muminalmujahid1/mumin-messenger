@@ -21,7 +21,7 @@
             overflow: hidden;
         }
         
-        /* প্রিমিয়াম লগইন স্ক্রিন */
+        /* প্রিমিয়াম লগইন স্ক্রিন */
         .auth-overlay {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -41,10 +41,9 @@
             text-align: center;
         }
         
-        /* আপনার আপলোড করা লোগোর স্টাইল */
         .app-logo {
-            width: 150px;
-            height: 150px;
+            width: 120px;
+            height: 120px;
             object-fit: contain;
             margin-bottom: 15px;
             border-radius: 12px;
@@ -103,10 +102,17 @@
         .auth-container button:hover {
             background-color: #20ba5a;
         }
-        #recaptcha-container { 
-            margin: 15px 0; 
-            display: flex;
-            justify-content: center;
+
+        .auth-toggle-text {
+            margin-top: 20px;
+            font-size: 14px;
+            color: #41525d;
+        }
+        .auth-toggle-text span {
+            color: #075e54;
+            font-weight: bold;
+            cursor: pointer;
+            text-decoration: underline;
         }
 
         /* মূল অ্যাপ্লিকেশন ইন্টারফেস */
@@ -142,7 +148,6 @@
             color: #111b21;
         }
         
-        /* চ্যাটের ভেতরের ছোট লোগো */
         .sidebar-logo {
             width: 40px;
             height: 40px;
@@ -364,29 +369,37 @@
     <div class="auth-overlay" id="authBox">
         <div class="auth-container">
             <img src="90dea708-d5b4-4590-b550-72a9de981b31.png" alt="Mumin Logo" class="app-logo">
-            <h2>Mumin Messenger</h2>
-            <p>নিরাপদ ও রিয়েল-টাইম চ্যাটিং প্ল্যাটফর্ম</p>
+            <h2 id="authTitle">Mumin Messenger</h2>
+            <p id="authSubTitle">নিরাপদ ও রিয়েল-টাইম চ্যাটিং প্ল্যাটফর্ম</p>
             
-            <div id="phoneInputSection">
+            <div id="loginForm">
                 <div class="input-group">
-                    <i class="fas fa-user"></i>
-                    <input type="text" id="authName" placeholder="আপনার নাম লিখুন">
+                    <i class="fas fa-envelope"></i>
+                    <input type="email" id="loginEmail" placeholder="আপনার ইমেইল দিন">
                 </div>
                 <div class="input-group">
-                    <i class="fas fa-phone-alt"></i>
-                    <input type="text" id="authPhone" placeholder="মোবাইল নম্বর (যেমন: +88017XXXXXXXX)">
+                    <i class="fas fa-lock"></i>
+                    <input type="password" id="loginPassword" placeholder="পাসওয়ার্ড দিন">
                 </div>
-                <div id="recaptcha-container"></div>
-                <button onclick="sendOTP()"><i class="fas fa-paper-plane"></i> ওটিপি কোড পাঠান</button>
+                <button onclick="loginUser()"><i class="fas fa-sign-in-alt"></i> লগইন করুন</button>
+                <p class="auth-toggle-text">নতুন অ্যাকাউন্ট খুলবেন? <span onclick="toggleAuth(true)">রেজিস্ট্রেশন করুন</span></p>
             </div>
 
-            <div id="otpInputSection" style="display: none;">
-                <p style="color: #ef5350;"><i class="fas fa-shield-alt"></i> আপনার মোবাইলের ৬ ডিজিটের ওটিপি কোডটি দিন</p>
+            <div id="registerForm" style="display: none;">
                 <div class="input-group">
-                    <i class="fas fa-key"></i>
-                    <input type="text" id="authOTP" placeholder="৬ ডিজিটের কোড লিখুন">
+                    <i class="fas fa-user"></i>
+                    <input type="text" id="regName" placeholder="আপনার পুরো নাম">
                 </div>
-                <button onclick="verifyOTP()"><i class="fas fa-check-circle"></i> নিশ্চিত করে লগইন করুন</button>
+                <div class="input-group">
+                    <i class="fas fa-envelope"></i>
+                    <input type="email" id="regEmail" placeholder="আপনার ইমেইল দিন">
+                </div>
+                <div class="input-group">
+                    <i class="fas fa-lock"></i>
+                    <input type="password" id="regPassword" placeholder="নতুন পাসওয়ার্ড (কমপক্ষে ৬ ডিজিট)">
+                </div>
+                <button onclick="registerUser()"><i class="fas fa-user-plus"></i> অ্যাকাউন্ট তৈরি করুন</button>
+                <p class="auth-toggle-text">ইতিমধ্যে অ্যাকাউন্ট আছে? <span onclick="toggleAuth(false)">লগইন করুন</span></p>
             </div>
         </div>
     </div>
@@ -398,12 +411,12 @@
                     <img src="90dea708-d5b4-4590-b550-72a9de981b31.png" class="sidebar-logo" alt="logo">
                     <span id="userDisplay">ব্যবহারকারী</span>
                 </div>
-                <button class="logout-btn" onclick="logoutUser()"><i class="fas fa-sign-out-alt"></i> লগआউট</button>
+                <button class="logout-btn" onclick="logoutBtnAction()"><i class="fas fa-sign-out-alt"></i> লগআউট</button>
             </div>
             <div class="search-box">
                 <div class="search-inner">
                     <i class="fas fa-search"></i>
-                    <input type="text" id="searchUserPhone" placeholder="বন্ধুর নম্বর দিয়ে খুঁজুন...">
+                    <input type="text" id="searchUserEmail" placeholder="বন্ধুর ইমেইল দিয়ে খুঁজুন...">
                 </div>
                 <button onclick="startNewChat()">চ্যাট</button>
             </div>
@@ -428,7 +441,7 @@
         <div class="no-chat-selected" id="noChatPlaceholder">
             <img src="90dea708-d5b4-4590-b550-72a9de981b31.png" alt="Mumin Logo" class="no-chat-logo">
             <h3>Mumin ওয়েব মেসেঞ্জার</h3>
-            <p>আপনার মোবাইল নম্বর দিয়ে কানেক্টেড বন্ধুদের সাথে চ্যাট শুরু করুন।<br>শুরু করতে বাম পাশের সার্চ বক্সে বন্ধুর নম্বর লিখুন।</p>
+            <p>আপনার বন্ধুদের ইমেইল এড্রেস দিয়ে সার্চ করে চ্যাট শুরু করুন।<br>শুরু করতে বাম পাশের সার্চ বক্সে বন্ধুর ইমেইল লিখুন।</p>
         </div>
     </div>
 
@@ -437,7 +450,7 @@
     <script src="https://www.gstatic.com/firebasejs/10.0.0/firebase-auth-compat.js"></script>
 
     <script>
-        // আপনার পাঠানো সাকসেসফুল কনফিগারেশন এখানে আপডেট করা হয়েছে
+        // Firebase কনফিগারেশন
         const firebaseConfig = {
             apiKey: "AIzaSyBHV2ml0ph5AdICrtBOxP5d5TqwaDqMRBY",
             authDomain: "mumin-messenger.firebaseapp.com",
@@ -452,74 +465,86 @@
         const db = firebase.firestore();
         const auth = firebase.auth();
 
-        let currentUserPhone = "";
+        let currentUserEmail = "";
         let currentUserName = "";
         let activeChatId = null; 
-        let confirmationResult = null;
         let unsubscribeMessages = null;
 
-        window.onload = function() {
-            window.recaptchaVerifier = new firebase.auth.RecaptchaVerifier('recaptcha-container', {
-                'size': 'normal'
-            });
-            window.recaptchaVerifier.render();
-        };
+        // লগইন ও রেজিস্ট্রেশন ফর্ম টগল করার ফাংশন
+        function toggleAuth(showRegister) {
+            if(showRegister) {
+                document.getElementById('loginForm').style.display = 'none';
+                document.getElementById('registerForm').style.display = 'block';
+                document.getElementById('authTitle').innerText = "নতুন অ্যাকাউন্ট তৈরি";
+            } else {
+                document.getElementById('loginForm').style.display = 'block';
+                document.getElementById('registerForm').style.display = 'none';
+                document.getElementById('authTitle').innerText = "Mumin Messenger";
+            }
+        }
 
-        function sendOTP() {
-            const name = document.getElementById('authName').value.trim();
-            const phoneNumber = document.getElementById('authPhone').value.trim();
-            
-            if(!name || !phoneNumber) return alert("দয়া করে নাম এবং মোবাইল নম্বর সঠিক নিয়মে দিন।");
-            currentUserName = name;
+        // নতুন ইউজার রেজিস্ট্রেশন (Sign Up)
+        function registerUser() {
+            const name = document.getElementById('regName').value.trim();
+            const email = document.getElementById('regEmail').value.trim();
+            const password = document.getElementById('regPassword').value.trim();
 
-            const appVerifier = window.recaptchaVerifier;
-            auth.signInWithPhoneNumber(phoneNumber, appVerifier)
-                .then((result) => {
-                    confirmationResult = result;
-                    document.getElementById('phoneInputSection').style.display = 'none';
-                    document.getElementById('otpInputSection').style.display = 'block';
-                }).catch((error) => {
-                    alert("ওটিপি পাঠাতে সমস্যা হয়েছে! " + error.message);
-                    location.reload(); 
+            if(!name || !email || !password) return alert("দয়া করে সব ঘরগুলো সঠিকভাবে পূরণ করুন।");
+            if(password.length < 6) return alert("পাসওয়ার্ড কমপক্ষে ৬ অক্ষরের হতে হবে।");
+
+            auth.createUserWithEmailAndPassword(email, password)
+                .then((userCredential) => {
+                    const user = userCredential.user;
+                    // ইউজারের তথ্য Firestore ডাটাবেজে সেভ করা
+                    return db.collection("users").doc(email.toLowerCase()).set({
+                        name: name,
+                        email: email.toLowerCase()
+                    });
+                })
+                .then(() => {
+                    alert("অ্যাকাউন্ট তৈরি সফল হয়েছে!");
+                })
+                .catch((error) => {
+                    alert("রেজিস্ট্রেশন করতে সমস্যা হয়েছে: " + error.message);
                 });
         }
 
-        function verifyOTP() {
-            const code = document.getElementById('authOTP').value.trim();
-            if(!code) return alert("৬ ডিজিটের কোডটি লিখুন।");
+        // ইউজার লগইন (Sign In)
+        function loginUser() {
+            const email = document.getElementById('loginEmail').value.trim();
+            const password = document.getElementById('loginPassword').value.trim();
 
-            confirmationResult.confirm(code).then((result) => {
-                const user = result.user;
-                currentUserPhone = user.phoneNumber;
+            if(!email || !password) return alert("ইমেইল এবং পাসওয়ার্ড দিন।");
 
-                db.collection("users").doc(currentUserPhone).set({
-                    name: currentUserName,
-                    phone: currentUserPhone
-                }).then(() => {
-                    alert("লগইন সফল হয়েছে!");
+            auth.signInWithEmailAndPassword(email, password)
+                .then(() => {
+                    alert("লগইন সফল হয়েছে!");
+                })
+                .catch((error) => {
+                    alert("লগইন ব্যর্থ হয়েছে: " + error.message);
                 });
-
-            }).catch((error) => alert("ভুল কোড দিয়েছেন! আবার চেষ্টা করুন।"));
         }
 
-        function logoutUser() { 
+        // লগআউট ফাংশন
+        function logoutBtnAction() { 
             auth.signOut().then(() => {
                 location.reload(); 
             });
         }
 
+        // ইউজার লগইন স্ট্যাটাস চেক (Auth State Observer)
         auth.onAuthStateChanged((user) => {
             if (user) {
                 document.getElementById('authBox').style.display = 'none';
                 document.getElementById('appBox').style.display = 'flex';
-                currentUserPhone = user.phoneNumber;
+                currentUserEmail = user.email.toLowerCase();
                 
-                db.collection("users").doc(currentUserPhone).get().then((doc) => {
+                db.collection("users").doc(currentUserEmail).get().then((doc) => {
                     if(doc.exists) {
                         currentUserName = doc.data().name;
                         document.getElementById('userDisplay').innerText = currentUserName;
                     } else {
-                        document.getElementById('userDisplay').innerText = currentUserPhone;
+                        document.getElementById('userDisplay').innerText = currentUserEmail;
                     }
                     loadMyChatList();
                 });
@@ -529,36 +554,39 @@
             }
         });
 
+        // নতুন চ্যাট শুরু করা (বন্ধুর ইমেইল দিয়ে সার্চ)
         function startNewChat() {
-            const partnerPhone = document.getElementById('searchUserPhone').value.trim();
-            if(!partnerPhone || partnerPhone === currentUserPhone) return alert("সঠিক মোবাইল নম্বর দিন। নিজের নম্বরে চ্যাট করা যাবে না।");
+            const partnerEmail = document.getElementById('searchUserEmail').value.trim().toLowerCase();
+            if(!partnerEmail || partnerEmail === currentUserEmail) return alert("সঠিক ইমেইল দিন। নিজের সাথে চ্যাট করা যাবে না।");
 
-            db.collection("users").doc(partnerPhone).get().then((docSnap) => {
+            db.collection("users").doc(partnerEmail).get().then((docSnap) => {
                 if (!docSnap.exists) {
-                    alert("এই নম্বরে কোনো অ্যাকাউন্ট খোলা নেই!");
+                    alert("এই ইমেইলে কোনো অ্যাকাউন্ট পাওয়া যায়নি!");
                     return;
                 }
                 
                 const partnerName = docSnap.data().name;
-                const chatId = [currentUserPhone, partnerPhone].sort().join("_");
+                // ইমেইল অ্যালফাবেট অনুযায়ী সর্ট করে ইউনিক চ্যাট আইডি তৈরি করা হচ্ছে
+                const chatId = [currentUserEmail, partnerEmail].sort().join("_");
                 
                 db.collection("chats").doc(chatId).set({
-                    users: [currentUserPhone, partnerPhone],
+                    users: [currentUserEmail, partnerEmail],
                     names: {
-                        [currentUserPhone]: currentUserName,
-                        [partnerPhone]: partnerName
+                        [currentUserEmail]: currentUserName,
+                        [partnerEmail]: partnerName
                     },
                     lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
                 }, { merge: true }).then(() => {
-                    document.getElementById('searchUserPhone').value = "";
-                    openChat(chatId, partnerName, partnerPhone);
+                    document.getElementById('searchUserEmail').value = "";
+                    openChat(chatId, partnerName, partnerEmail);
                 });
             });
         }
 
+        // চ্যাট লিস্ট লোড করা
         function loadMyChatList() {
             db.collection("chats")
-                .where("users", "array-contains", currentUserPhone)
+                .where("users", "array-contains", currentUserEmail)
                 .orderBy("lastUpdated", "desc") 
                 .onSnapshot((snapshot) => {
                     const listContainer = document.getElementById('activeChatsList');
@@ -566,8 +594,8 @@
                     
                     snapshot.forEach((doc) => {
                         const chatData = doc.data();
-                        const partnerPhone = chatData.users.find(u => u !== currentUserPhone);
-                        const partnerName = chatData.names ? chatData.names[partnerPhone] : partnerPhone;
+                        const partnerEmail = chatData.users.find(u => u !== currentUserEmail);
+                        const partnerName = chatData.names ? chatData.names[partnerEmail] : partnerEmail;
                         
                         const item = document.createElement('div');
                         item.classList.add('chat-item');
@@ -579,37 +607,39 @@
                             <div class="avatar-placeholder" style="background: #075e54;">${firstLetter}</div>
                             <div class="chat-item-info">
                                 <div class="chat-item-name">${partnerName}</div>
-                                <div class="chat-item-sub">${partnerPhone}</div>
+                                <div class="chat-item-sub">${partnerEmail}</div>
                             </div>
                         `;
                         
                         item.onclick = () => {
                             document.querySelectorAll('.chat-item').forEach(el => el.classList.remove('active'));
                             item.classList.add('active');
-                            openChat(doc.id, partnerName, partnerPhone);
+                            openChat(doc.id, partnerName, partnerEmail);
                         };
                         listContainer.appendChild(item);
                     });
                 }, (error) => {
-                    console.log("ইনডেক্সিং এরর: ", error);
+                    console.log("Firestore লিসেনার এরর: ", error);
                 });
         }
 
-        function openChat(chatId, partnerName, partnerPhone) {
+        // নির্দিষ্ট কোনো চ্যাট উইন্ডো ওপেন করা
+        function openChat(chatId, partnerName, partnerEmail) {
             activeChatId = chatId;
             document.getElementById('noChatPlaceholder').style.display = 'none';
             document.getElementById('chatAreaWindow').style.display = 'flex';
-            document.getElementById('currentChatPartner').innerText = partnerName + ` (${partnerPhone})`;
+            document.getElementById('currentChatPartner').innerText = partnerName + ` (${partnerEmail})`;
             loadMessages(chatId);
         }
 
+        // মেসেজ পাঠানো
         function sendMessage() {
             const input = document.getElementById('msgInput');
             const text = input.value.trim();
             if(text === "" || !activeChatId) return;
 
             db.collection("chats").doc(activeChatId).collection("messages").add({
-                sender: currentUserPhone,
+                sender: currentUserEmail,
                 text: text,
                 createdAt: firebase.firestore.FieldValue.serverTimestamp()
             }).then(() => {
@@ -622,6 +652,7 @@
             input.focus();
         }
 
+        // রিয়েলটাইম মেসেজ লোড করা
         function loadMessages(chatId) {
             if(unsubscribeMessages) unsubscribeMessages();
 
@@ -636,7 +667,7 @@
                         const msgDiv = document.createElement('div');
                         msgDiv.classList.add('message');
                         
-                        if(msgData.sender === currentUserPhone) {
+                        if(msgData.sender === currentUserEmail) {
                             msgDiv.classList.add('my-msg');
                         } else {
                             msgDiv.classList.add('other-msg');
@@ -649,6 +680,7 @@
                 });
         }
 
+        // এন্টার চাপলে মেসেজ চলে যাওয়ার ইভেন্ট
         document.getElementById('msgInput').addEventListener('keypress', function(e) {
             if (e.key === 'Enter') { sendMessage(); }
         });
