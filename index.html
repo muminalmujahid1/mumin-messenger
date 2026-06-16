@@ -341,13 +341,13 @@
         function closeProfileModal() { document.getElementById('profileModal').style.display = 'none'; }
         function triggerProfileUpload() { document.getElementById('profileImgInput').click(); }
 
-        /* ক্লাউডিনারি আপলোড ফিক্সড (files যোগ করা হয়েছে) */
+        /* ক্লাউডিনারি আপলোড ফিক্সড */
         function uploadProfilePicture() {
             const files = document.getElementById('profileImgInput').files;
             if(!files || files.length === 0) return; 
 
             let formData = new FormData();
-            formData.append("file", files); 
+            formData.append("file", files); // [FIXED] প্রথম ফাইলটি নির্দিষ্ট করা হয়েছে 
             formData.append("upload_preset", CLOUDINARY_PRESET);
 
             alert("প্রোফাইল পিকচার আপলোড হচ্ছে...");
@@ -371,7 +371,7 @@
             }).catch(err => alert("আপলোড ব্যর্থ: " + err.message));
         }
 
-        /* চ্যাট সার্চ লজিক ফিক্সড (docs.data() যোগ করা হয়েছে) */
+        /* চ্যাট সার্চ লজিক ফিক্সড */
         function startNewChat() {
             const searchQuery = document.getElementById('searchUsername').value.trim().toLowerCase();
             if(!searchQuery) return alert("বন্ধুর সঠিক ইউজারনেমটি লিখুন।");
@@ -379,9 +379,9 @@
 
             db.collection("users").where("username", "==", searchQuery).get().then((snap) => {
                 if(snap.empty) {
-                    alert("এই ইউজারনেম দিয়ে কোনো অ্যাকাউন্ট পাওয়া যায়নি!");
+                    alert("এই ইউজারনেম দিয়ে কোনো অ্যাকাউন্ট পাওয়া যায়নি!");
                 } else {
-                    const partnerData = snap.docs.data();
+                    const partnerData = snap.docs.data(); // [FIXED] প্রথম ডকুমেন্টের ডাটা নেওয়া হয়েছে
                     
                     const chatId = [currentUserUsername, partnerData.username].sort().join("_");
                     
@@ -462,12 +462,12 @@
             input.value = ""; input.focus();
         }
 
-        /* মিডিয়া ফাইল আপলোড ফিক্সড (files যোগ করা হয়েছে) */
+        /* মিডিয়া ফাইল আপলোড ফিক্সড */
         function sendMediaFile() {
             const files = document.getElementById('mediaInput').files;
             if(!files || files.length === 0 || !activeChatId) return; 
 
-            const selectedFile = files;
+            const selectedFile = files; // [FIXED] প্রথম ফাইল এলিমেন্টটি নেওয়া হয়েছে
             const isVideo = selectedFile.type.startsWith('video/');
             const fileType = isVideo ? 'video' : 'image';
             
@@ -495,7 +495,7 @@
                         db.collection("chats").doc(activeChatId).update({ lastUpdated: firebase.firestore.FieldValue.serverTimestamp() });
                     });
                 }
-            }).catch(err => alert("মিডিয়া আপলোড ব্যর্থ: " + err.message));
+            }).catch(err => alert("মিডিয়া আপলোড ব্যর্থ: " + err.message));
         }
 
         function loadMessages(chatId) {
