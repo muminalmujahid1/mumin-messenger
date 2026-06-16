@@ -8,11 +8,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&family=Segoe+UI:wght@400;600&display=swap" rel="stylesheet">
     
     <style>
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
             font-family: 'Segoe UI', 'Hind Siliguri', sans-serif;
             display: flex;
@@ -26,342 +22,85 @@
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
             background: linear-gradient(135deg, #0b141a 0%, #075e54 100%);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
+            display: flex; justify-content: center; align-items: center; z-index: 1000;
         }
         .auth-container {
-            width: 100%;
-            max-width: 420px;
-            padding: 35px;
-            background: #ffffff;
-            border-radius: 24px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-            text-align: center;
+            width: 100%; max-width: 420px; padding: 35px;
+            background: #ffffff; border-radius: 24px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3); text-align: center;
         }
-        
-        .app-logo {
-            width: 120px;
-            height: 120px;
-            object-fit: contain;
-            margin-bottom: 15px;
-            border-radius: 12px;
-        }
-        
-        .auth-container h2 { 
-            color: #075e54; 
-            margin-bottom: 5px;
-            font-weight: 700;
-        }
-        .auth-container p {
-            color: #667781;
-            font-size: 14px;
-            margin-bottom: 25px;
-        }
-        .input-group {
-            position: relative;
-            margin-bottom: 15px;
-        }
-        .input-group i {
-            position: absolute;
-            left: 15px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: #128c7e;
-        }
+        .app-logo { width: 120px; height: 120px; object-fit: contain; margin-bottom: 15px; border-radius: 12px; }
+        .auth-container h2 { color: #075e54; margin-bottom: 5px; font-weight: 700; }
+        .auth-container p { color: #667781; font-size: 14px; margin-bottom: 25px; }
+        .input-group { position: relative; margin-bottom: 15px; }
+        .input-group i { position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: #128c7e; }
         .auth-container input {
-            width: 100%;
-            padding: 14px 14px 14px 45px;
-            border: 1.5px solid #e1e7ec;
-            border-radius: 12px;
-            outline: none;
-            font-size: 15px;
-            transition: 0.3s;
-            background: #f8f9fa;
+            width: 100%; padding: 14px 14px 14px 45px; border: 1.5px solid #e1e7ec;
+            border-radius: 12px; outline: none; font-size: 15px; transition: 0.3s; background: #f8f9fa;
         }
-        .auth-container input:focus {
-            border-color: #25d366;
-            background: #fff;
-            box-shadow: 0 0 8px rgba(37, 211, 102, 0.2);
-        }
+        .auth-container input:focus { border-color: #25d366; background: #fff; box-shadow: 0 0 8px rgba(37, 211, 102, 0.2); }
         .auth-container button {
-            width: 100%;
-            padding: 14px;
-            border: none;
-            border-radius: 12px;
-            font-weight: bold;
-            cursor: pointer;
-            font-size: 16px;
-            background-color: #25d366;
-            color: white;
-            margin-top: 10px;
-            box-shadow: 0 4px 12px rgba(37, 211, 102, 0.3);
-            transition: 0.2s;
+            width: 100%; padding: 14px; border: none; border-radius: 12px; font-weight: bold;
+            cursor: pointer; font-size: 16px; background-color: #25d366; color: white;
+            margin-top: 10px; box-shadow: 0 4px 12px rgba(37, 211, 102, 0.3); transition: 0.2s;
         }
-        .auth-container button:hover {
-            background-color: #20ba5a;
-        }
-
-        .auth-toggle-text {
-            margin-top: 20px;
-            font-size: 14px;
-            color: #41525d;
-        }
-        .auth-toggle-text span {
-            color: #075e54;
-            font-weight: bold;
-            cursor: pointer;
-            text-decoration: underline;
-        }
+        .auth-container button:hover { background-color: #20ba5a; }
+        .auth-toggle-text { margin-top: 20px; font-size: 14px; color: #41525d; }
+        .auth-toggle-text span { color: #075e54; font-weight: bold; cursor: pointer; text-decoration: underline; }
 
         /* মূল অ্যাপ্লিকেশন ইন্টারফেস */
-        .main-app {
-            display: none;
-            width: 100%;
-            height: 100vh;
-            background-color: #f0f2f5;
-        }
+        .main-app { display: none; width: 100%; height: 100vh; background-color: #f0f2f5; }
+        .sidebar { width: 380px; min-width: 340px; background-color: white; border-right: 1.5px solid #e9edef; display: flex; flex-direction: column; }
+        .sidebar-header { padding: 12px 16px; background-color: #f0f2f5; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e9edef; }
+        .user-profile { display: flex; align-items: center; gap: 10px; font-weight: 600; color: #111b21; }
         
-        /* সাইডবার */
-        .sidebar {
-            width: 380px;
-            min-width: 340px;
-            background-color: white;
-            border-right: 1.5px solid #e9edef;
-            display: flex;
-            flex-direction: column;
-        }
-        .sidebar-header {
-            padding: 12px 16px;
-            background-color: #f0f2f5;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid #e9edef;
-        }
-        .user-profile {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            font-weight: 600;
-            color: #111b21;
-        }
+        .profile-img-btn { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; border: 1px solid #075e54; cursor: pointer; }
+        .avatar-placeholder { width: 40px; height: 40px; border-radius: 50%; background: #00a884; color: white; display: flex; justify-content: center; align-items: center; font-size: 18px; overflow: hidden; }
+        .avatar-placeholder img { width: 100%; height: 100%; object-fit: cover; }
         
-        .sidebar-logo {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            object-fit: cover;
-            border: 1px solid #075e54;
-        }
-        
-        .avatar-placeholder {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background: #00a884;
-            color: white;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-size: 18px;
-        }
-        .logout-btn {
-            font-size: 13px;
-            padding: 8px 14px;
-            background: #ffebee;
-            color: #c62828;
-            border: none;
-            border-radius: 20px;
-            cursor: pointer;
-            font-weight: 600;
-            transition: 0.2s;
-        }
+        .logout-btn { font-size: 13px; padding: 8px 14px; background: #ffebee; color: #c62828; border: none; border-radius: 20px; cursor: pointer; font-weight: 600; transition: 0.2s; }
         .logout-btn:hover { background: #ffcdd2; }
         
-        .search-box {
-            padding: 8px 12px;
-            background-color: #fff;
-            border-bottom: 1px solid #e9edef;
-            display: flex;
-            gap: 8px;
-        }
-        .search-inner {
-            position: relative;
-            flex: 1;
-        }
-        .search-inner i {
-            position: absolute;
-            left: 12px; top: 50%;
-            transform: translateY(-50%);
-            color: #667781;
-        }
-        .search-box input {
-            width: 100%;
-            padding: 8px 12px 8px 38px;
-            border: none;
-            background: #f0f2f5;
-            border-radius: 8px;
-            outline: none;
-            font-size: 14px;
-        }
-        .search-box button {
-            background: #00a884;
-            color: white;
-            border: none;
-            padding: 0 16px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: bold;
-        }
+        .search-box { padding: 8px 12px; background-color: #fff; border-bottom: 1px solid #e9edef; display: flex; gap: 8px; }
+        .search-inner { position: relative; flex: 1; }
+        .search-inner i { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #667781; }
+        .search-box input { width: 100%; padding: 8px 12px 8px 38px; border: none; background: #f0f2f5; border-radius: 8px; outline: none; font-size: 14px; }
+        .search-box button { background: #00a884; color: white; border: none; padding: 0 16px; border-radius: 8px; cursor: pointer; font-weight: bold; }
         
-        .chat-list {
-            flex: 1;
-            overflow-y: auto;
-            background: #fff;
-        }
-        .chat-item {
-            padding: 12px 16px;
-            cursor: pointer;
-            border-bottom: 1px solid #f0f2f5;
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            transition: 0.2s;
-        }
+        .chat-list { flex: 1; overflow-y: auto; background: #fff; }
+        .chat-item { padding: 12px 16px; cursor: pointer; border-bottom: 1px solid #f0f2f5; display: flex; align-items: center; gap: 15px; transition: 0.2s; }
         .chat-item:hover { background-color: #f5f6f6; }
         .chat-item.active { background-color: #eaebeb; }
-        .chat-item-info {
-            flex: 1;
-        }
-        .chat-item-name {
-            font-weight: 600;
-            color: #111b21;
-            font-size: 16px;
-            margin-bottom: 2px;
-        }
-        .chat-item-sub {
-            font-size: 13px;
-            color: #667781;
-        }
+        .chat-item-info { flex: 1; }
+        .chat-item-name { font-weight: 600; color: #111b21; font-size: 16px; margin-bottom: 2px; }
+        .chat-item-sub { font-size: 13px; color: #667781; }
         
-        /* ডান পাশের চ্যাট এরিয়া */
-        .chat-area {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            background: #efeae2 url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png') repeat;
-        }
-        .chat-header {
-            background: #f0f2f5;
-            padding: 10px 16px;
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            border-bottom: 1px solid #e9edef;
-        }
-        .chat-header-info {
-            flex: 1;
-        }
-        .chat-header-name {
-            font-weight: 600;
-            color: #111b21;
-            font-size: 16px;
-        }
-        .chat-header-status {
-            font-size: 12px;
-            color: #667781;
-        }
+        /* চ্যাট এরিয়া */
+        .chat-area { flex: 1; display: flex; flex-direction: column; background: #efeae2 url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png') repeat; }
+        .chat-header { background: #f0f2f5; padding: 10px 16px; display: flex; align-items: center; gap: 15px; border-bottom: 1px solid #e9edef; }
+        .chat-header-info { flex: 1; }
+        .chat-header-name { font-weight: 600; color: #111b21; font-size: 16px; }
+        .chat-header-status { font-size: 12px; color: #667781; }
         
-        .chat-messages {
-            flex: 1;
-            padding: 20px 5%;
-            overflow-y: auto;
-            display: flex;
-            flex-direction: column;
-            gap: 5px;
-        }
-        .message {
-            max-width: 65%;
-            padding: 8px 12px;
-            border-radius: 8px;
-            font-size: 14.5px;
-            line-height: 1.4;
-            position: relative;
-            box-shadow: 0 1px 1px rgba(0,0,0,0.14);
-            word-wrap: break-word;
-        }
-        .my-msg { 
-            background-color: #d9fdd3; 
-            align-self: flex-end; 
-            border-top-right-radius: 0;
-        }
-        .other-msg { 
-            background-color: white; 
-            align-self: flex-start; 
-            border-top-left-radius: 0;
-        }
+        .chat-messages { flex: 1; padding: 20px 5%; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
+        .message { max-width: 65%; padding: 8px 12px; border-radius: 8px; font-size: 14.5px; line-height: 1.4; position: relative; box-shadow: 0 1px 1px rgba(0,0,0,0.14); word-wrap: break-word; }
+        .my-msg { background-color: #d9fdd3; align-self: flex-end; border-top-right-radius: 0; }
+        .other-msg { background-color: white; align-self: flex-start; border-top-left-radius: 0; }
         
-        /* মেসেজ ইনপুট বার */
-        .chat-input-area {
-            padding: 10px 16px;
-            background-color: #f0f2f5;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-        .chat-input-area input {
-            flex: 1;
-            padding: 11px 20px;
-            border: none;
-            background: #fff;
-            border-radius: 8px;
-            outline: none;
-            font-size: 15px;
-        }
-        .chat-input-area button {
-            background-color: #00a884;
-            color: white;
-            border: none;
-            width: 45px;
-            height: 45px;
-            border-radius: 50%;
-            cursor: pointer;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-size: 16px;
-            transition: 0.2s;
-        }
-        .chat-input-area button:hover { background-color: #008f72; transform: scale(1.05); }
+        /* মেসেজের ভেতর ইমেজ বা ভিডিও এর স্টাইল */
+        .msg-media { max-width: 100%; max-height: 250px; border-radius: 6px; margin-top: 5px; display: block; }
 
-        /* নো চ্যাট সিলেক্টেড স্ক্রিন */
-        .no-chat-selected {
-            flex: 1;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            color: #667781;
-            flex-direction: column;
-            background: #f8f9fa;
-            border-bottom: 6px solid #075e54;
-            text-align: center;
-            padding: 20px;
-        }
-        .no-chat-logo {
-            width: 120px;
-            height: 120px;
-            object-fit: contain;
-            margin-bottom: 20px;
-            opacity: 0.8;
-        }
-        .no-chat-selected h3 {
-            color: #41525d;
-            font-weight: 600;
-            margin-bottom: 10px;
-            font-size: 26px;
-        }
+        /* ইনপুট বার */
+        .chat-input-area { padding: 10px 16px; background-color: #f0f2f5; display: flex; align-items: center; gap: 12px; }
+        .chat-input-area input[type="text"] { flex: 1; padding: 11px 20px; border: none; background: #fff; border-radius: 8px; outline: none; font-size: 15px; }
+        .media-btn { background: none; border: none; color: #54656f; font-size: 22px; cursor: pointer; transition: 0.2s; }
+        .media-btn:hover { color: #00a884; }
+        .chat-input-area button[onclick="sendMessage()"] { background-color: #00a884; color: white; border: none; width: 45px; height: 45px; border-radius: 50%; cursor: pointer; display: flex; justify-content: center; align-items: center; font-size: 16px; transition: 0.2s; }
+        .chat-input-area button:hover { transform: scale(1.05); }
+
+        .no-chat-selected { flex: 1; display: flex; justify-content: center; align-items: center; color: #667781; flex-direction: column; background: #f8f9fa; border-bottom: 6px solid #075e54; text-align: center; padding: 20px; }
+        .no-chat-logo { width: 120px; height: 120px; object-fit: contain; margin-bottom: 20px; opacity: 0.8; }
+        .no-chat-selected h3 { color: #41525d; font-weight: 600; margin-bottom: 10px; font-size: 26px; }
     </style>
 </head>
 <body>
@@ -391,12 +130,16 @@
                     <input type="text" id="regName" placeholder="আপনার পুরো নাম">
                 </div>
                 <div class="input-group">
+                    <i class="fas fa-at"></i>
+                    <input type="text" id="regUsername" placeholder="ইউনিক ইউজারনেম (যেমন: mumin12)">
+                </div>
+                <div class="input-group">
                     <i class="fas fa-envelope"></i>
                     <input type="email" id="regEmail" placeholder="আপনার ইমেইল দিন">
                 </div>
                 <div class="input-group">
                     <i class="fas fa-lock"></i>
-                    <input type="password" id="regPassword" placeholder="নতুন পাসওয়ার্ড (কমপক্ষে ৬ ডিজিট)">
+                    <input type="password" id="regPassword" placeholder="পাসওয়ার্ড (কমপক্ষে ৬ ডিজিট)">
                 </div>
                 <button onclick="registerUser()"><i class="fas fa-user-plus"></i> অ্যাকাউন্ট তৈরি করুন</button>
                 <p class="auth-toggle-text">ইতিমধ্যে অ্যাকাউন্ট আছে? <span onclick="toggleAuth(false)">লগইন করুন</span></p>
@@ -408,7 +151,10 @@
         <div class="sidebar">
             <div class="sidebar-header">
                 <div class="user-profile">
-                    <img src="90dea708-d5b4-4590-b550-72a9de981b31.png" class="sidebar-logo" alt="logo">
+                    <div class="avatar-placeholder" id="myAvatarArea" onclick="triggerProfileUpload()">
+                        <i class="fas fa-user" id="profileDefaultIcon"></i>
+                    </div>
+                    <input type="file" id="profileImgInput" accept="image/*" style="display:none;" onchange="uploadProfilePicture()">
                     <span id="userDisplay">ব্যবহারকারী</span>
                 </div>
                 <button class="logout-btn" onclick="logoutBtnAction()"><i class="fas fa-sign-out-alt"></i> লগআউট</button>
@@ -416,7 +162,7 @@
             <div class="search-box">
                 <div class="search-inner">
                     <i class="fas fa-search"></i>
-                    <input type="text" id="searchUserEmail" placeholder="বন্ধুর ইমেইল দিয়ে খুঁজুন...">
+                    <input type="text" id="searchUsername" placeholder="বন্ধুর ইউজারনেম দিয়ে খুঁজুন...">
                 </div>
                 <button onclick="startNewChat()">চ্যাট</button>
             </div>
@@ -425,14 +171,18 @@
 
         <div class="chat-area" id="chatAreaWindow" style="display: none;">
             <div class="chat-header">
-                <div class="avatar-placeholder" style="background: #128c7e;"><i class="fas fa-comments"></i></div>
+                <div class="avatar-placeholder" id="partnerAvatarArea" style="background: #128c7e;"><i class="fas fa-user"></i></div>
                 <div class="chat-header-info">
                     <div class="chat-header-name" id="currentChatPartner">চ্যাট পার্টনার</div>
                     <div class="chat-header-status"><i class="fas fa-circle" style="color: #25d366; font-size: 9px;"></i> সুরক্ষিত চ্যাট এনভায়রনমেন্ট</div>
                 </div>
             </div>
             <div class="chat-messages" id="chatMessages"></div>
+            
             <div class="chat-input-area">
+                <input type="file" id="mediaInput" accept="image/*,video/*" style="display: none;" onchange="sendMediaFile()">
+                <button class="media-btn" onclick="document.getElementById('mediaInput').click()"><i class="fas fa-paperclip"></i></button>
+                
                 <input type="text" id="msgInput" placeholder="এখানে মেসেজ লিখুন...">
                 <button onclick="sendMessage()"><i class="fas fa-paper-plane"></i></button>
             </div>
@@ -441,16 +191,16 @@
         <div class="no-chat-selected" id="noChatPlaceholder">
             <img src="90dea708-d5b4-4590-b550-72a9de981b31.png" alt="Mumin Logo" class="no-chat-logo">
             <h3>Mumin ওয়েব মেসেঞ্জার</h3>
-            <p>আপনার বন্ধুদের ইমেইল এড্রেস দিয়ে সার্চ করে চ্যাট শুরু করুন।<br>শুরু করতে বাম পাশের সার্চ বক্সে বন্ধুর ইমেইল লিখুন।</p>
+            <p>আপনার বন্ধুদের ইউজারনেম দিয়ে সার্চ করে চ্যাট শুরু করুন।<br>শুরু করতে বাম পাশের সার্চ বক্সে বন্ধুর ইউজারনেম লিখুন।</p>
         </div>
     </div>
 
     <script src="https://www.gstatic.com/firebasejs/10.0.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.0.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.0.0/firebase-storage-compat.js"></script>
 
     <script>
-        // Firebase কনফিগারেশন
         const firebaseConfig = {
             apiKey: "AIzaSyBHV2ml0ph5AdICrtBOxP5d5TqwaDqMRBY",
             authDomain: "mumin-messenger.firebaseapp.com",
@@ -464,13 +214,13 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
         const auth = firebase.auth();
+        const storage = firebase.storage();
 
-        let currentUserEmail = "";
+        let currentUserUsername = "";
         let currentUserName = "";
         let activeChatId = null; 
         let unsubscribeMessages = null;
 
-        // লগইন ও রেজিস্ট্রেশন ফর্ম টগল করার ফাংশন
         function toggleAuth(showRegister) {
             if(showRegister) {
                 document.getElementById('loginForm').style.display = 'none';
@@ -483,70 +233,66 @@
             }
         }
 
-        // নতুন ইউজার রেজিস্ট্রেশন (Sign Up)
+        // রেজিস্ট্রেশন (ইউজারনেম ডাটাবেজ সহ)
         function registerUser() {
             const name = document.getElementById('regName').value.trim();
+            const username = document.getElementById('regUsername').value.trim().toLowerCase().replace(/\s+/g, '');
             const email = document.getElementById('regEmail').value.trim();
             const password = document.getElementById('regPassword').value.trim();
 
-            if(!name || !email || !password) return alert("দয়া করে সব ঘরগুলো সঠিকভাবে পূরণ করুন।");
+            if(!name || !username || !email || !password) return alert("দয়া করে সব ঘরগুলো সঠিকভাবে পূরণ করুন।");
             if(password.length < 6) return alert("পাসওয়ার্ড কমপক্ষে ৬ অক্ষরের হতে হবে।");
 
-            auth.createUserWithEmailAndPassword(email, password)
-                .then((userCredential) => {
-                    const user = userCredential.user;
-                    // ইউজারের তথ্য Firestore ডাটাবেজে সেভ করা
-                    return db.collection("users").doc(email.toLowerCase()).set({
-                        name: name,
-                        email: email.toLowerCase()
-                    });
-                })
-                .then(() => {
-                    alert("অ্যাকাউন্ট তৈরি সফল হয়েছে!");
-                })
-                .catch((error) => {
-                    alert("রেজিস্ট্রেশন করতে সমস্যা হয়েছে: " + error.message);
-                });
-        }
+            // ইউজারনেম আগে কেউ নিয়েছে কি না চেক করা হচ্ছে
+            db.collection("users").where("username", "==", username).get().then((snapshot) => {
+                if(!snapshot.empty) {
+                    alert("এই ইউজারনেমটি ইতিমধ্যে ব্যবহার করা হয়েছে! অন্য একটি দিন।");
+                    return;
+                }
 
-        // ইউজার লগইন (Sign In)
-        function loginUser() {
-            const email = document.getElementById('loginEmail').value.trim();
-            const password = document.getElementById('loginPassword').value.trim();
-
-            if(!email || !password) return alert("ইমেইল এবং পাসওয়ার্ড দিন।");
-
-            auth.signInWithEmailAndPassword(email, password)
-                .then(() => {
-                    alert("লগইন সফল হয়েছে!");
-                })
-                .catch((error) => {
-                    alert("লগইন ব্যর্থ হয়েছে: " + error.message);
-                });
-        }
-
-        // লগআউট ফাংশন
-        function logoutBtnAction() { 
-            auth.signOut().then(() => {
-                location.reload(); 
+                auth.createUserWithEmailAndPassword(email, password)
+                    .then((userCredential) => {
+                        return db.collection("users").doc(username).set({
+                            name: name,
+                            username: username,
+                            email: email.toLowerCase(),
+                            avatarUrl: ""
+                        });
+                    })
+                    .then(() => alert("অ্যাকাউন্ট তৈরি সফল হয়েছে!"))
+                    .catch((error) => alert("রেজিস্ট্রেশন সমস্যা: " + error.message));
             });
         }
 
-        // ইউজার লগইন স্ট্যাটাস চেক (Auth State Observer)
+        function loginUser() {
+            const email = document.getElementById('loginEmail').value.trim();
+            const password = document.getElementById('loginPassword').value.trim();
+            if(!email || !password) return alert("ইমেইল এবং পাসওয়ার্ড দিন।");
+
+            auth.signInWithEmailAndPassword(email, password)
+                .catch((error) => alert("লগইন ব্যর্থ হয়েছে: " + error.message));
+        }
+
+        function logoutBtnAction() { auth.signOut().then(() => location.reload()); }
+
+        // অথ স্ট্যাটাস এবং নিজের প্রোফাইল পিকচার লোড
         auth.onAuthStateChanged((user) => {
             if (user) {
                 document.getElementById('authBox').style.display = 'none';
                 document.getElementById('appBox').style.display = 'flex';
-                currentUserEmail = user.email.toLowerCase();
                 
-                db.collection("users").doc(currentUserEmail).get().then((doc) => {
-                    if(doc.exists) {
-                        currentUserName = doc.data().name;
-                        document.getElementById('userDisplay').innerText = currentUserName;
-                    } else {
-                        document.getElementById('userDisplay').innerText = currentUserEmail;
+                db.collection("users").where("email", "==", user.email.toLowerCase()).get().then((snapshot) => {
+                    if(!snapshot.empty) {
+                        const myDoc = snapshot.docs;
+                        currentUserUsername = myDoc.id;
+                        currentUserName = myDoc.data().name;
+                        document.getElementById('userDisplay').innerText = currentUserName + ` (@${currentUserUsername})`;
+                        
+                        if(myDoc.data().avatarUrl) {
+                            document.getElementById('myAvatarArea').innerHTML = `<img src="${myDoc.data().avatarUrl}">`;
+                        }
+                        loadMyChatList();
                     }
-                    loadMyChatList();
                 });
             } else {
                 document.getElementById('authBox').style.display = 'flex';
@@ -554,111 +300,145 @@
             }
         });
 
-        // নতুন চ্যাট শুরু করা (বন্ধুর ইমেইল দিয়ে সার্চ)
-        function startNewChat() {
-            const partnerEmail = document.getElementById('searchUserEmail').value.trim().toLowerCase();
-            if(!partnerEmail || partnerEmail === currentUserEmail) return alert("সঠিক ইমেইল দিন। নিজের সাথে চ্যাট করা যাবে না।");
+        // প্রোফাইল পিকচার আপলোড করার ট্রিগার
+        function triggerProfileUpload() { document.getElementById('profileImgInput').click(); }
 
-            db.collection("users").doc(partnerEmail).get().then((docSnap) => {
-                if (!docSnap.exists) {
-                    alert("এই ইমেইলে কোনো অ্যাকাউন্ট পাওয়া যায়নি!");
-                    return;
-                }
-                
-                const partnerName = docSnap.data().name;
-                // ইমেইল অ্যালফাবেট অনুযায়ী সর্ট করে ইউনিক চ্যাট আইডি তৈরি করা হচ্ছে
-                const chatId = [currentUserEmail, partnerEmail].sort().join("_");
-                
-                db.collection("chats").doc(chatId).set({
-                    users: [currentUserEmail, partnerEmail],
-                    names: {
-                        [currentUserEmail]: currentUserName,
-                        [partnerEmail]: partnerName
-                    },
-                    lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
-                }, { merge: true }).then(() => {
-                    document.getElementById('searchUserEmail').value = "";
-                    openChat(chatId, partnerName, partnerEmail);
+        function uploadProfilePicture() {
+            const file = document.getElementById('profileImgInput').files;
+            if(!file) return;
+
+            const ref = storage.ref().child(`avatars/${currentUserUsername}`);
+            ref.put(file).then(() => {
+                ref.getDownloadURL().then((url) => {
+                    db.collection("users").doc(currentUserUsername).update({ avatarUrl: url }).then(() => {
+                        document.getElementById('myAvatarArea').innerHTML = `<img src="${url}">`;
+                        alert("প্রোফাইল পিকচার আপলোড সফল হয়েছে!");
+                    });
                 });
             });
         }
 
-        // চ্যাট লিস্ট লোড করা
+        // ইউজারনেম দিয়ে নতুন চ্যাট শুরু করা
+        function startNewChat() {
+            const partnerUsername = document.getElementById('searchUsername').value.trim().toLowerCase();
+            if(!partnerUsername || partnerUsername === currentUserUsername) return alert("সঠিক ইউজারনেম দিন। নিজের সাথে চ্যাট সম্ভব নয়।");
+
+            db.collection("users").doc(partnerUsername).get().then((docSnap) => {
+                if (!docSnap.exists) return alert("এই ইউজারনেমে কোনো অ্যাকাউন্ট পাওয়া যায়নি!");
+                
+                const partnerData = docSnap.data();
+                const chatId = [currentUserUsername, partnerUsername].sort().join("_");
+                
+                db.collection("chats").doc(chatId).set({
+                    users: [currentUserUsername, partnerUsername],
+                    names: { [currentUserUsername]: currentUserName, [partnerUsername]: partnerData.name },
+                    avatars: { [currentUserUsername]: document.getElementById('myAvatarArea').querySelector('img')?.src || "", [partnerUsername]: partnerData.avatarUrl || "" },
+                    lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
+                }, { merge: true }).then(() => {
+                    document.getElementById('searchUsername').value = "";
+                    openChat(chatId, partnerData.name, partnerUsername, partnerData.avatarUrl);
+                });
+            });
+        }
+
         function loadMyChatList() {
-            db.collection("chats")
-                .where("users", "array-contains", currentUserEmail)
-                .orderBy("lastUpdated", "desc") 
-                .onSnapshot((snapshot) => {
+            db.collection("chats").where("users", "array-contains", currentUserUsername)
+                .orderBy("lastUpdated", "desc").onSnapshot((snapshot) => {
                     const listContainer = document.getElementById('activeChatsList');
                     listContainer.innerHTML = "";
                     
                     snapshot.forEach((doc) => {
                         const chatData = doc.data();
-                        const partnerEmail = chatData.users.find(u => u !== currentUserEmail);
-                        const partnerName = chatData.names ? chatData.names[partnerEmail] : partnerEmail;
+                        const partnerUser = chatData.users.find(u => u !== currentUserUsername);
+                        const partnerName = chatData.names ? chatData.names[partnerUser] : partnerUser;
+                        const partnerAvatar = chatData.avatars ? chatData.avatars[partnerUser] : "";
                         
                         const item = document.createElement('div');
                         item.classList.add('chat-item');
                         if (activeChatId === doc.id) item.classList.add('active');
                         
-                        const firstLetter = partnerName ? partnerName.charAt(0).toUpperCase() : "💬";
+                        const avatarHTML = partnerAvatar ? `<img src="${partnerAvatar}" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">` : partnerName.charAt(0).toUpperCase();
                         
                         item.innerHTML = `
-                            <div class="avatar-placeholder" style="background: #075e54;">${firstLetter}</div>
+                            <div class="avatar-placeholder" style="background: #075e54;">${avatarHTML}</div>
                             <div class="chat-item-info">
                                 <div class="chat-item-name">${partnerName}</div>
-                                <div class="chat-item-sub">${partnerEmail}</div>
+                                <div class="chat-item-sub">@${partnerUser}</div>
                             </div>
                         `;
                         
                         item.onclick = () => {
                             document.querySelectorAll('.chat-item').forEach(el => el.classList.remove('active'));
                             item.classList.add('active');
-                            openChat(doc.id, partnerName, partnerEmail);
+                            openChat(doc.id, partnerName, partnerUser, partnerAvatar);
                         };
                         listContainer.appendChild(item);
                     });
-                }, (error) => {
-                    console.log("Firestore লিসেনার এরর: ", error);
                 });
         }
 
-        // নির্দিষ্ট কোনো চ্যাট উইন্ডো ওপেন করা
-        function openChat(chatId, partnerName, partnerEmail) {
+        function openChat(chatId, partnerName, partnerUser, partnerAvatar) {
             activeChatId = chatId;
             document.getElementById('noChatPlaceholder').style.display = 'none';
             document.getElementById('chatAreaWindow').style.display = 'flex';
-            document.getElementById('currentChatPartner').innerText = partnerName + ` (${partnerEmail})`;
+            document.getElementById('currentChatPartner').innerText = partnerName + ` (@${partnerUser})`;
+            
+            if(partnerAvatar) {
+                document.getElementById('partnerAvatarArea').innerHTML = `<img src="${partnerAvatar}">`;
+            } else {
+                document.getElementById('partnerAvatarArea').innerHTML = `<i class="fas fa-user"></i>`;
+            }
             loadMessages(chatId);
         }
 
-        // মেসেজ পাঠানো
+        // টেক্সট মেসেজ পাঠানো
         function sendMessage() {
             const input = document.getElementById('msgInput');
             const text = input.value.trim();
             if(text === "" || !activeChatId) return;
 
             db.collection("chats").doc(activeChatId).collection("messages").add({
-                sender: currentUserEmail,
+                sender: currentUserUsername,
                 text: text,
+                type: "text",
                 createdAt: firebase.firestore.FieldValue.serverTimestamp()
             }).then(() => {
-                db.collection("chats").doc(activeChatId).update({
-                    lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
-                });
+                db.collection("chats").doc(activeChatId).update({ lastUpdated: firebase.firestore.FieldValue.serverTimestamp() });
             });
-
-            input.value = "";
-            input.focus();
+            input.value = ""; input.focus();
         }
 
-        // রিয়েলটাইম মেসেজ লোড করা
+        // ছবি বা ভিডিও ফাইল পাঠানো
+        function sendMediaFile() {
+            const file = document.getElementById('mediaInput').files;
+            if(!file || !activeChatId) return;
+
+            const fileType = file.type.startsWith('image/') ? 'image' : 'video';
+            const fileId = Date.now() + "_" + file.name;
+            const ref = storage.ref().child(`chats/${activeChatId}/${fileId}`);
+
+            // ইউজারকে বোঝানোর জন্য একটি মেসেজ এরিয়া আপডেট করুন
+            alert("ফাইলটি আপলোড হচ্ছে, দয়া করে অপেক্ষা করুন...");
+
+            ref.put(file).then(() => {
+                ref.getDownloadURL().then((url) => {
+                    db.collection("chats").doc(activeChatId).collection("messages").add({
+                        sender: currentUserUsername,
+                        text: url,
+                        type: fileType,
+                        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                    }).then(() => {
+                        db.collection("chats").doc(activeChatId).update({ lastUpdated: firebase.firestore.FieldValue.serverTimestamp() });
+                    });
+                });
+            }).catch(err => alert("ফাইল আপলোড ব্যর্থ হয়েছে: " + err.message));
+        }
+
         function loadMessages(chatId) {
             if(unsubscribeMessages) unsubscribeMessages();
 
             unsubscribeMessages = db.collection("chats").doc(chatId).collection("messages")
-                .orderBy("createdAt")
-                .onSnapshot((snapshot) => {
+                .orderBy("createdAt").onSnapshot((snapshot) => {
                     const chatMessages = document.getElementById('chatMessages');
                     chatMessages.innerHTML = '';
 
@@ -666,24 +446,24 @@
                         const msgData = doc.data();
                         const msgDiv = document.createElement('div');
                         msgDiv.classList.add('message');
+                        msgDiv.classList.add(msgData.sender === currentUserUsername ? 'my-msg' : 'other-msg');
                         
-                        if(msgData.sender === currentUserEmail) {
-                            msgDiv.classList.add('my-msg');
+                        // মেসেজ টাইপ চেক করে রেন্ডার করা হচ্ছে
+                        if(msgData.type === 'image') {
+                            msgDiv.innerHTML = `<img src="${msgData.text}" class="msg-media" onclick="window.open('${msgData.text}')">`;
+                        } else if(msgData.type === 'video') {
+                            msgDiv.innerHTML = `<video src="${msgData.text}" controls class="msg-media"></video>`;
                         } else {
-                            msgDiv.classList.add('other-msg');
+                            msgDiv.textContent = msgData.text;
                         }
                         
-                        msgDiv.textContent = msgData.text;
                         chatMessages.appendChild(msgDiv);
                     });
                     chatMessages.scrollTop = chatMessages.scrollHeight;
                 });
         }
 
-        // এন্টার চাপলে মেসেজ চলে যাওয়ার ইভেন্ট
-        document.getElementById('msgInput').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') { sendMessage(); }
-        });
+        document.getElementById('msgInput').addEventListener('keypress', function(e) { if (e.key === 'Enter') { sendMessage(); } });
     </script>
 </body>
 </html>
