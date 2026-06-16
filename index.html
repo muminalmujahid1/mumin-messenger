@@ -194,7 +194,7 @@
 
         <div class="no-chat-selected" id="noChatPlaceholder">
             <h3>Mumin ওয়েব মেসেঞ্জার</h3>
-            <p>আপনার বন্ধুদের সঠিক ইউজারনেম দিয়ে সার্চ করে চ্যাট শুরু করুন।</p>
+            <p>আপনার বন্ধুদের সঠিক ইউজারনেম দিয়ে সার্চ করে চ্যাট শুরু করুন</p>
         </div>
     </div>
 
@@ -254,7 +254,6 @@
             }
         }
 
-        // রেজিস্ট্রেশন লজিক সম্পূর্ণরূপে ফিক্সড (ইউজার আইডি ইউনিক রাখার জন্য)
         function registerUser() {
             const name = document.getElementById('regName').value.trim();
             const username = document.getElementById('regUsername').value.trim().toLowerCase().replace(/\s+/g, '');
@@ -264,7 +263,6 @@
             if(!name || !username || !email || !password) return alert("সবগুলো ঘর সঠিকভাবে পূরণ করুন!");
             if(password.length < 6) return alert("পাসওয়ার্ড কমপক্ষে ৬ অক্ষরের দিন।");
 
-            // ইউজারনেম ডুপ্লিকেট চেক
             db.collection("users").where("username", "==", username).get().then((res) => {
                 if(!res.empty) {
                     alert("এই ইউজারনেমটি অন্য কেউ ব্যবহার করছে! ভিন্ন একটি দিন।");
@@ -274,7 +272,6 @@
                 auth.createUserWithEmailAndPassword(email, password)
                     .then((userCredential) => {
                         const uid = userCredential.user.uid;
-                        // ইউজার আইডিতে ডাটা রাইট করা হচ্ছে
                         return db.collection("users").doc(uid).set({
                             name: name,
                             username: username,
@@ -284,7 +281,7 @@
                         });
                     })
                     .then(() => {
-                        alert("অ্যাকাউন্ট তৈরি সফল হয়েছে!");
+                        alert("অ্যাকাউন্ট তৈরি সফল হয়েছে!");
                         location.reload();
                     })
                     .catch((error) => alert("ভুল: " + error.message));
@@ -303,7 +300,6 @@
 
         function logoutBtnAction() { auth.signOut().then(() => location.reload()); }
 
-        // রিয়েল-টাইম ইউজার ডাটা ট্র্যাকিং ফিক্সড
         auth.onAuthStateChanged((user) => {
             if (user) {
                 document.getElementById('authBox').style.display = 'none';
@@ -323,7 +319,7 @@
                         }
                         loadMyChatList();
                     } else {
-                        document.getElementById('userDisplay').innerText = "প্রোফাইল ডাটা পাওয়া যায়নি";
+                        document.getElementById('userDisplay').innerText = "প্রোফাইল ডাটা পাওয়া যায়নি";
                     }
                 });
             } else {
@@ -345,6 +341,7 @@
         function closeProfileModal() { document.getElementById('profileModal').style.display = 'none'; }
         function triggerProfileUpload() { document.getElementById('profileImgInput').click(); }
 
+        /* ক্লাউডিনারি আপলোড ফিক্সড (files যোগ করা হয়েছে) */
         function uploadProfilePicture() {
             const files = document.getElementById('profileImgInput').files;
             if(!files || files.length === 0) return; 
@@ -368,24 +365,23 @@
                         currentUserAvatar = url;
                         document.getElementById('myAvatarArea').innerHTML = `<img src="${url}">`;
                         document.getElementById('modalAvatarArea').innerHTML = `<img src="${url}"><div class="avatar-edit-icon"><i class="fas fa-camera"></i></div>`;
-                        alert("আপলোড সফল হয়েছে!");
+                        alert("আপলোড সফল হয়েছে!");
                     });
                 }
-            });
+            }).catch(err => alert("আপলোড ব্যর্থ: " + err.message));
         }
 
-        // ইউজারনেম দিয়ে চ্যাট সার্চ করার নিখুঁত অপশন
+        /* চ্যাট সার্চ লজিক ফিক্সড (docs.data() যোগ করা হয়েছে) */
         function startNewChat() {
             const searchQuery = document.getElementById('searchUsername').value.trim().toLowerCase();
             if(!searchQuery) return alert("বন্ধুর সঠিক ইউজারনেমটি লিখুন।");
-            if(searchQuery === currentUserUsername) return alert("নিজের সাথে চ্যাট করা সম্ভব নয়।");
+            if(searchQuery === currentUserUsername) return alert("নিজের সাথে চ্যাট করা সম্ভব নয়।");
 
             db.collection("users").where("username", "==", searchQuery).get().then((snap) => {
                 if(snap.empty) {
-                    alert("এই ইউজারনেম দিয়ে কোনো অ্যাকাউন্ট পাওয়া যায়নি!");
+                    alert("এই ইউজারনেম দিয়ে কোনো অ্যাকাউন্ট পাওয়া যায়নি!");
                 } else {
-                    const partnerDoc = snap.docs;
-                    const partnerData = partnerDoc.data();
+                    const partnerData = snap.docs.data();
                     
                     const chatId = [currentUserUsername, partnerData.username].sort().join("_");
                     
@@ -418,7 +414,7 @@
                         item.classList.add('chat-item');
                         if (activeChatId === doc.id) item.classList.add('active');
                         
-                        const avatarHTML = partnerAvatar ? `<img src="${partnerAvatar}" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">` : partnerName.charAt(0).toUpperCase();
+                        const avatarHTML = partnerAvatar ? `<img src="${partnerAvatar}" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">` : (partnerName ? partnerName.charAt(0).toUpperCase() : "?");
                         
                         item.innerHTML = `
                             <div class="avatar-placeholder" style="background: #075e54;">${avatarHTML}</div>
@@ -466,6 +462,7 @@
             input.value = ""; input.focus();
         }
 
+        /* মিডিয়া ফাইল আপলোড ফিক্সড (files যোগ করা হয়েছে) */
         function sendMediaFile() {
             const files = document.getElementById('mediaInput').files;
             if(!files || files.length === 0 || !activeChatId) return; 
@@ -498,7 +495,7 @@
                         db.collection("chats").doc(activeChatId).update({ lastUpdated: firebase.firestore.FieldValue.serverTimestamp() });
                     });
                 }
-            });
+            }).catch(err => alert("মিডিয়া আপলোড ব্যর্থ: " + err.message));
         }
 
         function loadMessages(chatId) {
