@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mumin Messenger - Premium WhatsApp Style</title>
+    <title>Mumin Messenger - Cloudinary & Profile Version</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&family=Segoe+UI:wght@400;600&display=swap" rel="stylesheet">
     
@@ -52,9 +52,8 @@
         .main-app { display: none; width: 100%; height: 100vh; background-color: #f0f2f5; }
         .sidebar { width: 380px; min-width: 340px; background-color: white; border-right: 1.5px solid #e9edef; display: flex; flex-direction: column; }
         .sidebar-header { padding: 12px 16px; background-color: #f0f2f5; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e9edef; }
-        .user-profile { display: flex; align-items: center; gap: 10px; font-weight: 600; color: #111b21; }
+        .user-profile { display: flex; align-items: center; gap: 10px; font-weight: 600; color: #111b21; cursor: pointer; }
         
-        .profile-img-btn { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; border: 1px solid #075e54; cursor: pointer; }
         .avatar-placeholder { width: 40px; height: 40px; border-radius: 50%; background: #00a884; color: white; display: flex; justify-content: center; align-items: center; font-size: 18px; overflow: hidden; }
         .avatar-placeholder img { width: 100%; height: 100%; object-fit: cover; }
         
@@ -87,7 +86,6 @@
         .my-msg { background-color: #d9fdd3; align-self: flex-end; border-top-right-radius: 0; }
         .other-msg { background-color: white; align-self: flex-start; border-top-left-radius: 0; }
         
-        /* মেসেজের ভেতর ইমেজ বা ভিডিও এর স্টাইল */
         .msg-media { max-width: 100%; max-height: 250px; border-radius: 6px; margin-top: 5px; display: block; }
 
         /* ইনপুট বার */
@@ -101,6 +99,16 @@
         .no-chat-selected { flex: 1; display: flex; justify-content: center; align-items: center; color: #667781; flex-direction: column; background: #f8f9fa; border-bottom: 6px solid #075e54; text-align: center; padding: 20px; }
         .no-chat-logo { width: 120px; height: 120px; object-fit: contain; margin-bottom: 20px; opacity: 0.8; }
         .no-chat-selected h3 { color: #41525d; font-weight: 600; margin-bottom: 10px; font-size: 26px; }
+
+        /* প্রোফাইল পপ-আপ মোডাল */
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 2000; justify-content: center; align-items: center; }
+        .modal-content { background: white; padding: 30px; border-radius: 20px; width: 90%; max-width: 360px; text-align: center; position: relative; box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
+        .modal-close { position: absolute; top: 15px; right: 20px; font-size: 20px; cursor: pointer; color: #667781; }
+        .modal-avatar { width: 90px; height: 90px; border-radius: 50%; background: #00a884; color: white; display: flex; justify-content: center; align-items: center; font-size: 36px; margin: 0 auto 15px; overflow: hidden; position: relative; }
+        .modal-avatar img { width: 100%; height: 100%; object-fit: cover; }
+        .avatar-edit-icon { position: absolute; bottom: 0; background: rgba(0,0,0,0.6); width: 100%; color: white; font-size: 12px; padding: 2px 0; cursor: pointer; }
+        .profile-info-item { text-align: left; background: #f8f9fa; padding: 10px 15px; border-radius: 10px; margin-top: 10px; font-size: 14px; border: 1px solid #e9edef; }
+        .profile-info-item span { font-weight: 600; color: #111b21; display: block; font-size: 15px; }
     </style>
 </head>
 <body>
@@ -150,11 +158,10 @@
     <div class="main-app" id="appBox">
         <div class="sidebar">
             <div class="sidebar-header">
-                <div class="user-profile">
-                    <div class="avatar-placeholder" id="myAvatarArea" onclick="triggerProfileUpload()">
+                <div class="user-profile" onclick="openProfileModal()">
+                    <div class="avatar-placeholder" id="myAvatarArea">
                         <i class="fas fa-user" id="profileDefaultIcon"></i>
                     </div>
-                    <input type="file" id="profileImgInput" accept="image/*" style="display:none;" onchange="uploadProfilePicture()">
                     <span id="userDisplay">ব্যবহারকারী</span>
                 </div>
                 <button class="logout-btn" onclick="logoutBtnAction()"><i class="fas fa-sign-out-alt"></i> লগআউট</button>
@@ -162,7 +169,7 @@
             <div class="search-box">
                 <div class="search-inner">
                     <i class="fas fa-search"></i>
-                    <input type="text" id="searchUsername" placeholder="বন্ধুর ইউজারনেম দিয়ে খুঁজুন...">
+                    <input type="text" id="searchUsername" placeholder="নাম, ইমেইল বা ইউজারনেম দিন...">
                 </div>
                 <button onclick="startNewChat()">চ্যাট</button>
             </div>
@@ -191,16 +198,36 @@
         <div class="no-chat-selected" id="noChatPlaceholder">
             <img src="90dea708-d5b4-4590-b550-72a9de981b31.png" alt="Mumin Logo" class="no-chat-logo">
             <h3>Mumin ওয়েব মেসেঞ্জার</h3>
-            <p>আপনার বন্ধুদের ইউজারনেম দিয়ে সার্চ করে চ্যাট শুরু করুন।<br>শুরু করতে বাম পাশের সার্চ বক্সে বন্ধুর ইউজারনেম লিখুন।</p>
+            <p>আপনার বন্ধুদের নাম, ইমেইল বা ইউজারনেম দিয়ে সার্চ করে চ্যাট শুরু করুন।</p>
+        </div>
+    </div>
+
+    <div class="modal" id="profileModal">
+        <div class="modal-content">
+            <span class="modal-close" onclick="closeProfileModal()">&times;</span>
+            <h3 style="margin-bottom: 20px; color: #075e54;">আমার প্রোফাইল</h3>
+            
+            <div class="modal-avatar" id="modalAvatarArea" onclick="triggerProfileUpload()">
+                <i class="fas fa-user"></i>
+                <div class="avatar-edit-icon"><i class="fas fa-camera"></i></div>
+            </div>
+            <input type="file" id="profileImgInput" accept="image/*" style="display:none;" onchange="uploadProfilePicture()">
+
+            <div class="profile-info-item">পুরো নাম: <span id="pModalName">-</span></div>
+            <div class="profile-info-item">ইউজারনেম: <span id="pModalUsername">-</span></div>
+            <div class="profile-info-item">ইমেইল ঠিকানা: <span id="pModalEmail">-</span></div>
         </div>
     </div>
 
     <script src="https://www.gstatic.com/firebasejs/10.0.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.0.0/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.0.0/firebase-storage-compat.js"></script>
 
     <script>
+        // 📢 Cloudinary সেটিংস এখানে বসান
+        const CLOUDINARY_CLOUD_NAME = "YOUR_CLOUD_NAME"; 
+        const CLOUDINARY_PRESET = "YOUR_UNSIGNED_PRESET_NAME"; 
+
         const firebaseConfig = {
             apiKey: "AIzaSyBHV2ml0ph5AdICrtBOxP5d5TqwaDqMRBY",
             authDomain: "mumin-messenger.firebaseapp.com",
@@ -214,10 +241,11 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
         const auth = firebase.auth();
-        const storage = firebase.storage();
 
         let currentUserUsername = "";
         let currentUserName = "";
+        let currentUserEmail = "";
+        let currentUserAvatar = "";
         let activeChatId = null; 
         let unsubscribeMessages = null;
 
@@ -273,7 +301,6 @@
 
         function logoutBtnAction() { auth.signOut().then(() => location.reload()); }
 
-        // অথ স্ট্যাটাস এবং নিজের প্রোফাইল পিকচার লোড (এখানে ভুলটি সংশোধন করা হয়েছে)
         auth.onAuthStateChanged((user) => {
             if (user) {
                 document.getElementById('authBox').style.display = 'none';
@@ -281,15 +308,16 @@
                 
                 db.collection("users").where("email", "==", user.email.toLowerCase()).get().then((snapshot) => {
                     if(!snapshot.empty) {
-                        const myDoc = snapshot.docs; // 🛠️ ফিক্সড: '.docs' এর বদলে প্রথম ডকুমেণ্টকে ধরা হলো
+                        const myDoc = snapshot.docs;
                         currentUserUsername = myDoc.id;
                         currentUserName = myDoc.data().name;
+                        currentUserEmail = myDoc.data().email;
+                        currentUserAvatar = myDoc.data().avatarUrl || "";
                         
-                        // 🛠️ এখন ইউজারের নাম এবং ইউজারনেম সঠিকভাবে ডিসপ্লে হবে
                         document.getElementById('userDisplay').innerText = currentUserName + ` (@${currentUserUsername})`;
                         
-                        if(myDoc.data().avatarUrl) {
-                            document.getElementById('myAvatarArea').innerHTML = `<img src="${myDoc.data().avatarUrl}">`;
+                        if(currentUserAvatar) {
+                            document.getElementById('myAvatarArea').innerHTML = `<img src="${currentUserAvatar}">`;
                         }
                         loadMyChatList();
                     }
@@ -300,42 +328,97 @@
             }
         });
 
+        // প্রোফাইল মোডাল ওপেন ও ডেটা দেখানো
+        function openProfileModal() {
+            document.getElementById('pModalName').innerText = currentUserName;
+            document.getElementById('pModalUsername').innerText = "@" + currentUserUsername;
+            document.getElementById('pModalEmail').innerText = currentUserEmail;
+            if(currentUserAvatar) {
+                document.getElementById('modalAvatarArea').innerHTML = `<img src="${currentUserAvatar}"><div class="avatar-edit-icon"><i class="fas fa-camera"></i></div>`;
+            }
+            document.getElementById('profileModal').style.display = 'flex';
+        }
+
+        function closeProfileModal() {
+            document.getElementById('profileModal').style.display = 'none';
+        }
+
         function triggerProfileUpload() { document.getElementById('profileImgInput').click(); }
 
         function uploadProfilePicture() {
-            const file = document.getElementById('profileImgInput').files; // 🛠️ ফিক্সড: ফাইলে ইনডেক্স দেওয়া হলো
+            const file = document.getElementById('profileImgInput').files;
             if(!file) return;
 
-            const ref = storage.ref().child(`avatars/${currentUserUsername}`);
-            ref.put(file).then(() => {
-                ref.getDownloadURL().then((url) => {
+            let formData = new FormData();
+            formData.append("file", file);
+            formData.append("upload_preset", CLOUDINARY_PRESET);
+
+            alert("প্রোফাইল পিকচার আপলোড হচ্ছে...");
+
+            fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`, {
+                method: "POST",
+                body: formData
+            })
+            .then(res => res.json())
+            .then(data => {
+                if(data.secure_url) {
+                    const url = data.secure_url;
                     db.collection("users").doc(currentUserUsername).update({ avatarUrl: url }).then(() => {
+                        currentUserAvatar = url;
                         document.getElementById('myAvatarArea').innerHTML = `<img src="${url}">`;
+                        document.getElementById('modalAvatarArea').innerHTML = `<img src="${url}"><div class="avatar-edit-icon"><i class="fas fa-camera"></i></div>`;
                         alert("প্রোফাইল পিকচার আপলোড সফল হয়েছে!");
                     });
-                });
+                } else {
+                    alert("আপলোড ব্যর্থ হয়েছে!");
+                }
+            })
+            .catch(err => alert("Error: " + err.message));
+        }
+
+        // 🔍 মাল্টিপল সার্চ লজিক (ইউজারনেম, নাম অথবা ইমেইল দিয়ে খোঁজার সিস্টেম)
+        function startNewChat() {
+            const searchQuery = document.getElementById('searchUsername').value.trim().toLowerCase();
+            if(!searchQuery) return alert("খোঁজার জন্য নাম, ইমেইল বা ইউজারনেম লিখুন।");
+
+            // প্রথমে চেক করা হচ্ছে ইনপুটটি কোনো ডিরেক্ট ইউজারনেম কি না
+            db.collection("users").doc(searchQuery).get().then((docSnap) => {
+                if (docSnap.exists) {
+                    processChatCreation(docSnap.id, docSnap.data());
+                } else {
+                    // ইউজারনেম না মিললে ইমেইল দিয়ে খোঁজা হচ্ছে
+                    db.collection("users").where("email", "==", searchQuery).get().then((emailSnap) => {
+                        if(!emailSnap.empty) {
+                            processChatCreation(emailSnap.docs.id, emailSnap.docs.data());
+                        } else {
+                            // ইমেইলও না মিললে নাম দিয়ে খোঁজা হচ্ছে
+                            db.collection("users").where("name", "==", searchQuery).get().then((nameSnap) => {
+                                if(!nameSnap.empty) {
+                                    processChatCreation(nameSnap.docs.id, nameSnap.docs.data());
+                                } else {
+                                    alert("এই তথ্য দিয়ে কোনো অ্যাকাউন্ট খুঁজে পাওয়া যায়নি!");
+                                }
+                            });
+                        }
+                    });
+                }
             });
         }
 
-        function startNewChat() {
-            const partnerUsername = document.getElementById('searchUsername').value.trim().toLowerCase();
-            if(!partnerUsername || partnerUsername === currentUserUsername) return alert("সঠিক ইউজারনেম দিন। নিজের সাথে চ্যাট সম্ভব নয়।");
-
-            db.collection("users").doc(partnerUsername).get().then((docSnap) => {
-                if (!docSnap.exists) return alert("এই ইউজারনেমে কোনো অ্যাকাউন্ট পাওয়া যায়নি!");
-                
-                const partnerData = docSnap.data();
-                const chatId = [currentUserUsername, partnerUsername].sort().join("_");
-                
-                db.collection("chats").doc(chatId).set({
-                    users: [currentUserUsername, partnerUsername],
-                    names: { [currentUserUsername]: currentUserName, [partnerUsername]: partnerData.name },
-                    avatars: { [currentUserUsername]: document.getElementById('myAvatarArea').querySelector('img')?.src || "", [partnerUsername]: partnerData.avatarUrl || "" },
-                    lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
-                }, { merge: true }).then(() => {
-                    document.getElementById('searchUsername').value = "";
-                    openChat(chatId, partnerData.name, partnerUsername, partnerData.avatarUrl);
-                });
+        // চ্যাট উইন্ডো তৈরি করার কমন ফাংশন
+        function processChatCreation(partnerUsername, partnerData) {
+            if(partnerUsername === currentUserUsername) return alert("নিজের সাথে চ্যাট করা সম্ভব নয়।");
+            
+            const chatId = [currentUserUsername, partnerUsername].sort().join("_");
+            
+            db.collection("chats").doc(chatId).set({
+                users: [currentUserUsername, partnerUsername],
+                names: { [currentUserUsername]: currentUserName, [partnerUsername]: partnerData.name },
+                avatars: { [currentUserUsername]: currentUserAvatar, [partnerUsername]: partnerData.avatarUrl || "" },
+                lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
+            }, { merge: true }).then(() => {
+                document.getElementById('searchUsername').value = "";
+                openChat(chatId, partnerData.name, partnerUsername, partnerData.avatarUrl || "");
             });
         }
 
@@ -406,17 +489,28 @@
         }
 
         function sendMediaFile() {
-            const file = document.getElementById('mediaInput').files; // 🛠️ ফিক্সড: ফাইলে ইনডেক্স দেওয়া হলো
+            const file = document.getElementById('mediaInput').files;
             if(!file || !activeChatId) return;
 
-            const fileType = file.type.startsWith('image/') ? 'image' : 'video';
-            const fileId = Date.now() + "_" + file.name;
-            const ref = storage.ref().child(`chats/${activeChatId}/${fileId}`);
+            const isVideo = file.type.startsWith('video/');
+            const fileType = isVideo ? 'video' : 'image';
+            
+            let formData = new FormData();
+            formData.append("file", file);
+            formData.append("upload_preset", CLOUDINARY_PRESET);
 
-            alert("ফাইলটি আপলোড হচ্ছে, দয়া করে অপেক্ষা করুন...");
+            alert("ফাইলটি পাঠানো হচ্ছে, একটু অপেক্ষা করুন...");
 
-            ref.put(file).then(() => {
-                ref.getDownloadURL().then((url) => {
+            const resourceType = isVideo ? 'video' : 'image';
+
+            fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/${resourceType}/upload`, {
+                method: "POST",
+                body: formData
+            })
+            .then(res => res.json())
+            .then(data => {
+                if(data.secure_url) {
+                    const url = data.secure_url;
                     db.collection("chats").doc(activeChatId).collection("messages").add({
                         sender: currentUserUsername,
                         text: url,
@@ -425,8 +519,11 @@
                     }).then(() => {
                         db.collection("chats").doc(activeChatId).update({ lastUpdated: firebase.firestore.FieldValue.serverTimestamp() });
                     });
-                });
-            }).catch(err => alert("ফাইল আপলোড ব্যর্থ হয়েছে: " + err.message));
+                } else {
+                    alert("ফাইল আপলোড ব্যর্থ হয়েছে!");
+                }
+            })
+            .catch(err => alert("Error: " + err.message));
         }
 
         function loadMessages(chatId) {
