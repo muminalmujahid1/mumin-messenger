@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mumin Messenger - Fixed & Fully Working Version</title>
+    <title>Mumin Messenger - Ultimate Fixed</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&family=Segoe+UI:wght@400;600&display=swap" rel="stylesheet">
     
@@ -136,7 +136,7 @@
                 </div>
                 <div class="input-group">
                     <i class="fas fa-at"></i>
-                    <input type="text" id="regUsername" placeholder="ইউজারনেম (ফাঁকা রাখলে অটো তৈরি হবে)">
+                    <input type="text" id="regUsername" placeholder="ইউজারনেম (যেমন: mumin12)">
                 </div>
                 <div class="input-group">
                     <i class="fas fa-envelope"></i>
@@ -166,7 +166,7 @@
             <div class="search-box">
                 <div class="search-inner">
                     <i class="fas fa-search"></i>
-                    <input type="text" id="searchUsername" placeholder="নাম, ইমেইল বা ইউজারনেম দিন...">
+                    <input type="text" id="searchUsername" placeholder="সঠিক ইউজারনেম লিখে সার্চ দিন...">
                 </div>
                 <button onclick="startNewChat()">চ্যাট</button>
             </div>
@@ -194,7 +194,7 @@
 
         <div class="no-chat-selected" id="noChatPlaceholder">
             <h3>Mumin ওয়েব মেসেঞ্জার</h3>
-            <p>আপনার বন্ধুদের নাম, ইমেইল বা ইউজারনেম দিয়ে সার্চ করে চ্যাট শুরু করুন।</p>
+            <p>আপনার বন্ধুদের সঠিক ইউজারনেম দিয়ে সার্চ করে চ্যাট শুরু করুন।</p>
         </div>
     </div>
 
@@ -220,11 +220,9 @@
     <script src="https://www.gstatic.com/firebasejs/10.0.0/firebase-auth-compat.js"></script>
 
     <script>
-        // 📢 Cloudinary Settings Configuration
         const CLOUDINARY_CLOUD_NAME = "dvcjenbg"; 
         const CLOUDINARY_PRESET = "Mumin-messenger"; 
 
-        // Firebase Configuration
         const firebaseConfig = {
             apiKey: "AIzaSyBHV2ml0ph5AdICrtBOxP5d5TqwaDqMRBY",
             authDomain: "mumin-messenger.firebaseapp.com",
@@ -256,82 +254,77 @@
             }
         }
 
-        // Account Registration Logic
+        // রেজিস্ট্রেশন লজিক সম্পূর্ণরূপে ফিক্সড (ইউজার আইডি ইউনিক রাখার জন্য)
         function registerUser() {
             const name = document.getElementById('regName').value.trim();
-            let username = document.getElementById('regUsername').value.trim().toLowerCase().replace(/\s+/g, '');
+            const username = document.getElementById('regUsername').value.trim().toLowerCase().replace(/\s+/g, '');
             const email = document.getElementById('regEmail').value.trim().toLowerCase();
             const password = document.getElementById('regPassword').value.trim();
 
-            if(!name || !email || !password) return alert("দয়া করে নাম, ইমেইল এবং পাসওয়ার্ড অবশ্যই দিন।");
-            if(password.length < 6) return alert("পাসওয়ার্ড কমপক্ষে ৬ অক্ষরের হতে হবে।");
-            
-            if(!username) {
-                username = name.toLowerCase().replace(/\s+/g, '') + Math.floor(100 + Math.random() * 900);
-            }
+            if(!name || !username || !email || !password) return alert("সবগুলো ঘর সঠিকভাবে পূরণ করুন!");
+            if(password.length < 6) return alert("পাসওয়ার্ড কমপক্ষে ৬ অক্ষরের দিন।");
 
-            db.collection("users").doc(username).get().then((snapshot) => {
-                if(snapshot.exists) {
-                    alert("এই ইউজারনেমটি ইতিমধ্যে বুকড! অন্য একটি দিন বা ঘরটি ফাঁকা রাখুন।");
+            // ইউজারনেম ডুপ্লিকেট চেক
+            db.collection("users").where("username", "==", username).get().then((res) => {
+                if(!res.empty) {
+                    alert("এই ইউজারনেমটি অন্য কেউ ব্যবহার করছে! ভিন্ন একটি দিন।");
                     return;
                 }
 
                 auth.createUserWithEmailAndPassword(email, password)
                     .then((userCredential) => {
-                        return db.collection("users").doc(username).set({
+                        const uid = userCredential.user.uid;
+                        // ইউজার আইডিতে ডাটা রাইট করা হচ্ছে
+                        return db.collection("users").doc(uid).set({
                             name: name,
                             username: username,
                             email: email,
-                            avatarUrl: ""
+                            avatarUrl: "",
+                            uid: uid
                         });
                     })
                     .then(() => {
-                        alert("অ্যাকাউন্ট তৈরি সফল হয়েছে! আপনার ইউজারনেম: @" + username);
-                        location.reload(); // পেজ রিলোড দিয়ে প্রোফাইল আপডেট ফোর্স করা
+                        alert("অ্যাকাউন্ট তৈরি সফল হয়েছে!");
+                        location.reload();
                     })
-                    .catch((error) => alert("রেজিস্ট্রেশন সমস্যা: " + error.message));
+                    .catch((error) => alert("ভুল: " + error.message));
             });
         }
 
-        // Authentication Login Logic
         function loginUser() {
             const email = document.getElementById('loginEmail').value.trim().toLowerCase();
             const password = document.getElementById('loginPassword').value.trim();
             if(!email || !password) return alert("ইমেইল এবং পাসওয়ার্ড দিন।");
 
             auth.signInWithEmailAndPassword(email, password)
-                .catch((error) => alert("লগইন ব্যর্থ হয়েছে: " + error.message));
+                .then(() => location.reload())
+                .catch((error) => alert("লগইন ব্যর্থ: " + error.message));
         }
 
         function logoutBtnAction() { auth.signOut().then(() => location.reload()); }
 
-        // State Listener & Global User State Extractor Fixed
+        // রিয়েল-টাইম ইউজার ডাটা ট্র্যাকিং ফিক্সড
         auth.onAuthStateChanged((user) => {
             if (user) {
                 document.getElementById('authBox').style.display = 'none';
                 document.getElementById('appBox').style.display = 'flex';
                 
-                // ইমেইল চেক করার সময় পুরোপুরি ছোট হাতের করে চেক করা হচ্ছে নিখুঁত ডেটার জন্য
-                db.collection("users").where("email", "==", user.email.toLowerCase()).get().then((snapshot) => {
-                    if(!snapshot.empty) {
-                        const myDoc = snapshot.docs; 
-                        currentUserUsername = myDoc.data().username || myDoc.id;
-                        currentUserName = myDoc.data().name || "ব্যবহারকারী";
-                        currentUserEmail = myDoc.data().email || user.email;
-                        currentUserAvatar = myDoc.data().avatarUrl || "";
+                db.collection("users").doc(user.uid).get().then((doc) => {
+                    if(doc.exists) {
+                        const data = doc.data();
+                        currentUserUsername = data.username;
+                        currentUserName = data.name;
+                        currentUserEmail = data.email;
+                        currentUserAvatar = data.avatarUrl || "";
                         
                         document.getElementById('userDisplay').innerText = currentUserName + ` (@${currentUserUsername})`;
-                        
                         if(currentUserAvatar) {
                             document.getElementById('myAvatarArea').innerHTML = `<img src="${currentUserAvatar}">`;
                         }
                         loadMyChatList();
                     } else {
-                        // যদি কোনো কারণে ইমেল দিয়ে ডেটাবেস ডক না পাওয়া যায়, তবে ব্যাকআপ আইডি রিড করার চেষ্টা
-                        document.getElementById('userDisplay').innerText = "প্রোফাইল লোড হচ্ছে...";
+                        document.getElementById('userDisplay').innerText = "প্রোফাইল ডাটা পাওয়া যায়নি";
                     }
-                }).catch((err) => {
-                    console.log("Firestore Error: ", err);
                 });
             } else {
                 document.getElementById('authBox').style.display = 'flex';
@@ -341,12 +334,10 @@
 
         function openProfileModal() {
             document.getElementById('pModalName').innerText = currentUserName || "-";
-            document.getElementById('pModalUsername').innerText = "@" + (currentUserUsername || "undefined");
+            document.getElementById('pModalUsername').innerText = "@" + (currentUserUsername || "none");
             document.getElementById('pModalEmail').innerText = currentUserEmail || "-";
             if(currentUserAvatar) {
                 document.getElementById('modalAvatarArea').innerHTML = `<img src="${currentUserAvatar}"><div class="avatar-edit-icon"><i class="fas fa-camera"></i></div>`;
-            } else {
-                document.getElementById('modalAvatarArea').innerHTML = `<i class="fas fa-user"></i><div class="avatar-edit-icon"><i class="fas fa-camera"></i></div>`;
             }
             document.getElementById('profileModal').style.display = 'flex';
         }
@@ -354,7 +345,6 @@
         function closeProfileModal() { document.getElementById('profileModal').style.display = 'none'; }
         function triggerProfileUpload() { document.getElementById('profileImgInput').click(); }
 
-        // Cloudinary Profile Picture Upload
         function uploadProfilePicture() {
             const files = document.getElementById('profileImgInput').files;
             if(!files || files.length === 0) return; 
@@ -373,57 +363,42 @@
             .then(data => {
                 if(data.secure_url) {
                     const url = data.secure_url;
-                    db.collection("users").doc(currentUserUsername).update({ avatarUrl: url }).then(() => {
+                    const uid = auth.currentUser.uid;
+                    db.collection("users").doc(uid).update({ avatarUrl: url }).then(() => {
                         currentUserAvatar = url;
                         document.getElementById('myAvatarArea').innerHTML = `<img src="${url}">`;
                         document.getElementById('modalAvatarArea').innerHTML = `<img src="${url}"><div class="avatar-edit-icon"><i class="fas fa-camera"></i></div>`;
-                        alert("প্রোফাইল পিকচার আপলোড সফল হয়েছে!");
-                    });
-                } else {
-                    alert("আপলোড ব্যর্থ হয়েছে! ক্লাউড সেটিংস চেক করুন।");
-                }
-            })
-            .catch(err => alert("Error: " + err.message));
-        }
-
-        // Multi-Query Logic Structure Fixed
-        function startNewChat() {
-            const searchQuery = document.getElementById('searchUsername').value.trim().toLowerCase();
-            if(!searchQuery) return alert("খোঁজার জন্য নাম, ইমেইল বা ইউজারনেম লিখুন।");
-
-            db.collection("users").doc(searchQuery).get().then((docSnap) => {
-                if (docSnap.exists) {
-                    processChatCreation(docSnap.id, docSnap.data());
-                } else {
-                    db.collection("users").where("email", "==", searchQuery).get().then((emailSnap) => {
-                        if(!emailSnap.empty) {
-                            processChatCreation(emailSnap.docs.id, emailSnap.docs.data()); 
-                        } else {
-                            db.collection("users").where("name", "==", searchQuery).get().then((nameSnap) => {
-                                if(!nameSnap.empty) {
-                                    processChatCreation(nameSnap.docs.id, nameSnap.docs.data()); 
-                                } else {
-                                    alert("এই তথ্য দিয়ে কোনো অ্যাকাউন্ট খুঁজে পাওয়া যায়নি!");
-                                }
-                            });
-                        }
+                        alert("আপলোড সফল হয়েছে!");
                     });
                 }
             });
         }
 
-        function processChatCreation(partnerUsername, partnerData) {
-            if(partnerUsername === currentUserUsername) return alert("নিজের সাথে চ্যাট করা সম্ভব নয়।");
-            const chatId = [currentUserUsername, partnerUsername].sort().join("_");
-            
-            db.collection("chats").doc(chatId).set({
-                users: [currentUserUsername, partnerUsername],
-                names: { [currentUserUsername]: currentUserName, [partnerUsername]: partnerData.name },
-                avatars: { [currentUserUsername]: currentUserAvatar, [partnerUsername]: partnerData.avatarUrl || "" },
-                lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
-            }, { merge: true }).then(() => {
-                document.getElementById('searchUsername').value = "";
-                openChat(chatId, partnerData.name, partnerUsername, partnerData.avatarUrl || "");
+        // ইউজারনেম দিয়ে চ্যাট সার্চ করার নিখুঁত অপশন
+        function startNewChat() {
+            const searchQuery = document.getElementById('searchUsername').value.trim().toLowerCase();
+            if(!searchQuery) return alert("বন্ধুর সঠিক ইউজারনেমটি লিখুন।");
+            if(searchQuery === currentUserUsername) return alert("নিজের সাথে চ্যাট করা সম্ভব নয়।");
+
+            db.collection("users").where("username", "==", searchQuery).get().then((snap) => {
+                if(snap.empty) {
+                    alert("এই ইউজারনেম দিয়ে কোনো অ্যাকাউন্ট পাওয়া যায়নি!");
+                } else {
+                    const partnerDoc = snap.docs;
+                    const partnerData = partnerDoc.data();
+                    
+                    const chatId = [currentUserUsername, partnerData.username].sort().join("_");
+                    
+                    db.collection("chats").doc(chatId).set({
+                        users: [currentUserUsername, partnerData.username],
+                        names: { [currentUserUsername]: currentUserName, [partnerData.username]: partnerData.name },
+                        avatars: { [currentUserUsername]: currentUserAvatar, [partnerData.username]: partnerData.avatarUrl || "" },
+                        lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
+                    }, { merge: true }).then(() => {
+                        document.getElementById('searchUsername').value = "";
+                        openChat(chatId, partnerData.name, partnerData.username, partnerData.avatarUrl || "");
+                    });
+                }
             });
         }
 
@@ -454,8 +429,6 @@
                         `;
                         
                         item.onclick = () => {
-                            document.querySelectorAll('.chat-item').forEach(el => el.classList.remove('active'));
-                            item.classList.add('active');
                             openChat(doc.id, partnerName, partnerUser, partnerAvatar);
                         };
                         listContainer.appendChild(item);
@@ -493,7 +466,6 @@
             input.value = ""; input.focus();
         }
 
-        // Media File Uploader Fixed
         function sendMediaFile() {
             const files = document.getElementById('mediaInput').files;
             if(!files || files.length === 0 || !activeChatId) return; 
@@ -506,7 +478,7 @@
             formData.append("file", selectedFile); 
             formData.append("upload_preset", CLOUDINARY_PRESET);
 
-            alert("ফাইলটি পাঠানো হচ্ছে, একটু অপেক্ষা করুন...");
+            alert("ফাইল আপলোড হচ্ছে...");
             const resourceType = isVideo ? 'video' : 'image';
 
             fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/${resourceType}/upload`, {
@@ -525,11 +497,8 @@
                     }).then(() => {
                         db.collection("chats").doc(activeChatId).update({ lastUpdated: firebase.firestore.FieldValue.serverTimestamp() });
                     });
-                } else {
-                    alert("ফাইল আপলোড ব্যর্থ হয়েছে!");
                 }
-            })
-            .catch(err => alert("Error: " + err.message));
+            });
         }
 
         function loadMessages(chatId) {
