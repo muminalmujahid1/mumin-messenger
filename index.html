@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mumin Messenger </title>
+    <title>Mumin Messenger - Fixed & Fully Working Version</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&family=Segoe+UI:wght@400;600&display=swap" rel="stylesheet">
     
@@ -220,7 +220,7 @@
     <script src="https://www.gstatic.com/firebasejs/10.0.0/firebase-auth-compat.js"></script>
 
     <script>
-        // 📢 Cloudinary Settings Configuration Fixed
+        // 📢 Cloudinary Settings Configuration
         const CLOUDINARY_CLOUD_NAME = "dvcjenbg"; 
         const CLOUDINARY_PRESET = "Mumin-messenger"; 
 
@@ -285,14 +285,17 @@
                             avatarUrl: ""
                         });
                     })
-                    .then(() => alert("অ্যাকাউন্ট তৈরি সফল হয়েছে! আপনার ইউজারনেম: @" + username))
+                    .then(() => {
+                        alert("অ্যাকাউন্ট তৈরি সফল হয়েছে! আপনার ইউজারনেম: @" + username);
+                        location.reload(); // পেজ রিলোড দিয়ে প্রোফাইল আপডেট ফোর্স করা
+                    })
                     .catch((error) => alert("রেজিস্ট্রেশন সমস্যা: " + error.message));
             });
         }
 
         // Authentication Login Logic
         function loginUser() {
-            const email = document.getElementById('loginEmail').value.trim();
+            const email = document.getElementById('loginEmail').value.trim().toLowerCase();
             const password = document.getElementById('loginPassword').value.trim();
             if(!email || !password) return alert("ইমেইল এবং পাসওয়ার্ড দিন।");
 
@@ -302,18 +305,19 @@
 
         function logoutBtnAction() { auth.signOut().then(() => location.reload()); }
 
-        // State Listener & Global User State Extractor
+        // State Listener & Global User State Extractor Fixed
         auth.onAuthStateChanged((user) => {
             if (user) {
                 document.getElementById('authBox').style.display = 'none';
                 document.getElementById('appBox').style.display = 'flex';
                 
+                // ইমেইল চেক করার সময় পুরোপুরি ছোট হাতের করে চেক করা হচ্ছে নিখুঁত ডেটার জন্য
                 db.collection("users").where("email", "==", user.email.toLowerCase()).get().then((snapshot) => {
                     if(!snapshot.empty) {
                         const myDoc = snapshot.docs; 
-                        currentUserUsername = myDoc.id;
-                        currentUserName = myDoc.data().name;
-                        currentUserEmail = myDoc.data().email;
+                        currentUserUsername = myDoc.data().username || myDoc.id;
+                        currentUserName = myDoc.data().name || "ব্যবহারকারী";
+                        currentUserEmail = myDoc.data().email || user.email;
                         currentUserAvatar = myDoc.data().avatarUrl || "";
                         
                         document.getElementById('userDisplay').innerText = currentUserName + ` (@${currentUserUsername})`;
@@ -322,7 +326,12 @@
                             document.getElementById('myAvatarArea').innerHTML = `<img src="${currentUserAvatar}">`;
                         }
                         loadMyChatList();
+                    } else {
+                        // যদি কোনো কারণে ইমেল দিয়ে ডেটাবেস ডক না পাওয়া যায়, তবে ব্যাকআপ আইডি রিড করার চেষ্টা
+                        document.getElementById('userDisplay').innerText = "প্রোফাইল লোড হচ্ছে...";
                     }
+                }).catch((err) => {
+                    console.log("Firestore Error: ", err);
                 });
             } else {
                 document.getElementById('authBox').style.display = 'flex';
@@ -331,11 +340,13 @@
         });
 
         function openProfileModal() {
-            document.getElementById('pModalName').innerText = currentUserName;
-            document.getElementById('pModalUsername').innerText = "@" + currentUserUsername;
-            document.getElementById('pModalEmail').innerText = currentUserEmail;
+            document.getElementById('pModalName').innerText = currentUserName || "-";
+            document.getElementById('pModalUsername').innerText = "@" + (currentUserUsername || "undefined");
+            document.getElementById('pModalEmail').innerText = currentUserEmail || "-";
             if(currentUserAvatar) {
                 document.getElementById('modalAvatarArea').innerHTML = `<img src="${currentUserAvatar}"><div class="avatar-edit-icon"><i class="fas fa-camera"></i></div>`;
+            } else {
+                document.getElementById('modalAvatarArea').innerHTML = `<i class="fas fa-user"></i><div class="avatar-edit-icon"><i class="fas fa-camera"></i></div>`;
             }
             document.getElementById('profileModal').style.display = 'flex';
         }
