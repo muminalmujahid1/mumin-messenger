@@ -2,7 +2,7 @@
 <html lang="bn">
 <head>
 <meta charset="UTF-8">
-<title>Mumin Messenger – Stable Edition</title>
+<title>Mumin Messenger – Simple Edition</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
@@ -27,18 +27,16 @@ body { font-family: 'Poppins', 'Hind Siliguri', sans-serif; background: #eae6df;
 .sidebar-header { padding: 15px 20px; background: #f0f2f5; font-weight: 600; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e3e3e3; }
 .logout-btn { background: #ff4d4d; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-weight: 500; }
 
-/* Search & Group Creation */
-.search-box { padding: 12px; background: #fff; border-bottom: 1px solid #f0f2f5; display: flex; flex-direction: column; gap: 8px; }
+/* Search Box Only */
+.search-box { padding: 12px; background: #fff; border-bottom: 1px solid #f0f2f5; }
 .search-row { display: flex; gap: 8px; }
 .search-row input { flex: 1; padding: 10px 14px; border-radius: 20px; border: 1px solid #e3e3e3; outline: none; background: #f0f2f5; }
 .search-row button { padding: 0 16px; border: none; background: #00a884; color: #fff; border-radius: 20px; cursor: pointer; }
-.grp-btn { background: #075e54 !important; }
 
 /* Chat List */
 .chat-list { flex: 1; overflow-y: auto; }
 .chat-item { padding: 15px 20px; border-bottom: 1px solid #f8f9fa; cursor: pointer; display: flex; align-items: center; font-weight: 500; justify-content: space-between;}
 .chat-item:hover { background: #f0f2f5; }
-.chat-type-badge { font-size: 11px; background: #e3e3e3; padding: 2px 6px; border-radius: 4px; color: #666; }
 
 /* Chat Window */
 .chat { flex: 1; display: flex; flex-direction: column; background: #efeae2; }
@@ -47,7 +45,6 @@ body { font-family: 'Poppins', 'Hind Siliguri', sans-serif; background: #eae6df;
 .message { max-width: 65%; padding: 10px 14px; border-radius: 10px; font-size: 15px; line-height: 1.4; box-shadow: 0 1px 2px rgba(0,0,0,0.1); word-wrap: break-word; }
 .me { align-self: flex-end; background: #d9fdd3; color: #111b21; border-top-right-radius: 2px; }
 .other { align-self: flex-start; background: #fff; color: #111b21; border-top-left-radius: 2px; }
-.msg-sender { font-size: 11px; color: #075e54; font-weight: bold; margin-bottom: 3px; display: block; }
 .msg-media { max-width: 280px; max-height: 200px; border-radius: 8px; display: block; margin-top: 4px; object-fit: cover; }
 
 /* Input Bar */
@@ -92,10 +89,6 @@ body { font-family: 'Poppins', 'Hind Siliguri', sans-serif; background: #eae6df;
       <div class="search-row">
         <input id="searchUser" placeholder="Username লিখুন...">
         <button onclick="startSingleChat()">Chat</button>
-      </div>
-      <div class="search-row">
-        <input id="groupName" placeholder="গ্রুপের নাম লিখুন...">
-        <button class="grp-btn" onclick="createGroupChat()">Create Group</button>
       </div>
     </div>
 
@@ -158,7 +151,7 @@ function register(){
     email: email, 
     uid: u.user.uid
    }).then(() => {
-     alert("অ্যাকাউন্ট তৈরি সফল হয়েছে!");
+     alert("অ্যাকাউন্ট তৈরি সফল হয়েছে!");
      location.reload();
    });
  }).catch(err => {
@@ -206,34 +199,13 @@ function startSingleChat(){
 
   db.collection("chats").doc(chatId).set({
    chatId: chatId,
-   isGroup: false,
    users:[myUid, targetUser.uid],
-   chatName: "",
    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
   },{merge:true}).then(()=> {
    openChat(chatId, targetUser.name);
    searchUser.value = "";
   });
  });
-}
-
-function createGroupChat(){
- const gName = groupName.value.trim();
- if(!gName) { alert("গ্রুপের একটি নাম দিন"); return; }
- 
- const generatedChatId = "group_" + Date.now() + "_" + myUid;
-
- db.collection("chats").doc(generatedChatId).set({
-   chatId: generatedChatId,
-   isGroup: true,
-   users: [myUid], 
-   chatName: gName,
-   updatedAt: firebase.firestore.FieldValue.serverTimestamp()
- }).then(() => {
-   openChat(generatedChatId, gName);
-   groupName.value = "";
-   alert("গ্রুপ তৈরি হয়েছে!");
- }).catch(err => alert(err.message));
 }
 
 function loadChats(){
@@ -245,16 +217,12 @@ function loadChats(){
    const div=document.createElement("div");
    div.className="chat-item";
    
-   if(chat.isGroup) {
-     div.innerHTML = `<span>👥 ${chat.chatName}</span> <span class="chat-type-badge">Group</span>`;
-     div.onclick=()=>openChat(chat.chatId, chat.chatName);
-   } else {
-     const otherUid = chat.users.find(x => x !== myUid);
-     getUserName(otherUid, (fullName) => {
-        div.innerHTML = `<span>💬 ${fullName}</span>`;
-     });
-     div.onclick=()=>getUserName(otherUid, (fullName) => openChat(chat.chatId, fullName));
-   }
+   const otherUid = chat.users.find(x => x !== myUid);
+   getUserName(otherUid, (fullName) => {
+      div.innerHTML = `<span>💬 ${fullName}</span>`;
+   });
+   div.onclick=()=>getUserName(otherUid, (fullName) => openChat(chat.chatId, fullName));
+   
    chatList.appendChild(div);
   });
  });
@@ -284,19 +252,15 @@ function openChat(id, title){
    const div=document.createElement("div");
    div.className="message "+(m.sender===myUid?"me":"other");
 
-   getUserName(m.sender, (senderName) => {
-     let senderSpan = m.sender !== myUid ? `<span class="msg-sender">${senderName}</span>` : "";
-     
-     if(m.type==="image")
-      div.innerHTML=`${senderSpan}<img src="${m.text}" class="msg-media" alt="Shared Image" onclick="window.open('${m.text}')">`;
-     else if(m.type==="video")
-      div.innerHTML=`${senderSpan}<video src="${m.text}" controls class="msg-media"></video>`;
-     else
-      div.innerHTML=`${senderSpan}${escapeHtml(m.text)}`;
-      
-     messages.appendChild(div);
-     messages.scrollTop=messages.scrollHeight;
-   });
+   if(m.type==="image")
+    div.innerHTML=`<img src="${m.text}" class="msg-media" alt="Shared Image" onclick="window.open('${m.text}')">`;
+   else if(m.type==="video")
+    div.innerHTML=`<video src="${m.text}" controls class="msg-media"></video>`;
+   else
+    div.innerHTML=`${escapeHtml(m.text)}`;
+    
+   messages.appendChild(div);
+   messages.scrollTop=messages.scrollHeight;
   });
  });
 }
@@ -318,7 +282,7 @@ function sendMedia(){
  const f=media.files; 
  if(!f||!chatId)return;
 
- if(f.size > 20 * 1024 * 1024) { alert("নিরাপত্তাজনিত কারণে ২০ মেগাবাইটের বড় ফাইল আপলোড করা যাবে না।"); return; }
+ if(f.size > 20 * 1024 * 1024) { alert("নিরাপত্তাজনিত কারণে ২০ মেগাবাইটের বড় ফাইল আপলোড করা যাবে না।"); return; }
  
  const isVideo = f.type.startsWith("video");
  const type = isVideo ? "video" : "image";
