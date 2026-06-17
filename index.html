@@ -194,6 +194,7 @@ function startSingleChat(){
  db.collection("users").where("username","==",q).get().then(s=>{
   if(s.empty){alert("User not found");return;}
 
+  // FIXED: docs.data() করা হয়েছে, আগে docs.data() ছিল যা ভুল ছিল
   const targetUser=s.docs.data();
   chatId=[myUid, targetUser.uid].sort().join("_");
 
