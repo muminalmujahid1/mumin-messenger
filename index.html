@@ -2,53 +2,161 @@
 <html lang="bn">
 <head>
 <meta charset="UTF-8">
-<title>Mumin Messenger – Full Fixed</title>
+<title>Mumin Messenger – Premium Edition</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;600&family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
 
 <style>
-*{box-sizing:border-box}
-body{margin:0;font-family:Segoe UI;background:#dadbd3;height:100vh;display:flex}
-.auth{position:fixed;inset:0;background:linear-gradient(135deg,#0b141a,#075e54);display:flex;justify-content:center;align-items:center}
-.auth-box{background:#fff;width:100%;max-width:420px;padding:30px;border-radius:20px;text-align:center}
-.auth-box input{width:100%;padding:12px;margin:8px 0;border-radius:10px;border:1px solid #ccc}
-.auth-box button{width:100%;padding:12px;background:#25d366;color:#fff;border:none;border-radius:10px;font-weight:bold}
-.auth-toggle{cursor:pointer;color:#075e54;font-size:14px}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { 
+    font-family: 'Poppins', 'Hind Siliguri', sans-serif; 
+    background: #eae6df; 
+    height: 100vh; 
+    display: flex; 
+    color: #3b3b3b;
+}
 
-.app{display:none;width:100%}
-.sidebar{width:360px;background:#fff;border-right:1px solid #ddd;display:flex;flex-direction:column}
-.sidebar-header{padding:15px;background:#f0f2f5;font-weight:bold;display:flex;justify-content:space-between}
-.search{padding:10px;display:flex;gap:5px}
-.search input{flex:1;padding:8px;border-radius:8px;border:1px solid #ccc}
-.search button{padding:8px 12px;border:none;background:#00a884;color:#fff;border-radius:8px}
-.chat-list{flex:1;overflow:auto}
-.chat-item{padding:12px;border-bottom:1px solid #eee;cursor:pointer}
-.chat-item:hover{background:#f5f6f6}
+/* --- AUTH SECTION --- */
+.auth { 
+    position: fixed; 
+    inset: 0; 
+    background: linear-gradient(135deg, #00a884, #075e54); 
+    display: flex; 
+    justify-content: center; 
+    align-items: center; 
+    z-index: 1000;
+}
+.auth-box { 
+    background: #fff; 
+    width: 90%; 
+    max-width: 400px; 
+    padding: 35px 25px; 
+    border-radius: 16px; 
+    text-align: center; 
+    box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+}
+.auth-box h2 { color: #075e54; margin-bottom: 20px; font-weight: 600; }
+.auth-box input { 
+    width: 100%; 
+    padding: 12px 15px; 
+    margin: 8px 0; 
+    border-radius: 8px; 
+    border: 1px solid #ddd; 
+    font-size: 15px;
+    outline: none;
+    transition: 0.3s;
+}
+.auth-box input:focus { border-color: #00a884; box-shadow: 0 0 5px rgba(0,168,132,0.2); }
+.auth-box button { 
+    width: 100%; 
+    padding: 12px; 
+    background: #00a884; 
+    color: #fff; 
+    border: none; 
+    border-radius: 8px; 
+    font-weight: bold; 
+    font-size: 16px; 
+    cursor: pointer; 
+    margin-top: 10px;
+    transition: 0.2s;
+}
+.auth-box button:hover { background: #06896c; }
+.auth-toggle { cursor: pointer; color: #075e54; font-size: 14px; margin-top: 15px; font-weight: 500; }
+.auth-toggle:hover { text-decoration: underline; }
 
-.chat{flex:1;display:flex;flex-direction:column;background:#efeae2}
-.chat-header{padding:12px;background:#f0f2f5;font-weight:bold}
-.messages{flex:1;padding:15px;overflow:auto;display:flex;flex-direction:column;gap:8px}
-.message{max-width:65%;padding:8px 12px;border-radius:8px}
-.me{align-self:flex-end;background:#d9fdd3}
-.other{align-self:flex-start;background:#fff}
-.msg-media{max-width:250px;border-radius:6px}
+/* --- MAIN APP SECTION --- */
+.app { display: none; width: 100%; height: 100vh; }
+.sidebar { width: 350px; background: #fff; border-right: 1px solid #e3e3e3; display: flex; flex-direction: column; }
 
-.input{display:flex;gap:8px;padding:10px;background:#f0f2f5}
-.input input[type=text]{flex:1;padding:10px;border-radius:8px;border:none}
-.input button{width:45px;border:none;border-radius:50%;background:#00a884;color:#fff}
+/* Sidebar Header */
+.sidebar-header { 
+    padding: 15px 20px; 
+    background: #f0f2f5; 
+    font-weight: 600; 
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center;
+    border-bottom: 1px solid #e3e3e3;
+}
+#me { color: #075e54; font-size: 16px; }
+.logout-btn {
+    background: #ff4d4d; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-weight: 500;
+}
+.logout-btn:hover { background: #cc3333; }
+
+/* Search User */
+.search { padding: 12px; display: flex; gap: 8px; background: #fff; border-bottom: 1px solid #f0f2f5; }
+.search input { flex: 1; padding: 10px 14px; border-radius: 20px; border: 1px solid #e3e3e3; outline: none; background: #f0f2f5; }
+.search button { padding: 0 16px; border: none; background: #00a884; color: #fff; border-radius: 20px; cursor: pointer; font-weight: 500; }
+
+/* Chat List */
+.chat-list { flex: 1; overflow-y: auto; background: #fff; }
+.chat-item { 
+    padding: 15px 20px; 
+    border-bottom: 1px solid #f8f9fa; 
+    cursor: pointer; 
+    display: flex; 
+    align-items: center; 
+    font-weight: 500;
+    transition: 0.2s;
+}
+.chat-item:hover { background: #f0f2f5; }
+.chat-item::before {
+    content: "\f111"; font-family: "Font Awesome 5 Free"; font-weight: 900;
+    color: #00a884; margin-right: 12px; font-size: 10px;
+}
+
+/* Chat Window */
+.chat { flex: 1; display: flex; flex-direction: column; background: #efeae2; position: relative; }
+.chat-header { 
+    padding: 15px 20px; 
+    background: #f0f2f5; 
+    font-weight: 600; 
+    font-size: 16px;
+    border-bottom: 1px solid #e3e3e3;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+
+/* Messages Area */
+.messages { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
+.message { 
+    max-width: 65%; 
+    padding: 10px 14px; 
+    border-radius: 10px; 
+    font-size: 15px; 
+    line-height: 1.4;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+    word-wrap: break-word;
+}
+.me { align-self: flex-end; background: #d9fdd3; color: #111b21; border-top-right-radius: 2px; }
+.other { align-self: flex-start; background: #fff; color: #111b21; border-top-left-radius: 2px; }
+.msg-media { max-width: 280px; max-height: 200px; border-radius: 8px; display: block; margin-top: 4px; }
+
+/* Input Bar */
+.input { display: flex; gap: 10px; padding: 12px 20px; background: #f0f2f5; align-items: center; }
+.input input[type=text] { 
+    flex: 1; padding: 12px 16px; border-radius: 24px; border: none; outline: none; font-size: 15px; background: #fff;
+}
+.input button { 
+    width: 42px; height: 42px; border: none; border-radius: 50%; background: #00a884; color: #fff; 
+    cursor: pointer; display: flex; justify-content: center; align-items: center; font-size: 16px; transition: 0.2s;
+}
+.input button:hover { background: #06896c; }
+.clip-btn { background: transparent !important; color: #54656f !important; font-size: 20px !important; }
+.clip-btn:hover { color: #111b21 !important; }
 </style>
 </head>
 
 <body>
 
-<!-- AUTH -->
 <div class="auth" id="authBox">
   <div class="auth-box">
     <h2>Mumin Messenger</h2>
 
     <div id="loginBox">
-      <input id="loginEmail" placeholder="Email">
+      <input id="loginEmail" type="email" placeholder="Email">
       <input id="loginPass" type="password" placeholder="Password">
       <button onclick="login()">Login</button>
       <p class="auth-toggle" onclick="toggleAuth(true)">Create account</p>
@@ -57,7 +165,7 @@ body{margin:0;font-family:Segoe UI;background:#dadbd3;height:100vh;display:flex}
     <div id="registerBox" style="display:none">
       <input id="regName" placeholder="Full Name">
       <input id="regUsername" placeholder="Username">
-      <input id="regEmail" placeholder="Email">
+      <input id="regEmail" type="email" placeholder="Email">
       <input id="regPass" type="password" placeholder="Password">
       <button onclick="register()">Register</button>
       <p class="auth-toggle" onclick="toggleAuth(false)">Already have account</p>
@@ -65,12 +173,11 @@ body{margin:0;font-family:Segoe UI;background:#dadbd3;height:100vh;display:flex}
   </div>
 </div>
 
-<!-- APP -->
 <div class="app" id="appBox">
   <div class="sidebar">
     <div class="sidebar-header">
       <span id="me"></span>
-      <button onclick="logout()">Logout</button>
+      <button class="logout-btn" onclick="logout()">Logout</button>
     </div>
 
     <div class="search">
@@ -85,15 +192,14 @@ body{margin:0;font-family:Segoe UI;background:#dadbd3;height:100vh;display:flex}
     <div class="chat-header" id="chatTitle">No chat selected</div>
     <div class="messages" id="messages"></div>
     <div class="input">
-      <input type="file" id="media" hidden onchange="sendMedia()">
-      <button onclick="media.click()"><i class="fa fa-paperclip"></i></button>
-      <input type="text" id="msg" placeholder="Message">
+      <input type="file" id="media" accept="image/*,video/*" hidden onchange="sendMedia()">
+      <button class="clip-btn" onclick="media.click()"><i class="fa fa-paperclip"></i></button>
+      <input type="text" id="msg" placeholder="Type a message">
       <button onclick="sendMessage()"><i class="fa fa-paper-plane"></i></button>
     </div>
   </div>
 </div>
 
-<!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
@@ -123,7 +229,7 @@ function register(){
  const pass=regPass.value;
 
  if(!name||!username||!email||pass.length<6){
-  alert("সব ঘর ঠিকভাবে পূরণ করুন");
+  alert("সব ঘর ঠিকভাবে পূরণ করুন (Password নূন্যতম ৬ অক্ষরের হতে হবে)");
   return;
  }
 
@@ -139,10 +245,11 @@ function register(){
 }
 
 function login(){
- auth.signInWithEmailAndPassword(loginEmail.value,loginPass.value);
+ if(!loginEmail.value || !loginPass.value) { alert("সব ঘর পূরণ করুন"); return; }
+ auth.signInWithEmailAndPassword(loginEmail.value,loginPass.value).catch(err => alert(err.message));
 }
 
-function logout(){auth.signOut();}
+function logout(){auth.signOut().then(()=>location.reload());}
 
 auth.onAuthStateChanged(u=>{
  if(u){
@@ -150,10 +257,15 @@ auth.onAuthStateChanged(u=>{
   appBox.style.display="flex";
 
   db.collection("users").doc(u.uid).get().then(d=>{
-   myUsername=d.data().username;
-   me.innerText=myUsername;
-   loadChats();
+   if(d.exists){
+    myUsername=d.data().username;
+    me.innerText="⚡ " + myUsername;
+    loadChats();
+   }
   });
+ } else {
+  authBox.style.display="flex";
+  appBox.style.display="none";
  }
 });
 
@@ -164,13 +276,14 @@ function startNewChat(){
  db.collection("users").where("username","==",q).get().then(s=>{
   if(s.empty){alert("User not found");return;}
 
-  const p=s.docs[0].data();
+  const p=s.docs.data();
   chatId=[myUsername,p.username].sort().join("_");
 
   db.collection("chats").doc(chatId).set({
    users:[myUsername,p.username]
-  },{merge:true}).then(()=>{
+  },{merge:true}).then(()=> {
    openChat(chatId,p.username);
+   searchUser.value = "";
   });
  });
 }
@@ -192,7 +305,7 @@ function loadChats(){
 
 function openChat(id,user){
  chatId=id;
- chatTitle.innerText=user;
+ chatTitle.innerText="💬 " + user;
  messages.innerHTML="";
  if(unsub)unsub();
 
@@ -205,7 +318,7 @@ function openChat(id,user){
    div.className="message "+(m.sender===myUsername?"me":"other");
 
    if(m.type==="image")
-    div.innerHTML=`<img src="${m.text}" class="msg-media">`;
+    div.innerHTML=`<img src="${m.text}" class="msg-media" alt="Image">`;
    else if(m.type==="video")
     div.innerHTML=`<video src="${m.text}" controls class="msg-media"></video>`;
    else
@@ -218,31 +331,45 @@ function openChat(id,user){
 }
 
 function sendMessage(){
- if(!msg.value||!chatId)return;
+ if(!msg.value.trim()||!chatId)return;
  db.collection("chats").doc(chatId).collection("messages").add({
   sender:myUsername,
-  text:msg.value,
+  text:msg.value.trim(),
   type:"text",
   time:firebase.firestore.FieldValue.serverTimestamp()
  });
  msg.value="";
 }
 
+// Fixed Media Sharing Function using Base64 Reader
 function sendMedia(){
- const f=media.files[0];
+ const f=media.files;
  if(!f||!chatId)return;
 
  const type=f.type.startsWith("video")?"video":"image";
- const url=URL.createObjectURL(f);
+ const reader = new FileReader();
 
- db.collection("chats").doc(chatId).collection("messages").add({
-  sender:myUsername,
-  text:url,
-  type:type,
-  time:firebase.firestore.FieldValue.serverTimestamp()
- });
+ reader.onload = function(e) {
+  const base64Data = e.target.result; // এটি ডাটাকে একটি পার্মানেন্ট স্ট্রিং এ রূপান্তর করে
+
+  db.collection("chats").doc(chatId).collection("messages").add({
+   sender:myUsername,
+   text:base64Data,
+   type:type,
+   time:firebase.firestore.FieldValue.serverTimestamp()
+  });
+ };
+
+ reader.readAsDataURL(f); // ফাইলটি পড়া শুরু করে
  media.value="";
 }
+
+// Enter চাপলে মেসেজ সেন্ড হওয়ার সুবিধা
+document.getElementById("msg").addEventListener("keyup", function(event) {
+  if (event.key === "Enter") {
+    sendMessage();
+  }
+});
 </script>
 
 </body>
