@@ -2,66 +2,92 @@
 <html lang="bn">
 <head>
 <meta charset="UTF-8">
-<title>Mumin Messenger – Fixed</title>
+<title>Mumin Messenger – Full Fixed</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 
 <style>
+*{box-sizing:border-box}
 body{margin:0;font-family:Segoe UI;background:#dadbd3;height:100vh;display:flex}
-.auth-overlay{position:fixed;inset:0;background:linear-gradient(135deg,#0b141a,#075e54);display:flex;align-items:center;justify-content:center}
-.auth-box{background:#fff;width:100%;max-width:400px;padding:30px;border-radius:20px;text-align:center}
+.auth{position:fixed;inset:0;background:linear-gradient(135deg,#0b141a,#075e54);display:flex;justify-content:center;align-items:center}
+.auth-box{background:#fff;width:100%;max-width:420px;padding:30px;border-radius:20px;text-align:center}
 .auth-box input{width:100%;padding:12px;margin:8px 0;border-radius:10px;border:1px solid #ccc}
 .auth-box button{width:100%;padding:12px;background:#25d366;color:#fff;border:none;border-radius:10px;font-weight:bold}
-.main{display:none;width:100%}
-.sidebar{width:350px;background:#fff;border-right:1px solid #ddd;display:flex;flex-direction:column}
+.auth-toggle{cursor:pointer;color:#075e54;font-size:14px}
+
+.app{display:none;width:100%}
+.sidebar{width:360px;background:#fff;border-right:1px solid #ddd;display:flex;flex-direction:column}
 .sidebar-header{padding:15px;background:#f0f2f5;font-weight:bold;display:flex;justify-content:space-between}
+.search{padding:10px;display:flex;gap:5px}
+.search input{flex:1;padding:8px;border-radius:8px;border:1px solid #ccc}
+.search button{padding:8px 12px;border:none;background:#00a884;color:#fff;border-radius:8px}
 .chat-list{flex:1;overflow:auto}
 .chat-item{padding:12px;border-bottom:1px solid #eee;cursor:pointer}
 .chat-item:hover{background:#f5f6f6}
-.chat-area{flex:1;display:flex;flex-direction:column;background:#efeae2}
-.chat-header{padding:10px;background:#f0f2f5;font-weight:bold}
-.chat-messages{flex:1;overflow:auto;padding:15px;display:flex;flex-direction:column;gap:8px}
+
+.chat{flex:1;display:flex;flex-direction:column;background:#efeae2}
+.chat-header{padding:12px;background:#f0f2f5;font-weight:bold}
+.messages{flex:1;padding:15px;overflow:auto;display:flex;flex-direction:column;gap:8px}
 .message{max-width:65%;padding:8px 12px;border-radius:8px}
 .me{align-self:flex-end;background:#d9fdd3}
 .other{align-self:flex-start;background:#fff}
-.chat-input{display:flex;padding:10px;background:#f0f2f5;gap:8px}
-.chat-input input{flex:1;padding:10px;border-radius:8px;border:none}
-.chat-input button{background:#00a884;border:none;color:#fff;width:45px;border-radius:50%}
 .msg-media{max-width:250px;border-radius:6px}
+
+.input{display:flex;gap:8px;padding:10px;background:#f0f2f5}
+.input input[type=text]{flex:1;padding:10px;border-radius:8px;border:none}
+.input button{width:45px;border:none;border-radius:50%;background:#00a884;color:#fff}
 </style>
 </head>
 
 <body>
 
 <!-- AUTH -->
-<div class="auth-overlay" id="authBox">
+<div class="auth" id="authBox">
   <div class="auth-box">
     <h2>Mumin Messenger</h2>
-    <input id="email" placeholder="Email">
-    <input id="password" type="password" placeholder="Password">
-    <button onclick="login()">Login</button>
-    <p onclick="register()" style="cursor:pointer;color:#075e54">Create account</p>
+
+    <div id="loginBox">
+      <input id="loginEmail" placeholder="Email">
+      <input id="loginPass" type="password" placeholder="Password">
+      <button onclick="login()">Login</button>
+      <p class="auth-toggle" onclick="toggleAuth(true)">Create account</p>
+    </div>
+
+    <div id="registerBox" style="display:none">
+      <input id="regName" placeholder="Full Name">
+      <input id="regUsername" placeholder="Username">
+      <input id="regEmail" placeholder="Email">
+      <input id="regPass" type="password" placeholder="Password">
+      <button onclick="register()">Register</button>
+      <p class="auth-toggle" onclick="toggleAuth(false)">Already have account</p>
+    </div>
   </div>
 </div>
 
-<!-- MAIN -->
-<div class="main" id="mainApp">
+<!-- APP -->
+<div class="app" id="appBox">
   <div class="sidebar">
     <div class="sidebar-header">
-      <span id="meName"></span>
+      <span id="me"></span>
       <button onclick="logout()">Logout</button>
     </div>
+
+    <div class="search">
+      <input id="searchUser" placeholder="username লিখুন">
+      <button onclick="startNewChat()">Chat</button>
+    </div>
+
     <div class="chat-list" id="chatList"></div>
   </div>
 
-  <div class="chat-area">
-    <div class="chat-header" id="chatTitle">Select a chat</div>
-    <div class="chat-messages" id="messages"></div>
-    <div class="chat-input">
-      <input type="file" id="media" onchange="sendMedia()" hidden>
+  <div class="chat">
+    <div class="chat-header" id="chatTitle">No chat selected</div>
+    <div class="messages" id="messages"></div>
+    <div class="input">
+      <input type="file" id="media" hidden onchange="sendMedia()">
       <button onclick="media.click()"><i class="fa fa-paperclip"></i></button>
-      <input id="msg" placeholder="Message">
+      <input type="text" id="msg" placeholder="Message">
       <button onclick="sendMessage()"><i class="fa fa-paper-plane"></i></button>
     </div>
   </div>
@@ -83,60 +109,108 @@ firebase.initializeApp(firebaseConfig);
 const auth=firebase.auth();
 const db=firebase.firestore();
 
-let me="",chatId="",unsub=null;
+let myUsername="",chatId="",unsub=null;
 
-auth.onAuthStateChanged(u=>{
- if(u){
-  document.getElementById("authBox").style.display="none";
-  document.getElementById("mainApp").style.display="flex";
-  me=u.email.split("@")[0];
-  document.getElementById("meName").innerText=me;
-  loadChats();
- }else{
-  document.getElementById("authBox").style.display="flex";
- }
-});
+function toggleAuth(r){
+ loginBox.style.display=r?"none":"block";
+ registerBox.style.display=r?"block":"none";
+}
 
 function register(){
- auth.createUserWithEmailAndPassword(email.value,password.value);
+ const name=regName.value.trim();
+ const username=regUsername.value.trim().toLowerCase();
+ const email=regEmail.value.trim();
+ const pass=regPass.value;
+
+ if(!name||!username||!email||pass.length<6){
+  alert("সব ঘর ঠিকভাবে পূরণ করুন");
+  return;
+ }
+
+ db.collection("users").where("username","==",username).get().then(s=>{
+  if(!s.empty){alert("Username taken");return;}
+
+  auth.createUserWithEmailAndPassword(email,pass).then(u=>{
+   return db.collection("users").doc(u.user.uid).set({
+    name,username,email
+   });
+  }).then(()=>location.reload());
+ });
 }
 
 function login(){
- auth.signInWithEmailAndPassword(email.value,password.value);
+ auth.signInWithEmailAndPassword(loginEmail.value,loginPass.value);
 }
 
 function logout(){auth.signOut();}
 
+auth.onAuthStateChanged(u=>{
+ if(u){
+  authBox.style.display="none";
+  appBox.style.display="flex";
+
+  db.collection("users").doc(u.uid).get().then(d=>{
+   myUsername=d.data().username;
+   me.innerText=myUsername;
+   loadChats();
+  });
+ }
+});
+
+function startNewChat(){
+ const q=searchUser.value.trim().toLowerCase();
+ if(!q||q===myUsername)return;
+
+ db.collection("users").where("username","==",q).get().then(s=>{
+  if(s.empty){alert("User not found");return;}
+
+  const p=s.docs[0].data();
+  chatId=[myUsername,p.username].sort().join("_");
+
+  db.collection("chats").doc(chatId).set({
+   users:[myUsername,p.username]
+  },{merge:true}).then(()=>{
+   openChat(chatId,p.username);
+  });
+ });
+}
+
 function loadChats(){
- db.collection("chats").where("users","array-contains",me)
+ db.collection("chats").where("users","array-contains",myUsername)
  .onSnapshot(s=>{
   chatList.innerHTML="";
   s.forEach(d=>{
-   const p=d.data().users.find(u=>u!==me);
+   const u=d.data().users.find(x=>x!==myUsername);
    const div=document.createElement("div");
    div.className="chat-item";
-   div.innerText=p;
-   div.onclick=()=>openChat(d.id,p);
+   div.innerText=u;
+   div.onclick=()=>openChat(d.id,u);
    chatList.appendChild(div);
   });
  });
 }
 
-function openChat(id,partner){
+function openChat(id,user){
  chatId=id;
- chatTitle.innerText=partner;
+ chatTitle.innerText=user;
  messages.innerHTML="";
  if(unsub)unsub();
+
  unsub=db.collection("chats").doc(id).collection("messages")
  .orderBy("time").onSnapshot(s=>{
   messages.innerHTML="";
   s.forEach(d=>{
    const m=d.data();
    const div=document.createElement("div");
-   div.className="message "+(m.sender===me?"me":"other");
-   if(m.type==="image")div.innerHTML=`<img src="${m.text}" class="msg-media">`;
-   else if(m.type==="video")div.innerHTML=`<video src="${m.text}" controls class="msg-media"></video>`;
-   else div.innerText=m.text;
+   div.className="message "+(m.sender===myUsername?"me":"other");
+
+   if(m.type==="image")
+    div.innerHTML=`<img src="${m.text}" class="msg-media">`;
+   else if(m.type==="video")
+    div.innerHTML=`<video src="${m.text}" controls class="msg-media"></video>`;
+   else
+    div.innerText=m.text;
+
    messages.appendChild(div);
   });
   messages.scrollTop=messages.scrollHeight;
@@ -146,7 +220,10 @@ function openChat(id,partner){
 function sendMessage(){
  if(!msg.value||!chatId)return;
  db.collection("chats").doc(chatId).collection("messages").add({
-  sender:me,text:msg.value,type:"text",time:firebase.firestore.FieldValue.serverTimestamp()
+  sender:myUsername,
+  text:msg.value,
+  type:"text",
+  time:firebase.firestore.FieldValue.serverTimestamp()
  });
  msg.value="";
 }
@@ -154,10 +231,15 @@ function sendMessage(){
 function sendMedia(){
  const f=media.files[0];
  if(!f||!chatId)return;
- const url=URL.createObjectURL(f);
+
  const type=f.type.startsWith("video")?"video":"image";
+ const url=URL.createObjectURL(f);
+
  db.collection("chats").doc(chatId).collection("messages").add({
-  sender:me,text:url,type:type,time:firebase.firestore.FieldValue.serverTimestamp()
+  sender:myUsername,
+  text:url,
+  type:type,
+  time:firebase.firestore.FieldValue.serverTimestamp()
  });
  media.value="";
 }
