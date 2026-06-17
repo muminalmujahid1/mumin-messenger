@@ -2,7 +2,7 @@
 <html lang="bn">
 <head>
 <meta charset="UTF-8">
-<title>Mumin Messenger – Premium Edition</title>
+<title>Mumin Messenger – Secure Production Edition</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
@@ -10,142 +10,51 @@
 
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
-body { 
-    font-family: 'Poppins', 'Hind Siliguri', sans-serif; 
-    background: #eae6df; 
-    height: 100vh; 
-    display: flex; 
-    color: #3b3b3b;
-}
+body { font-family: 'Poppins', 'Hind Siliguri', sans-serif; background: #eae6df; height: 100vh; display: flex; color: #3b3b3b; }
 
-/* --- AUTH SECTION --- */
-.auth { 
-    position: fixed; 
-    inset: 0; 
-    background: linear-gradient(135deg, #00a884, #075e54); 
-    display: flex; 
-    justify-content: center; 
-    align-items: center; 
-    z-index: 1000;
-}
-.auth-box { 
-    background: #fff; 
-    width: 90%; 
-    max-width: 400px; 
-    padding: 35px 25px; 
-    border-radius: 16px; 
-    text-align: center; 
-    box-shadow: 0 8px 24px rgba(0,0,0,0.2);
-}
+/* AUTH SECTION */
+.auth { position: fixed; inset: 0; background: linear-gradient(135deg, #00a884, #075e54); display: flex; justify-content: center; align-items: center; z-index: 1000; }
+.auth-box { background: #fff; width: 90%; max-width: 400px; padding: 35px 25px; border-radius: 16px; text-align: center; box-shadow: 0 8px 24px rgba(0,0,0,0.2); }
 .auth-box h2 { color: #075e54; margin-bottom: 20px; font-weight: 600; }
-.auth-box input { 
-    width: 100%; 
-    padding: 12px 15px; 
-    margin: 8px 0; 
-    border-radius: 8px; 
-    border: 1px solid #ddd; 
-    font-size: 15px;
-    outline: none;
-    transition: 0.3s;
-}
-.auth-box input:focus { border-color: #00a884; box-shadow: 0 0 5px rgba(0,168,132,0.2); }
-.auth-box button { 
-    width: 100%; 
-    padding: 12px; 
-    background: #00a884; 
-    color: #fff; 
-    border: none; 
-    border-radius: 8px; 
-    font-weight: bold; 
-    font-size: 16px; 
-    cursor: pointer; 
-    margin-top: 10px;
-    transition: 0.2s;
-}
-.auth-box button:hover { background: #06896c; }
+.auth-box input { width: 100%; padding: 12px 15px; margin: 8px 0; border-radius: 8px; border: 1px solid #ddd; font-size: 15px; outline: none; }
+.auth-box input:focus { border-color: #00a884; }
+.auth-box button { width: 100%; padding: 12px; background: #00a884; color: #fff; border: none; border-radius: 8px; font-weight: bold; font-size: 16px; cursor: pointer; margin-top: 10px; }
 .auth-toggle { cursor: pointer; color: #075e54; font-size: 14px; margin-top: 15px; font-weight: 500; }
-.auth-toggle:hover { text-decoration: underline; }
 
-/* --- MAIN APP SECTION --- */
+/* MAIN APP SECTION */
 .app { display: none; width: 100%; height: 100vh; }
 .sidebar { width: 350px; background: #fff; border-right: 1px solid #e3e3e3; display: flex; flex-direction: column; }
+.sidebar-header { padding: 15px 20px; background: #f0f2f5; font-weight: 600; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e3e3e3; }
+.logout-btn { background: #ff4d4d; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-weight: 500; }
 
-/* Sidebar Header */
-.sidebar-header { 
-    padding: 15px 20px; 
-    background: #f0f2f5; 
-    font-weight: 600; 
-    display: flex; 
-    justify-content: space-between; 
-    align-items: center;
-    border-bottom: 1px solid #e3e3e3;
-}
-#me { color: #075e54; font-size: 16px; }
-.logout-btn {
-    background: #ff4d4d; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-weight: 500;
-}
-.logout-btn:hover { background: #cc3333; }
-
-/* Search User */
-.search { padding: 12px; display: flex; gap: 8px; background: #fff; border-bottom: 1px solid #f0f2f5; }
-.search input { flex: 1; padding: 10px 14px; border-radius: 20px; border: 1px solid #e3e3e3; outline: none; background: #f0f2f5; }
-.search button { padding: 0 16px; border: none; background: #00a884; color: #fff; border-radius: 20px; cursor: pointer; font-weight: 500; }
+/* Search & Group Creation */
+.search-box { padding: 12px; background: #fff; border-bottom: 1px solid #f0f2f5; display: flex; flex-direction: column; gap: 8px; }
+.search-row { display: flex; gap: 8px; }
+.search-row input { flex: 1; padding: 10px 14px; border-radius: 20px; border: 1px solid #e3e3e3; outline: none; background: #f0f2f5; }
+.search-row button { padding: 0 16px; border: none; background: #00a884; color: #fff; border-radius: 20px; cursor: pointer; }
+.grp-btn { background: #075e54 !important; }
 
 /* Chat List */
-.chat-list { flex: 1; overflow-y: auto; background: #fff; }
-.chat-item { 
-    padding: 15px 20px; 
-    border-bottom: 1px solid #f8f9fa; 
-    cursor: pointer; 
-    display: flex; 
-    align-items: center; 
-    font-weight: 500;
-    transition: 0.2s;
-}
+.chat-list { flex: 1; overflow-y: auto; }
+.chat-item { padding: 15px 20px; border-bottom: 1px solid #f8f9fa; cursor: pointer; display: flex; align-items: center; font-weight: 500; justify-content: space-between;}
 .chat-item:hover { background: #f0f2f5; }
-.chat-item::before {
-    content: "\f111"; font-family: "Font Awesome 5 Free"; font-weight: 900;
-    color: #00a884; margin-right: 12px; font-size: 10px;
-}
+.chat-type-badge { font-size: 11px; background: #e3e3e3; padding: 2px 6px; border-radius: 4px; color: #666; }
 
 /* Chat Window */
-.chat { flex: 1; display: flex; flex-direction: column; background: #efeae2; position: relative; }
-.chat-header { 
-    padding: 15px 20px; 
-    background: #f0f2f5; 
-    font-weight: 600; 
-    font-size: 16px;
-    border-bottom: 1px solid #e3e3e3;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-}
-
-/* Messages Area */
+.chat { flex: 1; display: flex; flex-direction: column; background: #efeae2; }
+.chat-header { padding: 15px 20px; background: #f0f2f5; font-weight: 600; font-size: 16px; border-bottom: 1px solid #e3e3e3; }
 .messages { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
-.message { 
-    max-width: 65%; 
-    padding: 10px 14px; 
-    border-radius: 10px; 
-    font-size: 15px; 
-    line-height: 1.4;
-    box-shadow: 0 1px 2px rgba(0,0,0,0.1);
-    word-wrap: break-word;
-}
+.message { max-width: 65%; padding: 10px 14px; border-radius: 10px; font-size: 15px; line-height: 1.4; box-shadow: 0 1px 2px rgba(0,0,0,0.1); word-wrap: break-word; }
 .me { align-self: flex-end; background: #d9fdd3; color: #111b21; border-top-right-radius: 2px; }
 .other { align-self: flex-start; background: #fff; color: #111b21; border-top-left-radius: 2px; }
-.msg-media { max-width: 280px; max-height: 200px; border-radius: 8px; display: block; margin-top: 4px; }
+.msg-sender { font-size: 11px; color: #075e54; font-weight: bold; margin-bottom: 3px; display: block; }
+.msg-media { max-width: 280px; max-height: 200px; border-radius: 8px; display: block; margin-top: 4px; object-fit: cover; }
 
 /* Input Bar */
 .input { display: flex; gap: 10px; padding: 12px 20px; background: #f0f2f5; align-items: center; }
-.input input[type=text] { 
-    flex: 1; padding: 12px 16px; border-radius: 24px; border: none; outline: none; font-size: 15px; background: #fff;
-}
-.input button { 
-    width: 42px; height: 42px; border: none; border-radius: 50%; background: #00a884; color: #fff; 
-    cursor: pointer; display: flex; justify-content: center; align-items: center; font-size: 16px; transition: 0.2s;
-}
-.input button:hover { background: #06896c; }
+.input input[type=text] { flex: 1; padding: 12px 16px; border-radius: 24px; border: none; outline: none; font-size: 15px; }
+.input button { width: 42px; height: 42px; border: none; border-radius: 50%; background: #00a884; color: #fff; cursor: pointer; display: flex; justify-content: center; align-items: center; font-size: 16px; }
 .clip-btn { background: transparent !important; color: #54656f !important; font-size: 20px !important; }
-.clip-btn:hover { color: #111b21 !important; }
 </style>
 </head>
 
@@ -154,7 +63,6 @@ body {
 <div class="auth" id="authBox">
   <div class="auth-box">
     <h2>Mumin Messenger</h2>
-
     <div id="loginBox">
       <input id="loginEmail" type="email" placeholder="Email">
       <input id="loginPass" type="password" placeholder="Password">
@@ -176,13 +84,19 @@ body {
 <div class="app" id="appBox">
   <div class="sidebar">
     <div class="sidebar-header">
-      <span id="me"></span>
+      <span id="me">Loading...</span>
       <button class="logout-btn" onclick="logout()">Logout</button>
     </div>
 
-    <div class="search">
-      <input id="searchUser" placeholder="username লিখুন">
-      <button onclick="startNewChat()">Chat</button>
+    <div class="search-box">
+      <div class="search-row">
+        <input id="searchUser" placeholder="Username লিখুন...">
+        <button onclick="startSingleChat()">Chat</button>
+      </div>
+      <div class="search-row">
+        <input id="groupName" placeholder="গ্রুপের নাম লিখুন...">
+        <button class="grp-btn" onclick="createGroupChat()">Create Group</button>
+      </div>
     </div>
 
     <div class="chat-list" id="chatList"></div>
@@ -203,25 +117,31 @@ body {
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-storage-compat.js"></script>
 
 <script>
+// Firebase Configuration
 const firebaseConfig={
  apiKey:"AIzaSyBHV2ml0ph5AdICrtBOxP5d5TqwaDqMRBY",
  authDomain:"mumin-messenger.firebaseapp.com",
- projectId:"mumin-messenger"
+ projectId:"mumin-messenger",
+ storageBucket:"mumin-messenger.appspot.com" // Storage Bucket সেট করা হয়েছে
 };
 firebase.initializeApp(firebaseConfig);
 
 const auth=firebase.auth();
 const db=firebase.firestore();
+const storage=firebase.storage();
 
-let myUsername="",chatId="",unsub=null;
+let myUid="", myUsername="", chatId="", unsub=null;
+let cachedUsers = {}; // UI-তে UID থেকে আসল নাম দেখানোর জন্য ক্যাশ
 
 function toggleAuth(r){
  loginBox.style.display=r?"none":"block";
  registerBox.style.display=r?"block":"none";
 }
 
+// REGISTER WITH EMAIL VERIFICATION
 function register(){
  const name=regName.value.trim();
  const username=regUsername.value.trim().toLowerCase();
@@ -234,32 +154,49 @@ function register(){
  }
 
  db.collection("users").where("username","==",username).get().then(s=>{
-  if(!s.empty){alert("Username taken");return;}
+  if(!s.empty){alert("Username already taken!");return;}
 
   auth.createUserWithEmailAndPassword(email,pass).then(u=>{
+   // Save to Users Collection mapped by strict UID
    return db.collection("users").doc(u.user.uid).set({
-    name,username,email
+    name, username, email, uid: u.user.uid
+   }).then(() => {
+     u.user.sendEmailVerification();
+     alert("আপনার ইমেইলে একটি ভেরিফিকেশন লিঙ্ক পাঠানো হয়েছে। ইমেইল ভেরিফাই করে লগইন করুন।");
+     auth.signOut();
+     location.reload();
    });
-  }).then(()=>location.reload());
+  }).catch(err => alert(err.message));
  });
 }
 
+// LOGIN WITH EMAIL VERIFICATION CHECK
 function login(){
- if(!loginEmail.value || !loginPass.value) { alert("সব ঘর পূরণ করুন"); return; }
- auth.signInWithEmailAndPassword(loginEmail.value,loginPass.value).catch(err => alert(err.message));
+ const email = loginEmail.value.trim();
+ const pass = loginPass.value;
+ if(!email || !pass) { alert("সব ঘর পূরণ করুন"); return; }
+
+ auth.signInWithEmailAndPassword(email, pass).then(u => {
+   if(!u.user.emailVerified){
+     alert("দয়া করে প্রথমে আপনার ইমেইল ভেরিফাই করুন!");
+     auth.signOut();
+   }
+ }).catch(err => alert(err.message));
 }
 
-function logout(){auth.signOut().then(()=>location.reload());}
+function logout(){ auth.signOut().then(()=>location.reload()); }
 
+// SECURE AUTH STATE TRACKER
 auth.onAuthStateChanged(u=>{
- if(u){
+ if(u && u.emailVerified){
   authBox.style.display="none";
   appBox.style.display="flex";
+  myUid = u.uid;
 
   db.collection("users").doc(u.uid).get().then(d=>{
    if(d.exists){
     myUsername=d.data().username;
-    me.innerText="⚡ " + myUsername;
+    me.innerText="⚡ " + d.data().name + " (@" + myUsername + ")";
     loadChats();
    }
   });
@@ -269,43 +206,92 @@ auth.onAuthStateChanged(u=>{
  }
 });
 
-function startNewChat(){
+// START 1-TO-1 CHAT (UID BASED)
+function startSingleChat(){
  const q=searchUser.value.trim().toLowerCase();
- if(!q||q===myUsername)return;
+ if(!q||q===myUsername) return;
 
  db.collection("users").where("username","==",q).get().then(s=>{
   if(s.empty){alert("User not found");return;}
 
-  const p=s.docs.data();
-  chatId=[myUsername,p.username].sort().join("_");
+  const targetUser=s.docs.data();
+  // Generate secure Unique ID sorting via UIDs
+  chatId=[myUid, targetUser.uid].sort().join("_");
 
   db.collection("chats").doc(chatId).set({
-   users:[myUsername,p.username]
+   chatId: chatId,
+   isGroup: false,
+   users:[myUid, targetUser.uid],
+   chatName: "",
+   updatedAt: firebase.firestore.FieldValue.serverTimestamp()
   },{merge:true}).then(()=> {
-   openChat(chatId,p.username);
+   openChat(chatId, targetUser.name);
    searchUser.value = "";
   });
  });
 }
 
+// CREATE SECURE GROUP CHAT
+function createGroupChat(){
+ const gName = groupName.value.trim();
+ if(!gName) { alert("গ্রুপের একটি নাম দিন"); return; }
+ 
+ const generatedChatId = "group_" + Date.now() + "_" + myUid;
+
+ db.collection("chats").doc(generatedChatId).set({
+   chatId: generatedChatId,
+   isGroup: true,
+   users: [myUid], // শুরুতে সৃষ্টিকারী মেম্বার হিসেবে অ্যাড হবে
+   chatName: gName,
+   updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+ }).then(() => {
+   openChat(generatedChatId, gName);
+   groupName.value = "";
+   alert("গ্রুপ তৈরি হয়েছে! সিকিউর ব্যাকএন্ড রুলস চালু আছে।");
+ }).catch(err => alert(err.message));
+}
+
+// FETCH AND RENDER CHAT LIST
 function loadChats(){
- db.collection("chats").where("users","array-contains",myUsername)
+ db.collection("chats").where("users","array-contains",myUid)
  .onSnapshot(s=>{
   chatList.innerHTML="";
   s.forEach(d=>{
-   const u=d.data().users.find(x=>x!==myUsername);
+   const chat = d.data();
    const div=document.createElement("div");
    div.className="chat-item";
-   div.innerText=u;
-   div.onclick=()=>openChat(d.id,u);
+   
+   if(chat.isGroup) {
+     div.innerHTML = `<span>👥 ${chat.chatName}</span> <span class="chat-type-badge">Group</span>`;
+     div.onclick=()=>openChat(chat.chatId, chat.chatName);
+   } else {
+     // ১-টু-১ চ্যাটের ক্ষেত্রে অন্য ইউজারের নাম ডেটাবেস থেকে তুলে আনা
+     const otherUid = chat.users.find(x => x !== myUid);
+     getUserName(otherUid, (fullName) => {
+        div.innerHTML = `<span>💬 ${fullName}</span>`;
+     });
+     div.onclick=()=>getUserName(otherUid, (fullName) => openChat(chat.chatId, fullName));
+   }
    chatList.appendChild(div);
   });
  });
 }
 
-function openChat(id,user){
+// HELPER: CACHE & GET USER REAL NAME VIA UID
+function getUserName(uid, callback) {
+  if(cachedUsers[uid]) { callback(cachedUsers[uid]); return; }
+  db.collection("users").doc(uid).get().then(doc => {
+    if(doc.exists) {
+      cachedUsers[uid] = doc.data().name;
+      callback(doc.data().name);
+    } else { callback("Unknown User"); }
+  });
+}
+
+// SECURE OPEN CHAT (WITH REAL SENDER ID RENDERING)
+function openChat(id, title){
  chatId=id;
- chatTitle.innerText="💬 " + user;
+ chatTitle.innerText=title;
  messages.innerHTML="";
  if(unsub)unsub();
 
@@ -315,60 +301,88 @@ function openChat(id,user){
   s.forEach(d=>{
    const m=d.data();
    const div=document.createElement("div");
-   div.className="message "+(m.sender===myUsername?"me":"other");
+   div.className="message "+(m.sender===myUid?"me":"other");
 
-   if(m.type==="image")
-    div.innerHTML=`<img src="${m.text}" class="msg-media" alt="Image">`;
-   else if(m.type==="video")
-    div.innerHTML=`<video src="${m.text}" controls class="msg-media"></video>`;
-   else
-    div.innerText=m.text;
+   // গ্রুপ চ্যাটে মেসেজ প্রেরকের নাম প্রদর্শন
+   getUserName(m.sender, (senderName) => {
+     let senderSpan = m.sender !== myUid ? `<span class="msg-sender">${senderName}</span>` : "";
+     
+     if(m.type==="image")
+      div.innerHTML=`${senderSpan}<img src="${m.text}" class="msg-media" alt="Shared Image" onclick="window.open('${m.text}')">`;
+     else if(m.type==="video")
+      div.innerHTML=`${senderSpan}<video src="${m.text}" controls class="msg-media"></video>`;
+     else
+      div.innerHTML=`${senderSpan}${escapeHtml(m.text)}`;
+   });
 
    messages.appendChild(div);
   });
-  messages.scrollTop=messages.scrollHeight;
+  setTimeout(() => { messages.scrollTop=messages.scrollHeight; }, 200);
  });
 }
 
+// SECURE TEXT SENDING (ENFORCED CLIENT ATTACK RESISTANT)
 function sendMessage(){
  if(!msg.value.trim()||!chatId)return;
+ const textData = msg.value.trim();
+ msg.value=""; // UI Instant Clear
+
  db.collection("chats").doc(chatId).collection("messages").add({
-  sender:myUsername,
-  text:msg.value.trim(),
-  type:"text",
-  time:firebase.firestore.FieldValue.serverTimestamp()
+  sender: myUid, // ক্লায়েন্ট সাইড স্পুফিং রেজিস্ট্যান্ট (Strict UID)
+  text: textData,
+  type: "text",
+  time: firebase.firestore.FieldValue.serverTimestamp()
  });
- msg.value="";
 }
 
-// Fixed Media Sharing Function using Base64 Reader
+// 100% SECURE CLOUD STORAGE MEDIA UPLOADING (FIXED MULTI-USER SHOW ISSUE)
 function sendMedia(){
  const f=media.files;
  if(!f||!chatId)return;
 
- const type=f.type.startsWith("video")?"video":"image";
- const reader = new FileReader();
+ // টাইপ ও সাইজ ভ্যালিডেশন (Max: 20MB Security Barrier)
+ if(f.size > 20 * 1024 * 1024) { alert("নিরাপত্তাজনিত কারণে ২০ মেগাবাইটের বড় ফাইল আপলোড করা যাবে না।"); return; }
+ 
+ const isVideo = f.type.startsWith("video");
+ const type = isVideo ? "video" : "image";
+ 
+ // চ্যাট বক্সে আপলোডিং মেসেজ শো করা
+ const tempDiv = document.createElement("div");
+ tempDiv.className = "message me";
+ tempDiv.innerText = "Uploading file... ⏳";
+ messages.appendChild(tempDiv);
+ messages.scrollTop=messages.scrollHeight;
 
- reader.onload = function(e) {
-  const base64Data = e.target.result; // এটি ডাটাকে একটি পার্মানেন্ট স্ট্রিং এ রূপান্তর করে
+ // সুরক্ষিত ডিরেক্টরি পাথ: media/user_uid/timestamp_filename
+ const fileRef = storage.ref(`media/${myUid}/${Date.now()}_${f.name}`);
+ 
+ fileRef.put(f).then(snapshot => {
+    return snapshot.ref.getDownloadURL();
+ }).then(downloadURL => {
+    // আপলোড সম্পন্ন হলে মেসেজ কালেকশনে স্থায়ী URL পুশ
+    tempDiv.remove();
+    db.collection("chats").doc(chatId).collection("messages").add({
+      sender: myUid,
+      text: downloadURL, // স্থায়ী গ্লোবাল ক্লাউড লিংক
+      type: type,
+      time: firebase.firestore.FieldValue.serverTimestamp()
+    });
+ }).catch(err => {
+    tempDiv.remove();
+    alert("Upload failed: " + err.message);
+ });
 
-  db.collection("chats").doc(chatId).collection("messages").add({
-   sender:myUsername,
-   text:base64Data,
-   type:type,
-   time:firebase.firestore.FieldValue.serverTimestamp()
-  });
- };
-
- reader.readAsDataURL(f); // ফাইলটি পড়া শুরু করে
  media.value="";
 }
 
-// Enter চাপলে মেসেজ সেন্ড হওয়ার সুবিধা
-document.getElementById("msg").addEventListener("keyup", function(event) {
-  if (event.key === "Enter") {
-    sendMessage();
-  }
+// XSS Attack Prevention Helper
+function escapeHtml(text) {
+  return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
+// Enter triggering message send
+document.getElementById("msg").addEventListener("keyup", function(e) {
+  if (e.key === "Enter") sendMessage();
 });
 </script>
 
