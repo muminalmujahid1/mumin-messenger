@@ -2,7 +2,7 @@
 <html lang="bn">
 <head>
 <meta charset="UTF-8">
-<title>Mumin Messenger – Secure Production Edition</title>
+<title>Mumin Messenger – Stable Edition</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
@@ -120,7 +120,6 @@ body { font-family: 'Poppins', 'Hind Siliguri', sans-serif; background: #eae6df;
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-storage-compat.js"></script>
 
 <script>
-// Firebase Configuration
 const firebaseConfig={
  apiKey:"AIzaSyBHV2ml0ph5AdICrtBOxP5d5TqwaDqMRBY",
  authDomain:"mumin-messenger.firebaseapp.com",
@@ -141,7 +140,6 @@ function toggleAuth(r){
  registerBox.style.display=r?"block":"none";
 }
 
-// 100% SECURE REGISTER (NO EMAIL VERIFICATION CHECK FOR EASY TESTING)
 function register(){
  const name=regName.value.trim();
  const username=regUsername.value.trim().toLowerCase();
@@ -168,18 +166,15 @@ function register(){
  });
 }
 
-// LOGIN WITHOUT EMAIL VERIFICATION
 function login(){
  const email = loginEmail.value.trim();
  const pass = loginPass.value;
  if(!email || !pass) { alert("সব ঘর পূরণ করুন"); return; }
-
  auth.signInWithEmailAndPassword(email, pass).catch(err => alert(err.message));
 }
 
 function logout(){ auth.signOut().then(()=>location.reload()); }
 
-// SECURE AUTH STATE TRACKER (VERIFICATION REMOVED)
 auth.onAuthStateChanged(u=>{
  if(u){
   authBox.style.display="none";
@@ -199,7 +194,6 @@ auth.onAuthStateChanged(u=>{
  }
 });
 
-// START 1-TO-1 CHAT (FIXED SYNTAX)
 function startSingleChat(){
  const q=searchUser.value.trim().toLowerCase();
  if(!q||q===myUsername) return;
@@ -207,7 +201,7 @@ function startSingleChat(){
  db.collection("users").where("username","==",q).get().then(s=>{
   if(s.empty){alert("User not found");return;}
 
-  const targetUser=s.docs.data(); // Fixed syntax error here
+  const targetUser=s.docs.data();
   chatId=[myUid, targetUser.uid].sort().join("_");
 
   db.collection("chats").doc(chatId).set({
@@ -223,7 +217,6 @@ function startSingleChat(){
  });
 }
 
-// CREATE SECURE GROUP CHAT
 function createGroupChat(){
  const gName = groupName.value.trim();
  if(!gName) { alert("গ্রুপের একটি নাম দিন"); return; }
@@ -243,7 +236,6 @@ function createGroupChat(){
  }).catch(err => alert(err.message));
 }
 
-// FETCH AND RENDER CHAT LIST
 function loadChats(){
  db.collection("chats").where("users","array-contains",myUid)
  .onSnapshot(s=>{
@@ -268,7 +260,6 @@ function loadChats(){
  });
 }
 
-// HELPER: CACHE & GET USER REAL NAME VIA UID
 function getUserName(uid, callback) {
   if(cachedUsers[uid]) { callback(cachedUsers[uid]); return; }
   db.collection("users").doc(uid).get().then(doc => {
@@ -279,7 +270,6 @@ function getUserName(uid, callback) {
   });
 }
 
-// SECURE OPEN CHAT 
 function openChat(id, title){
  chatId=id;
  chatTitle.innerText=title;
@@ -303,15 +293,14 @@ function openChat(id, title){
       div.innerHTML=`${senderSpan}<video src="${m.text}" controls class="msg-media"></video>`;
      else
       div.innerHTML=`${senderSpan}${escapeHtml(m.text)}`;
+      
+     messages.appendChild(div);
+     messages.scrollTop=messages.scrollHeight;
    });
-
-   messages.appendChild(div);
   });
-  setTimeout(() => { messages.scrollTop=messages.scrollHeight; }, 200);
  });
 }
 
-// SECURE TEXT SENDING
 function sendMessage(){
  if(!msg.value.trim()||!chatId)return;
  const textData = msg.value.trim();
@@ -325,12 +314,10 @@ function sendMessage(){
  });
 }
 
-// 100% SECURE CLOUD STORAGE MEDIA UPLOADING (FIXED FILE BALANCING ARRAYS)
 function sendMedia(){
- const f=media.files; // Fixed syntax from media.files to media.files
+ const f=media.files; 
  if(!f||!chatId)return;
 
- // 20MB Security Barrier
  if(f.size > 20 * 1024 * 1024) { alert("নিরাপত্তাজনিত কারণে ২০ মেগাবাইটের বড় ফাইল আপলোড করা যাবে না।"); return; }
  
  const isVideo = f.type.startsWith("video");
@@ -362,7 +349,6 @@ function sendMedia(){
  media.value="";
 }
 
-// XSS Attack Prevention Helper
 function escapeHtml(text) {
   return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
