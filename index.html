@@ -564,7 +564,7 @@ const CLOUDINARY = { cloud: "", preset: "" };
 const TURN_CFG = { app: "muminchat", key: "783a2446e2607faca42bd686eea60d95fc24" };
 const HAS_CDN = !!(CLOUDINARY.cloud && CLOUDINARY.preset);
 /* ইনকামিং কল পুশ (FCM): Firebase Console → Project settings → Cloud Messaging → Web Push certificates → Key pair এর মান এখানে বসান */
-const FCM_VAPID_KEY = "";
+const FCM_VAPID_KEY = "BFNzUwLIveoGQAb58ztA6b_mfCyJumGr7AKlSwl4c-AF39kclFWkOTtHhiiyfskNqnlUnR7-acDEIBEmohTIzKc";
 
 const app = initializeApp(FIREBASE_CONFIG);
 const auth = getAuth(app);
@@ -799,7 +799,7 @@ async function notifyCall(title, body){
   try{ new Notification(title,{body,icon:'icon-192.png',tag:'call'}); }catch(e){}
 }
 let pendingCallAct=null, pendingCallId=null, pendingCallAt=Date.now();
-try{ const ca=new URLSearchParams(location.search).get('callaction'); if(ca){ pendingCallAct=ca; history.replaceState(null,'',location.pathname); } }catch(e){}
+try{ const qp=new URLSearchParams(location.search); const ca=qp.get('callaction'); if(ca){ pendingCallAct=ca; pendingCallId=qp.get('callid')||null; history.replaceState(null,'',location.pathname); } }catch(e){}
 if(/[?&]debug\b/.test(location.search)) document.body.classList.add('dbg');
 const closeCallNotif = id => { try{ navigator.serviceWorker?.ready.then(r=>r.getNotifications({tag:'call'}).then(a=>a.forEach(n=>n.close()))); }catch(e){}
   try{ NA&&NA.dismissCall&&NA.dismissCall(id||''); }catch(e){} };
@@ -837,8 +837,19 @@ async function unregisterPush(){
 }
 addEventListener('davet-fcm-token',e=>{ if(me&&e.detail) saveToken('android',e.detail); });
 if('serviceWorker' in navigator) navigator.serviceWorker.addEventListener('message',e=>{
-  const t=e.data&&e.data.type; if(!call||call.role!=='callee'||call.accepted||call.ended) return;
-  if(t==='call-decline') hangup('declined'); else if(t==='call-answer'){ try{ acceptCall(); }catch(err){} } });
+  const d=e.data||{}, t=d.type;
+  if(t!=='call-decline' && t!=='call-answer') return;
+  // কল UI/Firestore listener প্রস্তুত হওয়ার আগে action এলে queue করে রাখি।
+  if(!call || call.role!=='callee' || call.accepted || call.ended){
+    pendingCallAct=t==='call-answer'?'answer':'decline';
+    pendingCallId=d.callId||null;
+    pendingCallAt=Date.now();
+    return;
+  }
+  if(d.callId && call.id!==d.callId) return;
+  if(t==='call-decline') hangup('declined');
+  else { try{ acceptCall(); }catch(err){} }
+});
 
 /* ---------------- চ্যাট লিস্ট ---------------- */
 const lastTsMap = {};
