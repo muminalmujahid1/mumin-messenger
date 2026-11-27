@@ -1,0 +1,918 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>মুমিন মেসেঞ্জার</title>
+<meta name="description" content="প্রিয়জনের সাথে নিরাপদে চ্যাট করুন">
+<meta name="theme-color" content="#6b4cf6">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="মুমিন চ্যাট">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--p:#6b4cf6;--p2:#14b8a6;--grad:linear-gradient(135deg,#6b4cf6,#14b8a6);--out:linear-gradient(135deg,#6b4cf6,#8b5cf6);--bg:#f4f2fb;--panel:#fff;--txt:#1c1b29;--sub:#7a7891;--line:#ece9f6;--in:#fff;--chatbg:#efecfa;--hover:#f6f4fd;--shadow:0 1px 2px rgba(60,40,120,.12);--tick:#38d6c4;--danger:#e5484d}
+:root[data-theme=dark]{--bg:#0f0e17;--panel:#171626;--txt:#ecebf5;--sub:#9a98b3;--line:#25233a;--in:#25233d;--chatbg:#0c0b14;--hover:#1d1b30;--shadow:0 1px 2px rgba(0,0,0,.4)}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overflow:hidden;font-family:"Hind Siliguri","Noto Sans Bengali",system-ui,-apple-system,"Segoe UI",sans-serif;color:var(--txt);background:var(--bg);overscroll-behavior:none}
+button{font:inherit;cursor:pointer;border:none;background:none;color:inherit}
+input,textarea{font:inherit;color:inherit}
+svg.i{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none}
+svg.i.fill{fill:currentColor}
+.hidden{display:none!important}
+a{color:inherit}
+
+/* splash + toast */
+#splash{position:fixed;inset:0;z-index:100;background:var(--grad);display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;gap:14px}
+#splash .lg{width:92px;height:92px;border-radius:26px;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;animation:pulse 1.4s infinite}
+#splash .lg svg{width:48px;height:48px}
+@keyframes pulse{50%{transform:scale(1.08)}}
+#toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%) translateY(20px);background:#222;color:#fff;padding:10px 18px;border-radius:22px;font-size:14px;opacity:0;pointer-events:none;transition:.25s;z-index:200;max-width:88vw;text-align:center}
+#toast.on{opacity:1;transform:translateX(-50%)}
+
+/* auth */
+#auth{position:fixed;inset:0;overflow-y:auto;background:var(--bg);z-index:50}
+.hero{background:var(--grad);color:#fff;padding:44px 24px 80px;text-align:center;border-radius:0 0 40px 40px}
+.hero .lg{width:72px;height:72px;border-radius:22px;background:rgba(255,255,255,.22);margin:0 auto 12px;display:flex;align-items:center;justify-content:center}
+.hero .lg svg{width:38px;height:38px}
+.hero h1{font-size:28px;font-weight:700}
+.hero p{opacity:.9;font-size:14px;margin-top:4px}
+.acard{background:var(--panel);max-width:400px;margin:-52px auto 30px;border-radius:22px;padding:22px 20px;box-shadow:0 12px 40px rgba(80,50,180,.18);width:calc(100% - 32px)}
+.tabs{display:flex;background:var(--bg);border-radius:14px;padding:4px;margin-bottom:8px}
+.tabs button{flex:1;padding:10px;border-radius:11px;font-weight:600;color:var(--sub)}
+.tabs button.on{background:var(--panel);color:var(--p);box-shadow:var(--shadow)}
+.fld{margin-top:14px}
+.fld label{display:block;font-size:13px;color:var(--sub);margin-bottom:5px}
+.fld .in{display:flex;align-items:center;gap:8px;border:1.5px solid var(--line);border-radius:14px;padding:0 12px;background:var(--panel)}
+.fld .in:focus-within{border-color:var(--p)}
+.fld .in svg{color:var(--sub)}
+.fld input{flex:1;border:none;outline:none;background:none;padding:13px 0;font-size:16px;min-width:0}
+.btn{width:100%;margin-top:20px;padding:14px;background:var(--grad);color:#fff;border-radius:16px;font-weight:700;font-size:16px;box-shadow:0 6px 18px rgba(107,76,246,.35)}
+.btn:disabled{opacity:.6}
+.btn:active{transform:scale(.98)}
+.aerr{color:var(--danger);font-size:13px;margin-top:12px;text-align:center;min-height:18px;line-height:1.5}
+.anote{font-size:12px;color:var(--sub);text-align:center;margin-top:12px;line-height:1.6}
+
+/* layout */
+#app{position:fixed;inset:0;display:flex;max-width:1500px;margin:0 auto;background:var(--panel)}
+#side{width:100%;max-width:410px;border-right:1px solid var(--line);display:flex;flex-direction:column;min-width:0;background:var(--panel)}
+#main{flex:1;display:flex;flex-direction:column;min-width:0;background:var(--chatbg)}
+.top{display:flex;align-items:center;gap:6px;padding:10px 12px;min-height:60px}
+.top h2{flex:1;font-size:21px;font-weight:700;background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+.ib{width:42px;height:42px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:var(--txt);flex:none}
+.ib:hover{background:var(--hover)}
+.ib:active{background:var(--line)}
+.srch{margin:0 12px 8px;display:flex;align-items:center;gap:8px;background:var(--bg);border-radius:14px;padding:0 12px}
+.srch input{flex:1;border:none;outline:none;background:none;padding:11px 0;font-size:15px;min-width:0}
+.srch svg{color:var(--sub);width:19px;height:19px}
+#banner{margin:0 12px 8px;background:var(--grad);color:#fff;border-radius:14px;padding:11px 12px;display:flex;align-items:center;gap:10px;font-size:14px}
+#banner span{flex:1;line-height:1.4}
+#banner button{background:rgba(255,255,255,.25);padding:7px 12px;border-radius:10px;font-weight:600;font-size:13px}
+#list{flex:1;overflow-y:auto}
+.item{display:flex;gap:12px;padding:11px 14px;align-items:center;cursor:pointer;position:relative}
+.item:hover{background:var(--hover)}
+.item.on{background:var(--hover)}
+.av{width:50px;height:50px;border-radius:50%;flex:none;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:19px;position:relative}
+.av.sm{width:40px;height:40px;font-size:16px}
+.av .dot{position:absolute;right:0;bottom:1px;width:13px;height:13px;border-radius:50%;background:#2ecc71;border:2.5px solid var(--panel)}
+.item .m{flex:1;min-width:0;border-bottom:1px solid var(--line);padding-bottom:11px;margin-bottom:-11px}
+.item .r1,.item .r2{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.item .r1 b{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:16px}
+.item .r1 span{font-size:12px;color:var(--sub);flex:none}
+.item.un .r1 span{color:var(--p);font-weight:600}
+.item .r2{margin-top:3px}
+.item .p{font-size:14px;color:var(--sub);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:flex;align-items:center;gap:4px}
+.item .p.ty{color:var(--p2);font-weight:600}
+.item.un .p{color:var(--txt);font-weight:600}
+.badge{background:var(--grad);color:#fff;border-radius:11px;min-width:22px;height:22px;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;padding:0 6px;flex:none}
+.empty{padding:50px 28px;text-align:center;color:var(--sub);line-height:1.8;font-size:15px}
+.empty .big{font-size:46px;margin-bottom:8px}
+#fab{position:absolute;right:18px;bottom:20px;width:58px;height:58px;border-radius:19px;background:var(--grad);color:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 8px 22px rgba(107,76,246,.45);z-index:3}
+#fab:active{transform:scale(.94)}
+#side{position:relative}
+
+#welcome{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:28px;color:var(--sub);gap:10px}
+#welcome .lg{width:100px;height:100px;border-radius:30px;background:var(--grad);display:flex;align-items:center;justify-content:center;color:#fff}
+#welcome .lg svg{width:52px;height:52px}
+#welcome h2{color:var(--txt)}
+#chat{flex:1;display:flex;flex-direction:column;min-height:0;position:relative}
+.chead{display:flex;align-items:center;gap:8px;padding:8px 8px;background:var(--panel);border-bottom:1px solid var(--line);min-height:60px}
+.chead .who{flex:1;min-width:0;cursor:default}
+.chead .who b{display:block;font-size:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.chead .who small{font-size:12.5px;color:var(--sub)}
+.chead .who small.on{color:var(--p2);font-weight:600}
+#back{display:none}
+#msgs{flex:1;overflow-y:auto;padding:10px 6%;display:flex;flex-direction:column;gap:2px;background-image:radial-gradient(circle at 20% 20%,rgba(107,76,246,.07) 0 2px,transparent 3px),radial-gradient(circle at 70% 60%,rgba(20,184,166,.07) 0 2px,transparent 3px);background-size:64px 64px,90px 90px}
+.day{align-self:center;background:var(--panel);color:var(--sub);font-size:12px;padding:4px 13px;border-radius:12px;margin:10px 0 6px;box-shadow:var(--shadow)}
+.more{align-self:center;color:var(--p);font-size:13px;font-weight:600;padding:6px 14px;background:var(--panel);border-radius:14px;margin:4px 0;box-shadow:var(--shadow)}
+.row{display:flex;flex-direction:column;max-width:100%}
+.row.me{align-items:flex-end}.row.th{align-items:flex-start}
+.b{max-width:min(78%,520px);padding:6px 10px 5px;border-radius:16px;font-size:15.5px;line-height:1.42;word-wrap:break-word;overflow-wrap:anywhere;white-space:pre-wrap;position:relative;box-shadow:var(--shadow);margin-top:2px;user-select:text}
+.b.me{background:var(--out);color:#fff;border-bottom-right-radius:5px}
+.b.th{background:var(--in);border-bottom-left-radius:5px}
+.b .txt a{text-decoration:underline;word-break:break-all}
+.meta{display:inline-flex;gap:4px;align-items:center;float:right;margin:7px 0 -2px 12px;font-size:11px;opacity:.75;white-space:nowrap}
+.b.th .meta{color:var(--sub);opacity:1}
+.tk{font-weight:700;letter-spacing:-3px;margin-right:3px;font-size:12px}
+.tk.rd{color:var(--tick);opacity:1}
+.b.del{font-style:italic;opacity:.75}
+.rp{background:rgba(0,0,0,.12);border-left:4px solid var(--p2);border-radius:9px;padding:5px 9px;margin:1px 0 5px;font-size:13px;cursor:pointer;overflow:hidden}
+.b.th .rp{background:var(--hover)}
+.rp b{display:block;color:var(--p2);font-size:12.5px}
+.b.me .rp b{color:#c9fff6}
+.rp span{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;opacity:.85}
+.rx{display:flex;gap:3px;margin:-6px 8px 4px;position:relative;z-index:1}
+.rx span{background:var(--panel);border:1.5px solid var(--line);border-radius:12px;padding:1px 7px;font-size:13px;box-shadow:var(--shadow);cursor:pointer}
+.media{display:block;max-width:100%;border-radius:11px;margin-bottom:3px;cursor:pointer;background:#0002}
+img.media,video.media{max-height:320px;min-width:180px;object-fit:cover}
+.vwrap{position:relative;display:inline-block;max-width:100%}
+.vwrap .pl{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none}
+.vwrap .pl span{width:52px;height:52px;border-radius:50%;background:rgba(0,0,0,.5);color:#fff;display:flex;align-items:center;justify-content:center}
+.file{display:flex;align-items:center;gap:10px;background:rgba(0,0,0,.1);border-radius:12px;padding:10px;min-width:210px;text-decoration:none;margin-bottom:3px}
+.b.th .file{background:var(--hover)}
+.file .fi{width:40px;height:40px;border-radius:11px;background:var(--grad);color:#fff;display:flex;align-items:center;justify-content:center;flex:none}
+.file .fn{min-width:0}.file .fn b{display:block;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:180px}
+.file .fn small{opacity:.75;font-size:12px}
+.aud{display:flex;align-items:center;gap:9px;min-width:230px;padding:2px 0}
+.aud .pb{width:40px;height:40px;border-radius:50%;background:var(--grad);color:#fff;display:flex;align-items:center;justify-content:center;flex:none}
+.b.me .aud .pb{background:rgba(255,255,255,.28)}
+.aud .bar{flex:1;height:5px;border-radius:3px;background:rgba(128,128,128,.35);position:relative;overflow:hidden}
+.aud .bar i{position:absolute;left:0;top:0;bottom:0;width:0;background:var(--p2)}
+.b.me .aud .bar i{background:#fff}
+.aud small{font-size:12px;opacity:.8;min-width:34px;text-align:right}
+.typing{align-self:flex-start;background:var(--in);border-radius:16px;padding:10px 14px;box-shadow:var(--shadow);display:flex;gap:4px;margin-top:4px}
+.typing i{width:7px;height:7px;border-radius:50%;background:var(--sub);animation:bl 1.2s infinite}
+.typing i:nth-child(2){animation-delay:.2s}.typing i:nth-child(3){animation-delay:.4s}
+@keyframes bl{0%,60%,100%{opacity:.3;transform:none}30%{opacity:1;transform:translateY(-3px)}}
+.flash{animation:fl 1.2s}
+@keyframes fl{0%,60%{outline:3px solid var(--p2);outline-offset:2px}100%{outline:3px solid transparent}}
+
+#replybar,#editbar{display:flex;align-items:center;gap:10px;padding:8px 12px;background:var(--panel);border-top:1px solid var(--line)}
+#replybar .rp,#editbar .rp{flex:1;margin:0;cursor:default;background:var(--hover)}
+#emo{display:grid;grid-template-columns:repeat(8,1fr);gap:2px;padding:8px;background:var(--panel);border-top:1px solid var(--line);max-height:210px;overflow-y:auto}
+#emo button{font-size:25px;padding:5px 0;border-radius:8px}
+#emo button:active{background:var(--line)}
+#composer{display:flex;align-items:flex-end;gap:7px;padding:8px 8px calc(8px + env(safe-area-inset-bottom));background:var(--panel)}
+#composer .box{flex:1;background:var(--bg);border-radius:24px;display:flex;align-items:flex-end;padding:0 4px;min-width:0}
+#composer .box .ib{width:40px;height:44px;color:var(--sub)}
+#composer textarea{flex:1;border:none;outline:none;resize:none;padding:11px 4px;font-size:16px;max-height:130px;background:none;line-height:1.35;min-width:0}
+#send{width:48px;height:48px;border-radius:50%;background:var(--grad);color:#fff;display:flex;align-items:center;justify-content:center;flex:none;box-shadow:0 4px 12px rgba(107,76,246,.4)}
+#send:active{transform:scale(.92)}
+#recbar{display:flex;align-items:center;gap:12px;padding:8px 12px calc(8px + env(safe-area-inset-bottom));background:var(--panel)}
+#recbar .rd{width:12px;height:12px;border-radius:50%;background:var(--danger);animation:bl 1s infinite}
+#recbar .tm{flex:1;font-variant-numeric:tabular-nums;font-weight:600}
+#recbar .ib.x{color:var(--danger)}
+
+/* sheets / menus */
+#ov{position:fixed;inset:0;background:rgba(10,8,25,.5);z-index:60;display:flex;align-items:flex-end;justify-content:center;animation:fi .15s}
+@keyframes fi{from{opacity:0}}
+.sheet{background:var(--panel);width:100%;max-width:440px;border-radius:24px 24px 0 0;padding:14px 10px calc(14px + env(safe-area-inset-bottom));animation:up .2s;max-height:88vh;overflow-y:auto}
+@keyframes up{from{transform:translateY(40px)}}
+@media(min-width:760px){#ov{align-items:center}.sheet{border-radius:24px}}
+.sheet .grab{width:42px;height:4px;border-radius:2px;background:var(--line);margin:0 auto 10px}
+.sheet h3{padding:4px 12px 10px;font-size:17px}
+.mi{display:flex;align-items:center;gap:14px;width:100%;padding:13px 14px;border-radius:14px;text-align:left;font-size:16px}
+.mi:hover,.mi:active{background:var(--hover)}
+.mi.dg{color:var(--danger)}
+.mi small{display:block;color:var(--sub);font-size:12.5px}
+.rxrow{display:flex;justify-content:space-around;padding:6px 4px 12px;border-bottom:1px solid var(--line);margin-bottom:6px}
+.rxrow button{font-size:28px;padding:5px 7px;border-radius:50%}
+.rxrow button:active{background:var(--hover);transform:scale(1.2)}
+.attg{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;padding:6px 6px 8px}
+.attg button{display:flex;flex-direction:column;align-items:center;gap:7px;font-size:13px;padding:8px 2px}
+.attg .c{width:56px;height:56px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff}
+.sheet .fld{padding:0 10px}
+.sheet .btn{margin:16px 10px 0;width:calc(100% - 20px)}
+.sheet .btn.ghost{background:var(--bg);color:var(--txt);box-shadow:none;margin-top:8px}
+#viewer{position:fixed;inset:0;background:rgba(0,0,0,.94);z-index:90;display:flex;align-items:center;justify-content:center}
+#viewer img,#viewer video{max-width:100%;max-height:100%}
+#viewer .ib{position:absolute;top:12px;color:#fff;background:rgba(255,255,255,.15)}
+#upl{position:absolute;left:12px;right:12px;bottom:84px;background:var(--panel);border-radius:14px;padding:10px 14px;box-shadow:0 6px 20px rgba(0,0,0,.2);font-size:14px;z-index:5}
+#upl i{display:block;height:5px;background:var(--grad);border-radius:3px;margin-top:7px;width:0;transition:width .2s}
+
+@media(max-width:760px){
+  #side{max-width:none}
+  #main{position:fixed;inset:0;transform:translateX(100%);transition:transform .22s;z-index:5}
+  #app.open #main{transform:none}
+  #back{display:flex}
+  #msgs{padding:8px 8px}
+  .b{max-width:85%}
+}
+
+</style>
+</head>
+<body>
+<div id="splash"><div class="lg" data-ic="message"></div><b style="font-size:22px">মুমিন মেসেঞ্জার</b></div>
+<div id="toast"></div>
+
+<!-- অ্যাকাউন্ট -->
+<div id="auth" class="hidden">
+  <div class="hero">
+    <div class="lg" data-ic="message"></div>
+    <h1>মুমিন মেসেঞ্জার</h1>
+    <p>প্রিয়জনের সাথে যেকোনো জায়গা থেকে নিরাপদে চ্যাট করুন</p>
+  </div>
+  <div class="acard">
+    <div class="tabs"><button id="tabin" class="on">লগইন</button><button id="tabup">নতুন অ্যাকাউন্ট</button></div>
+    <div class="fld hidden" id="fname"><label>আপনার নাম</label><div class="in"><span data-ic="user"></span><input id="aname" placeholder="যেমন: আব্দুল্লাহ" autocomplete="name"></div></div>
+    <div class="fld"><label>মোবাইল নম্বর</label><div class="in"><span data-ic="phone"></span><input id="aphone" type="tel" inputmode="numeric" placeholder="01XXXXXXXXX" autocomplete="tel"></div></div>
+    <div class="fld"><label>পাসওয়ার্ড</label><div class="in"><span data-ic="lock"></span><input id="apass" type="password" placeholder="কমপক্ষে ৬ অক্ষর" autocomplete="current-password"><button id="eye" type="button" data-ic="eye" style="color:var(--sub)"></button></div></div>
+    <div class="fld hidden" id="fpass2"><label>পাসওয়ার্ড আবার দিন</label><div class="in"><span data-ic="lock"></span><input id="apass2" type="password" placeholder="আবার লিখুন" autocomplete="new-password"></div></div>
+    <button class="btn" id="abtn">লগইন করুন</button>
+    <div class="aerr" id="aerr"></div>
+    <p class="anote" id="anote">নতুন অ্যাকাউন্ট খুলতে উপরের "নতুন অ্যাকাউন্ট" চাপুন। এই নম্বর ও পাসওয়ার্ড দিয়ে যেকোনো ডিভাইসে লগইন করলে আগের সব চ্যাট ফিরে আসবে।</p>
+  </div>
+</div>
+
+<!-- মূল অ্যাপ -->
+<div id="app" class="hidden">
+  <aside id="side">
+    <div class="top">
+      <h2>মুমিন মেসেঞ্জার</h2>
+      <button class="ib" id="themebtn"></button>
+      <button class="ib" id="menubtn" data-ic="more"></button>
+    </div>
+    <div class="srch"><span data-ic="search"></span><input id="q" placeholder="চ্যাট বা নম্বর খুঁজুন"></div>
+    <div id="banner" class="hidden"><span id="bantxt"></span><button id="banbtn"></button><button id="banx" data-ic="x" style="padding:6px"></button></div>
+    <div id="list"></div>
+    <button id="fab" data-ic="message"></button>
+  </aside>
+  <section id="main">
+    <div id="welcome">
+      <div class="lg" data-ic="message"></div>
+      <h2>মুমিন মেসেঞ্জার</h2>
+      <p style="max-width:320px;line-height:1.7">বাম পাশ থেকে একটি চ্যাট বেছে নিন, অথবা নতুন চ্যাট বাটন চেপে নম্বর দিয়ে কথা শুরু করুন।</p>
+    </div>
+    <div id="chat" class="hidden">
+      <div class="chead">
+        <button class="ib" id="back" data-ic="back"></button>
+        <div class="av sm" id="cav"></div>
+        <div class="who"><b id="cname"></b><small id="cstat"></small></div>
+        <button class="ib" id="cvid" data-ic="video"></button>
+        <button class="ib" id="ccall" data-ic="phone"></button>
+        <button class="ib" id="cmenu" data-ic="more"></button>
+      </div>
+      <div id="msgs"></div>
+      <div id="upl" class="hidden"><span id="upt">আপলোড হচ্ছে…</span><i id="upb"></i></div>
+      <div id="replybar" class="hidden"><div class="rp"><b id="rpn"></b><span id="rpt"></span></div><button class="ib" id="rpx" data-ic="x"></button></div>
+      <div id="editbar" class="hidden"><div class="rp"><b>মেসেজ সম্পাদনা</b><span id="edt"></span></div><button class="ib" id="edx" data-ic="x"></button></div>
+      <div id="emo" class="hidden"></div>
+      <div id="composer">
+        <div class="box">
+          <button class="ib" id="emobtn" data-ic="smile"></button>
+          <textarea id="inp" rows="1" placeholder="মেসেজ লিখুন"></textarea>
+          <button class="ib" id="attbtn" data-ic="clip"></button>
+          <button class="ib" id="camb" data-ic="camera"></button>
+        </div>
+        <button id="send"></button>
+      </div>
+      <div id="recbar" class="hidden"><button class="ib x" id="recx" data-ic="trash"></button><i class="rd"></i><span class="tm" id="rectm">০:০০</span><button id="recok" class="ib" data-ic="send" style="background:var(--grad);color:#fff;width:48px;height:48px"></button></div>
+    </div>
+  </section>
+</div>
+<div id="ov" class="hidden"></div>
+<div id="viewer" class="hidden"></div>
+<input type="file" id="fimg" accept="image/*,video/*" multiple hidden>
+<input type="file" id="fcam" accept="image/*,video/*" capture="environment" hidden>
+<input type="file" id="fdoc" hidden>
+<input type="file" id="faud" accept="audio/*" hidden>
+
+<script type="module">
+/* ============================================================
+   মুমিন মেসেঞ্জার — PWA চ্যাট অ্যাপ
+   ============================================================ */
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getAuth, onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getFirestore, doc, getDoc, setDoc, updateDoc, addDoc, collection, query, where, orderBy, limit, onSnapshot, arrayUnion, increment, deleteField } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyBHV2ml0ph5AdICrtBOxP5d5TqwaDqMRBY",
+  authDomain: "mumin-messenger.firebaseapp.com",
+  projectId: "mumin-messenger",
+  storageBucket: "mumin-messenger.firebasestorage.app",
+  messagingSenderId: "315677520507",
+  appId: "1:315677520507:web:704763268b428bf1a068de",
+  measurementId: "G-CW1R9VR7CS"
+};
+/* ভিডিও/বড় ফাইল/লম্বা ভয়েস পাঠাতে Cloudinary (ফ্রি) বসান:
+   cloud = আপনার Cloud name, preset = Unsigned upload preset এর নাম */
+const CLOUDINARY = { cloud: "", preset: "" };
+const HAS_CDN = !!(CLOUDINARY.cloud && CLOUDINARY.preset);
+
+const app = initializeApp(FIREBASE_CONFIG);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+/* ---------------- ছোট ইউটিলিটি ---------------- */
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const bn = n => String(n).replace(/\d/g, d => '০১২৩৪৫৬৭৮৯'[d]);
+const colors = ['#e5484d','#8e4ec6','#3e63dd','#0091ff','#12a594','#30a46c','#f76b15','#ab6400','#d6409f','#5c6c7a'];
+const colorOf = s => colors[[...String(s)].reduce((a,c)=>a+c.charCodeAt(0),0) % colors.length];
+const norm = p => { p = (p||'').replace(/[০-৯]/g, d => '০১২৩৪৫৬৭৮৯'.indexOf(d)).replace(/\D/g,''); if(p.startsWith('880')) p='0'+p.slice(3); return p; };
+const cid = (a,b) => [a,b].sort().join('_');
+const emailOf = p => p + '@mumin-messenger.app';
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+const P = {
+  back:'<line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/>',
+  send:'<line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>',
+  mic:'<path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/>',
+  clip:'<path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/>',
+  smile:'<circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/>',
+  more:'<circle cx="12" cy="5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="12" cy="19" r="1"/>',
+  search:'<circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>',
+  x:'<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>',
+  image:'<rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/>',
+  file:'<path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><polyline points="13 2 13 9 20 9"/>',
+  camera:'<path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/>',
+  play:'<polygon points="6 3 20 12 6 21 6 3"/>',
+  pause:'<rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/>',
+  download:'<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>',
+  reply:'<polyline points="9 14 4 9 9 4"/><path d="M20 20v-7a4 4 0 0 0-4-4H4"/>',
+  trash:'<polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>',
+  copy:'<rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>',
+  edit:'<path d="M17 3a2.83 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/>',
+  logout:'<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>',
+  moon:'<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>',
+  sun:'<circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>',
+  bell:'<path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>',
+  user:'<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>',
+  eye:'<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>',
+  phone:'<path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.91.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92z"/>',
+  video:'<polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/>',
+  install:'<rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/>',
+  message:'<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>',
+  lock:'<rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>',
+  check:'<polyline points="20 6 9 17 4 12"/>',
+  edit2:'<path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4z"/>'
+};
+const ic = (n, fill) => `<svg class="i${fill?' fill':''}" viewBox="0 0 24 24">${P[n]||''}</svg>`;
+function hydrateIcons(root=document){ root.querySelectorAll('[data-ic]').forEach(el=>{ el.innerHTML = ic(el.dataset.ic); el.removeAttribute('data-ic'); }); }
+
+let toastT;
+function toast(m){ const t=$('toast'); t.textContent=m; t.classList.add('on'); clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove('on'),2600); }
+
+const fmtTime = ts => { const d=new Date(ts); let h=d.getHours(), m=d.getMinutes(); const ap=h<12?'AM':'PM'; h=h%12||12; return bn(h)+':'+bn(String(m).padStart(2,'0'))+' '+ap; };
+const fmtDay = ts => { const d=new Date(ts), t=new Date(), y=new Date(); y.setDate(t.getDate()-1);
+  if(d.toDateString()===t.toDateString()) return 'আজ'; if(d.toDateString()===y.toDateString()) return 'গতকাল';
+  return bn(d.getDate())+'/'+bn(d.getMonth()+1)+'/'+bn(d.getFullYear()); };
+const fmtSize = n => n>1048576 ? bn((n/1048576).toFixed(1))+' MB' : bn(Math.max(1,Math.round(n/1024)))+' KB';
+const fmtDur = s => bn(Math.floor(s/60))+':'+bn(String(Math.floor(s%60)).padStart(2,'0'));
+const linkify = s => esc(s).replace(/(https?:\/\/[^\s<]+)/g, u=>`<a href="${u}" target="_blank" rel="noopener">${u}</a>`);
+
+/* ---------------- থিম ---------------- */
+function applyTheme(t){ document.documentElement.dataset.theme=t; localStorage.setItem('mm_theme',t);
+  const m=document.querySelector('meta[name=theme-color]'); if(m) m.content = t==='dark'?'#171626':'#6b4cf6';
+  $('themebtn').innerHTML = ic(t==='dark'?'sun':'moon'); }
+applyTheme(localStorage.getItem('mm_theme') || (matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light'));
+
+/* ---------------- স্টেট ---------------- */
+let me = null;              // {phone,name,about}
+let chats = [];             // চ্যাট লিস্ট
+let cur = null;             // খোলা চ্যাট
+let msgsAll = [];           // খোলা চ্যাটের মেসেজ
+let msgLimit = 80;
+let unsubChats=null, unsubMsgs=null, unsubPeer=null;
+let peer = null;            // অপরজনের প্রোফাইল
+let replyTo = null, editing = null;
+let chatsReady = false, knownChats = new Set(), lastTypingSent = 0;
+const other = c => { const p=c.participants.find(x=>x!==me.phone); return {phone:p,name:(c.names&&c.names[p])||p}; };
+const ts_ = () => Date.now();
+
+/* ---------------- ওভারলে/শিট ---------------- */
+function sheet(html, onclose){
+  const ov=$('ov'); ov.innerHTML=`<div class="sheet"><div class="grab"></div>${html}</div>`; ov.classList.remove('hidden'); hydrateIcons(ov);
+  ov.onclick=e=>{ if(e.target===ov) closeSheet(); }; ov._cb=onclose; return ov.firstChild;
+}
+function closeSheet(){ const ov=$('ov'); ov.classList.add('hidden'); ov.innerHTML=''; if(ov._cb){ov._cb();ov._cb=null;} }
+
+/* ---------------- অ্যাকাউন্ট (লগইন / নতুন) ---------------- */
+let mode='in', busyAuth=false;
+function setMode(m){
+  mode=m; $('tabin').classList.toggle('on',m==='in'); $('tabup').classList.toggle('on',m==='up');
+  $('fname').classList.toggle('hidden',m==='in'); $('fpass2').classList.toggle('hidden',m==='in');
+  $('abtn').textContent = m==='in'?'লগইন করুন':'অ্যাকাউন্ট খুলুন'; $('aerr').textContent='';
+  $('apass').autocomplete = m==='in'?'current-password':'new-password';
+}
+const authErr = e => ({
+  'auth/email-already-in-use':'এই নম্বরে আগেই অ্যাকাউন্ট খোলা আছে। "লগইন" করুন।',
+  'auth/invalid-credential':'নম্বর বা পাসওয়ার্ড ভুল হয়েছে।',
+  'auth/wrong-password':'পাসওয়ার্ড ভুল হয়েছে।',
+  'auth/user-not-found':'এই নম্বরে কোনো অ্যাকাউন্ট নেই। "নতুন অ্যাকাউন্ট" খুলুন।',
+  'auth/weak-password':'পাসওয়ার্ড কমপক্ষে ৬ অক্ষরের দিন।',
+  'auth/too-many-requests':'অনেকবার ভুল চেষ্টা হয়েছে। কিছুক্ষণ পরে আবার চেষ্টা করুন।',
+  'auth/network-request-failed':'ইন্টারনেট সংযোগ চেক করুন।',
+  'auth/operation-not-allowed':'Firebase Console → Authentication → Sign-in method থেকে "Email/Password" চালু করুন।',
+  'auth/configuration-not-found':'Firebase Console-এ Authentication → "Get started" চাপুন, তারপর Email/Password চালু করুন।'
+}[e.code] || ('সমস্যা হয়েছে: ' + (e.code||e.message)));
+
+async function doAuth(){
+  if(busyAuth) return;
+  const name=$('aname').value.trim(), phone=norm($('aphone').value), pw=$('apass').value, err=m=>$('aerr').textContent=m;
+  if(mode==='up' && !name) return err('আপনার নাম লিখুন');
+  if(phone.length<10) return err('সঠিক মোবাইল নম্বর দিন');
+  if(pw.length<6) return err('পাসওয়ার্ড কমপক্ষে ৬ অক্ষরের হতে হবে');
+  if(mode==='up' && pw!==$('apass2').value) return err('দুটি পাসওয়ার্ড মিলছে না');
+  busyAuth=true; err(''); $('abtn').disabled=true; $('abtn').textContent='অপেক্ষা করুন…';
+  try{
+    if(mode==='up'){ localStorage.setItem('mm_pendname',name); await createUserWithEmailAndPassword(auth,emailOf(phone),pw); }
+    else await signInWithEmailAndPassword(auth,emailOf(phone),pw);
+  }catch(e){ err(authErr(e)); }
+  busyAuth=false; $('abtn').disabled=false; $('abtn').textContent=mode==='in'?'লগইন করুন':'অ্যাকাউন্ট খুলুন';
+}
+
+onAuthStateChanged(auth, async user=>{
+  $('splash').classList.add('hidden');
+  if(!user){ teardown(); $('app').classList.add('hidden'); $('auth').classList.remove('hidden'); return; }
+  const phone=user.email.split('@')[0];
+  try{
+    const ref=doc(db,'users',phone); let s=await getDoc(ref);
+    if(!s.exists()){
+      const prof={name:localStorage.getItem('mm_pendname')||phone,phone,about:'মুমিন মেসেঞ্জার ব্যবহার করছি',created:ts_(),online:true,lastSeen:ts_()};
+      await setDoc(ref,prof); s=await getDoc(ref);
+    }
+    localStorage.removeItem('mm_pendname');
+    const d=s.data(); me={phone,name:d.name,about:d.about||''};
+  }catch(e){
+    $('auth').classList.remove('hidden'); $('aerr').textContent = e.code==='permission-denied' ? 'Firestore Rules সেট করা হয়নি — firestore.rules ফাইলের কোড Publish করুন।' : authErr(e); return;
+  }
+  $('auth').classList.add('hidden'); $('app').classList.remove('hidden');
+  startSession();
+});
+
+function teardown(){
+  unsubChats&&unsubChats(); unsubMsgs&&unsubMsgs(); unsubPeer&&unsubPeer();
+  unsubChats=unsubMsgs=unsubPeer=null; cur=null; chats=[]; chatsReady=false; knownChats=new Set(); me=null;
+  clearInterval(hb); $('apass').value=''; $('apass2').value=''; $('chat').classList.add('hidden'); $('welcome').classList.remove('hidden'); $('app').classList.remove('open');
+}
+
+/* ---------------- প্রেজেন্স (অনলাইন/শেষ দেখা) ---------------- */
+let hb=null;
+const setPresence = on => { if(!me) return; updateDoc(doc(db,'users',me.phone),{online:on,lastSeen:ts_()}).catch(()=>{}); };
+document.addEventListener('visibilitychange',()=>{ if(!me) return; setPresence(!document.hidden); if(!document.hidden && cur) markRead(); });
+addEventListener('pagehide',()=>setPresence(false));
+
+function startSession(){
+  setPresence(true); clearInterval(hb); hb=setInterval(()=>{ if(!document.hidden) setPresence(true); },25000);
+  unsubChats = onSnapshot(query(collection(db,'chats'),where('participants','array-contains',me.phone)), onChats, e=>console.warn(e));
+  setupBanner();
+}
+
+/* ---------------- নোটিফিকেশন ---------------- */
+let audioCtx;
+function beep(){ try{ audioCtx=audioCtx||new (window.AudioContext||window.webkitAudioContext)(); const o=audioCtx.createOscillator(),g=audioCtx.createGain(); o.connect(g); g.connect(audioCtx.destination); o.frequency.value=880; g.gain.setValueAtTime(.08,audioCtx.currentTime); g.gain.exponentialRampToValueAtTime(.001,audioCtx.currentTime+.25); o.start(); o.stop(audioCtx.currentTime+.25);}catch(e){} }
+async function notify(title, body, id){
+  if(!('Notification' in window) || Notification.permission!=='granted') return;
+  try{ const reg=await navigator.serviceWorker?.getRegistration();
+    if(reg) reg.showNotification(title,{body,icon:'icon-192.png',badge:'icon-192.png',tag:id,renotify:true,data:{id}});
+    else new Notification(title,{body,icon:'icon-192.png'}); }catch(e){}
+}
+
+/* ---------------- চ্যাট লিস্ট ---------------- */
+const lastTsMap = {};
+const preview = c => { const t=c.lastType||'text';
+  return t==='image'?'📷 ছবি': t==='video'?'🎥 ভিডিও': t==='audio'?'🎤 ভয়েস মেসেজ': t==='file'?'📄 ডকুমেন্ট': c.last||''; };
+const isOnline = u => !!(u && u.online && ts_()-(u.lastSeen||0) < 70000);
+const typingNow = c => { const o=other(c); return c.typing && ts_()-(c.typing[o.phone]||0) < 5000; };
+
+function onChats(snap){
+  const incoming=[];
+  snap.docChanges().forEach(ch=>{
+    const d=ch.doc.data(), id=ch.doc.id;
+    if(ch.doc.metadata.hasPendingWrites) { lastTsMap[id]=Math.max(lastTsMap[id]||0,d.lastTs||0); return; }
+    if(chatsReady && d.lastFrom && d.lastFrom!==me.phone && (d.lastTs||0)>(lastTsMap[id]||0)) incoming.push({id,d});
+    lastTsMap[id]=Math.max(lastTsMap[id]||0,d.lastTs||0);
+  });
+  chats = snap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>(b.lastTs||0)-(a.lastTs||0));
+  chats.forEach(c=>knownChats.add(c.id));
+  // ডেলিভারড টিক
+  snap.docs.forEach(d=>{ const c=d.data(); if(d.metadata.hasPendingWrites) return;
+    if(c.lastFrom && c.lastFrom!==me.phone && (c.lastTs||0) > ((c.deliveredAt||{})[me.phone]||0))
+      updateDoc(d.ref,{[`deliveredAt.${me.phone}`]:ts_()}).catch(()=>{}); });
+  chatsReady=true;
+  incoming.forEach(({id,d})=>{ const o=other({...d,id}); const visible = cur&&cur.id===id&&!document.hidden;
+    if(!visible){ notify(o.name, preview(d), id); beep(); } else beep(); });
+  if(cur){ const c=chats.find(x=>x.id===cur.id); if(c){ cur=c; renderHead(); renderMsgs(); if(!document.hidden) markRead(); } }
+  renderList();
+  const tot=chats.reduce((n,c)=>n+((c.unread||{})[me.phone]||0),0);
+  document.title = (tot?`(${bn(tot)}) `:'')+'মুমিন মেসেঞ্জার'; navigator.setAppBadge?.(tot).catch?.(()=>{});
+}
+
+function renderList(){
+  const L=$('list'), qv=$('q').value.trim().toLowerCase(), qn=norm(qv);
+  let arr=chats;
+  if(qv) arr=arr.filter(c=>{ const o=other(c); return o.name.toLowerCase().includes(qv)||(qn&&o.phone.includes(qn)); });
+  let html='';
+  if(qn.length>=10 && qn!==me.phone && !chats.some(c=>other(c).phone===qn))
+    html+=`<div class="item" data-new="${qn}"><div class="av" style="background:var(--p2)">${ic('plus')}</div><div class="m"><div class="r1"><b>নতুন চ্যাট শুরু করুন</b></div><div class="r2"><span class="p">${qn}</span></div></div></div>`;
+  if(!arr.length && !html){ L.innerHTML = qv ? '<div class="empty">কিছু পাওয়া যায়নি</div>' : `<div class="empty"><div class="big">💬</div>এখনো কোনো চ্যাট নেই।<br>নিচের বাটন চেপে বন্ধুর মোবাইল নম্বর দিয়ে<br>প্রথম মেসেজ পাঠান।</div>`; return; }
+  html+=arr.map(c=>{
+    const o=other(c), un=(c.unread||{})[me.phone]||0, ty=typingNow(c), sel=cur&&cur.id===c.id;
+    const tick = c.lastFrom===me.phone ? `<span class="tk${((c.readAt||{})[o.phone]||0)>=(c.lastTs||0)?' rd':''}">✓✓</span>` : '';
+    return `<div class="item${sel?' on':''}${un?' un':''}" data-id="${c.id}">
+      <div class="av" style="background:${colorOf(o.phone)}">${esc((o.name[0]||'?'))}</div>
+      <div class="m"><div class="r1"><b>${esc(o.name)}</b><span>${c.lastTs?fmtTime(c.lastTs):''}</span></div>
+      <div class="r2"><span class="p${ty?' ty':''}">${ty?'লিখছে…':tick+esc(preview(c)||'নতুন চ্যাট')}</span>${un&&!sel?`<div class="badge">${bn(un>99?'99+':un)}</div>`:''}</div></div></div>`;
+  }).join('');
+  L.innerHTML=html;
+}
+$('list').addEventListener('click',e=>{ const it=e.target.closest('.item'); if(!it) return;
+  if(it.dataset.new){ startChatWith(it.dataset.new); $('q').value=''; return; }
+  const c=chats.find(x=>x.id===it.dataset.id); if(c) openChat(c); });
+$('q').addEventListener('input',renderList);
+
+/* ---------------- নতুন চ্যাট ---------------- */
+function newChatSheet(){
+  const s=sheet(`<h3>নতুন চ্যাট</h3><div class="fld"><label>যার সাথে কথা বলবেন তার মোবাইল নম্বর</label><div class="in"><span data-ic="phone"></span><input id="np" type="tel" inputmode="numeric" placeholder="01XXXXXXXXX"></div></div><div class="aerr" id="nerr"></div><button class="btn" id="ngo">চ্যাট শুরু করুন</button>`);
+  hydrateIcons(s); setTimeout(()=>$('np').focus(),100);
+  const go=()=>startChatWith(norm($('np').value),true);
+  $('ngo').onclick=go; $('np').addEventListener('keydown',e=>{ if(e.key==='Enter') go(); });
+}
+async function startChatWith(p,fromSheet){
+  const err=m=>{ if(fromSheet&&$('nerr')) $('nerr').textContent=m; else toast(m); };
+  if(p.length<10) return err('সঠিক নম্বর দিন');
+  if(p===me.phone) return err('নিজের সাথে চ্যাট করা যাবে না');
+  try{
+    const s=await getDoc(doc(db,'users',p));
+    if(!s.exists()) return err('এই নম্বরে মুমিন মেসেঞ্জারে কোনো অ্যাকাউন্ট নেই। বন্ধুকে অ্যাপে অ্যাকাউন্ট খুলতে বলুন।');
+    const u=s.data(), id=cid(me.phone,p);
+    const ex=chats.find(c=>c.id===id);
+    if(fromSheet) closeSheet();
+    openChat(ex||{id,participants:[me.phone,p],names:{[me.phone]:me.name,[p]:u.name}});
+  }catch(e){ err('সমস্যা হয়েছে, আবার চেষ্টা করুন'); }
+}
+async function ensureChat(){
+  if(knownChats.has(cur.id)) return;
+  const o=other(cur);
+  await setDoc(doc(db,'chats',cur.id),{participants:cur.participants,names:{[me.phone]:me.name,[o.phone]:o.name}},{merge:true});
+  knownChats.add(cur.id);
+}
+
+/* ---------------- মেনু / প্রোফাইল ---------------- */
+function mainMenu(){
+  const inst = deferredInstall || (isIOS && !isStandalone);
+  const s=sheet(`<h3>${esc(me.name)} <small style="color:var(--sub);font-weight:400">· ${me.phone}</small></h3>
+    <button class="mi" id="m1"><span data-ic="user"></span>প্রোফাইল সম্পাদনা<small>নাম ও "আমার সম্পর্কে"</small></button>
+    ${('Notification' in window && Notification.permission!=='granted')?'<button class="mi" id="m2"><span data-ic="bell"></span>নোটিফিকেশন চালু করুন</button>':''}
+    ${inst&&!isStandalone?'<button class="mi" id="m3"><span data-ic="install"></span>অ্যাপ ইনস্টল করুন</button>':''}
+    <button class="mi dg" id="m4"><span data-ic="logout"></span>লগআউট</button>`);
+  hydrateIcons(s);
+  $('m1').onclick=profileSheet;
+  $('m2')&&($('m2').onclick=()=>{ closeSheet(); askNotif(); });
+  $('m3')&&($('m3').onclick=()=>{ closeSheet(); installApp(); });
+  $('m4').onclick=async()=>{ closeSheet(); await setPresence(false); await signOut(auth); };
+}
+function profileSheet(){
+  const s=sheet(`<h3>প্রোফাইল</h3>
+    <div class="fld"><label>নাম</label><div class="in"><span data-ic="user"></span><input id="pn" value="${esc(me.name)}" maxlength="40"></div></div>
+    <div class="fld"><label>আমার সম্পর্কে</label><div class="in"><span data-ic="edit2"></span><input id="pa" value="${esc(me.about)}" maxlength="80"></div></div>
+    <button class="btn" id="ps">সংরক্ষণ করুন</button>`);
+  hydrateIcons(s);
+  $('ps').onclick=async()=>{ const name=$('pn').value.trim(); if(!name) return toast('নাম লিখুন');
+    try{ await updateDoc(doc(db,'users',me.phone),{name,about:$('pa').value.trim()}); me.name=name; me.about=$('pa').value.trim(); closeSheet(); toast('প্রোফাইল আপডেট হয়েছে'); }
+    catch(e){ toast('সংরক্ষণ করা যায়নি'); } };
+}
+
+/* ============ চ্যাট স্ক্রিন ============ */
+const msgDoc = id => doc(db,'chats',cur.id,'messages',id);
+const canWrite = () => cur && me;
+
+function openChat(c, fromPop){
+  cur=c; const o=other(c);
+  $('welcome').classList.add('hidden'); $('chat').classList.remove('hidden'); $('app').classList.add('open');
+  if(!fromPop && !history.state?.chat) history.pushState({chat:1},'');
+  cancelReply(); cancelEdit(); $('emo').classList.add('hidden'); $('inp').value=''; autosize(); updSendIcon();
+  msgsAll=[]; msgLimit=80; peer=null; $('msgs').innerHTML='';
+  $('cav').textContent=o.name[0]||'?'; $('cav').style.background=colorOf(o.phone);
+  unsubPeer&&unsubPeer(); unsubPeer=onSnapshot(doc(db,'users',o.phone),s=>{ peer=s.exists()?s.data():null; renderHead(); });
+  subMsgs(); renderHead(); renderList();
+  if(innerWidth>760) setTimeout(()=>$('inp').focus(),200);
+}
+function subMsgs(){
+  unsubMsgs&&unsubMsgs(); const id=cur.id;
+  unsubMsgs=onSnapshot(query(collection(db,'chats',id,'messages'),orderBy('ts','desc'),limit(msgLimit)),s=>{
+    if(!cur||cur.id!==id) return;
+    msgsAll=s.docs.map(d=>({id:d.id,pending:d.metadata.hasPendingWrites,...d.data()})).reverse();
+    renderMsgs(); markRead();
+  },e=>console.warn(e));
+}
+function closeChat(){
+  unsubMsgs&&unsubMsgs(); unsubPeer&&unsubPeer(); unsubMsgs=unsubPeer=null; cur=null; peer=null;
+  stopAllAudio(); $('app').classList.remove('open'); $('chat').classList.add('hidden'); $('welcome').classList.remove('hidden'); renderList();
+}
+addEventListener('popstate',()=>{ if(!$('viewer').classList.contains('hidden')){ closeViewer(true); return; } if(cur) closeChat(); });
+$('back').onclick=()=>{ if(history.state?.chat) history.back(); else closeChat(); };
+
+let markBusy=false;
+function markRead(){
+  if(!cur||!me||document.hidden||markBusy||!knownChats.has(cur.id)) return;
+  const un=(cur.unread||{})[me.phone]||0, ra=(cur.readAt||{})[me.phone]||0;
+  if(!un && ra>=(cur.lastTs||0)) return;
+  markBusy=true;
+  updateDoc(doc(db,'chats',cur.id),{[`readAt.${me.phone}`]:ts_(),[`unread.${me.phone}`]:0,[`deliveredAt.${me.phone}`]:ts_()}).catch(()=>{}).finally(()=>markBusy=false);
+}
+
+function lastSeenText(u){
+  if(!u||!u.lastSeen) return '';
+  return 'শেষ দেখা: '+fmtDay(u.lastSeen)+' '+fmtTime(u.lastSeen);
+}
+function renderHead(){
+  if(!cur) return; const o=other(cur); $('cname').textContent=(peer&&peer.name)||o.name;
+  const st=$('cstat'); st.className='';
+  if(typingNow(cur)){ st.textContent='লিখছে…'; st.className='on'; }
+  else if(isOnline(peer)){ st.textContent='অনলাইন'; st.className='on'; }
+  else st.textContent=lastSeenText(peer);
+}
+setInterval(()=>{ if(me){ renderHead(); if(cur) renderMsgs(true); renderList(); } },3000);
+
+/* ---------------- মেসেজ রেন্ডার ---------------- */
+function tickHtml(m){
+  if(m.from!==me.phone) return '';
+  if(m.pending) return '<span class="tk">🕓</span>';
+  const o=other(cur).phone, rd=((cur.readAt||{})[o]||0)>=m.ts, dl=((cur.deliveredAt||{})[o]||0)>=m.ts;
+  return `<span class="tk${rd?' rd':''}">${dl||rd?'✓✓':'✓'}</span>`;
+}
+function bodyHtml(m){
+  if(m.deleted) return `<div class="txt">🚫 ${m.from===me.phone?'আপনি এই মেসেজ মুছে ফেলেছেন':'এই মেসেজটি মুছে ফেলা হয়েছে'}</div>`;
+  const t=m.type||'text';
+  if(t==='image') return `<img class="media" loading="lazy" src="${esc(m.url)}" data-view="${m.id}">`;
+  if(t==='video') return `<div class="vwrap"><video class="media" preload="metadata" playsinline src="${esc(m.url)}#t=0.1" data-view="${m.id}"></video><div class="pl"><span>${ic('play',true)}</span></div></div>`;
+  if(t==='audio'){ const playing=curAud&&curAud.id===m.id&&!curAud.el.paused;
+    return `<div class="aud" data-aud="${m.id}"><button class="pb">${ic(playing?'pause':'play',true)}</button><div class="bar"><i></i></div><small>${fmtDur(m.dur||0)}</small></div>`; }
+  if(t==='file') return `<a class="file" href="${esc(m.url)}" target="_blank" rel="noopener" download="${esc(m.name||'file')}"><div class="fi">${ic('file')}</div><div class="fn"><b>${esc(m.name||'ফাইল')}</b><small>${fmtSize(m.size||0)} · ডাউনলোড</small></div></a>`;
+  return `<div class="txt">${linkify(m.text||'')}</div>`;
+}
+function renderMsgs(soft){
+  if(!cur) return;
+  const box=$('msgs'), near=box.scrollHeight-box.scrollTop-box.clientHeight<140||!box.children.length, prevH=box.scrollHeight, prevT=box.scrollTop;
+  const clr=(cur.clearedAt||{})[me.phone]||0, o=other(cur);
+  const list=msgsAll.filter(m=>m.ts>clr && !(m.deletedFor||[]).includes(me.phone));
+  let html='', last='';
+  if(msgsAll.length>=msgLimit) html+='<button class="more" id="moreb">আরও পুরনো মেসেজ দেখুন</button>';
+  if(!list.length) html+='<div class="day">🔒 কথা শুরু করুন — "আসসালামু আলাইকুম" 👋</div>';
+  for(const m of list){
+    const d=fmtDay(m.ts); if(d!==last){ html+=`<div class="day">${d}</div>`; last=d; }
+    const mine=m.from===me.phone;
+    let rp='';
+    if(m.replyTo&&!m.deleted) rp=`<div class="rp" data-goto="${esc(m.replyTo.id)}"><b>${m.replyTo.from===me.phone?'আপনি':esc((peer&&peer.name)||o.name)}</b><span>${esc(m.replyTo.text||'')}</span></div>`;
+    const rxs={}; Object.values(m.reactions||{}).forEach(e=>rxs[e]=(rxs[e]||0)+1);
+    const rx=Object.keys(rxs).length&&!m.deleted?`<div class="rx">${Object.entries(rxs).map(([e,n])=>`<span data-rx="${m.id}">${e}${n>1?' '+bn(n):''}</span>`).join('')}</div>`:'';
+    html+=`<div class="row ${mine?'me':'th'}" data-id="${m.id}"><div class="b ${mine?'me':'th'}${m.deleted?' del':''}">${rp}${bodyHtml(m)}<span class="meta">${m.edited&&!m.deleted?'সম্পাদিত ':''}${fmtTime(m.ts)}${tickHtml(m)}</span></div>${rx}</div>`;
+  }
+  if(typingNow(cur)) html+='<div class="typing"><i></i><i></i><i></i></div>';
+  const sig=html; if(soft && box._sig===sig) return; box._sig=sig;
+  box.innerHTML=html;
+  if(near) box.scrollTop=box.scrollHeight; else box.scrollTop=prevT+(box.scrollHeight-prevH>0&&msgLimitGrew?box.scrollHeight-prevH:0);
+  msgLimitGrew=false;
+}
+let msgLimitGrew=false;
+
+$('msgs').addEventListener('click',e=>{
+  if(e.target.id==='moreb'){ msgLimit+=80; msgLimitGrew=true; subMsgs(); return; }
+  const gt=e.target.closest('[data-goto]'); if(gt){ const el=$('msgs').querySelector(`.row[data-id="${gt.dataset.goto}"] .b`); if(el){ el.scrollIntoView({block:'center',behavior:'smooth'}); el.classList.add('flash'); setTimeout(()=>el.classList.remove('flash'),1300);} else toast('মেসেজটি পুরনো — "আরও পুরনো মেসেজ" চাপুন'); return; }
+  if(e.target.closest('a')) return;
+  const au=e.target.closest('[data-aud]'); if(au){ toggleAudio(au.dataset.aud); return; }
+  const vw=e.target.closest('[data-view]'); if(vw){ openViewer(vw.dataset.view); return; }
+  const rx=e.target.closest('[data-rx]'); if(rx){ msgMenu(rx.dataset.rx); return; }
+  const row=e.target.closest('.row'); if(row && !getSelection().toString()) msgMenu(row.dataset.id);
+});
+
+/* ---------------- মেসেজ মেনু ---------------- */
+const REACTS=['👍','❤️','😂','😮','😢','🙏'];
+function msgText(m){ const t=m.type||'text'; return t==='image'?'📷 ছবি':t==='video'?'🎥 ভিডিও':t==='audio'?'🎤 ভয়েস মেসেজ':t==='file'?'📄 '+(m.name||'ফাইল'):(m.text||''); }
+function msgMenu(id){
+  const m=msgsAll.find(x=>x.id===id); if(!m) return; const mine=m.from===me.phone, t=m.type||'text';
+  if(m.deleted){ const s=sheet(`<button class="mi dg" id="a_dme"><span data-ic="trash"></span>আমার জন্য মুছুন</button>`); hydrateIcons(s); $('a_dme').onclick=()=>{ closeSheet(); delForMe(m); }; return; }
+  const my=(m.reactions||{})[me.phone];
+  const s=sheet(`<div class="rxrow">${REACTS.map(e=>`<button data-e="${e}" style="${my===e?'background:var(--hover)':''}">${e}</button>`).join('')}</div>
+    <button class="mi" id="a_rep"><span data-ic="reply"></span>উত্তর দিন</button>
+    ${t==='text'?'<button class="mi" id="a_cp"><span data-ic="copy"></span>কপি করুন</button>':''}
+    ${(t==='image'||t==='video'||t==='file'||t==='audio')?'<a class="mi" id="a_dl" href="'+esc(m.url)+'" target="_blank" download="'+esc(m.name||'file')+'" style="text-decoration:none;color:inherit"><span data-ic="download"></span>ডাউনলোড</a>':''}
+    ${mine&&t==='text'?'<button class="mi" id="a_ed"><span data-ic="edit"></span>সম্পাদনা করুন</button>':''}
+    <button class="mi dg" id="a_dme"><span data-ic="trash"></span>আমার জন্য মুছুন</button>
+    ${mine?'<button class="mi dg" id="a_dall"><span data-ic="trash"></span>সবার জন্য মুছুন</button>':''}`);
+  hydrateIcons(s);
+  s.querySelectorAll('.rxrow button').forEach(b=>b.onclick=()=>{ closeSheet(); react(m,b.dataset.e); });
+  $('a_rep').onclick=()=>{ closeSheet(); startReply(m); };
+  $('a_cp')&&($('a_cp').onclick=()=>{ closeSheet(); navigator.clipboard?.writeText(m.text).then(()=>toast('কপি হয়েছে')).catch(()=>toast('কপি করা যায়নি')); });
+  $('a_ed')&&($('a_ed').onclick=()=>{ closeSheet(); startEdit(m); });
+  $('a_dme').onclick=()=>{ closeSheet(); delForMe(m); };
+  $('a_dall')&&($('a_dall').onclick=()=>{ closeSheet(); delForAll(m); });
+}
+async function react(m,e){
+  try{ const my=(m.reactions||{})[me.phone];
+    await updateDoc(msgDoc(m.id),{[`reactions.${me.phone}`]: my===e?deleteField():e}); }catch(x){ toast('রিয়্যাকশন দেওয়া যায়নি'); }
+}
+async function delForMe(m){ try{ await updateDoc(msgDoc(m.id),{deletedFor:arrayUnion(me.phone)}); }catch(e){ toast('মুছতে সমস্যা হয়েছে'); } }
+async function delForAll(m){ try{ await updateDoc(msgDoc(m.id),{deleted:true,text:'',url:'',name:'',reactions:{}}); }catch(e){ toast('মুছতে সমস্যা হয়েছে'); } }
+
+/* ---------------- রিপ্লাই / এডিট ---------------- */
+function startReply(m){ cancelEdit(); replyTo=m; $('rpn').textContent=m.from===me.phone?'আপনি':((peer&&peer.name)||other(cur).name); $('rpt').textContent=msgText(m); $('replybar').classList.remove('hidden'); $('inp').focus(); }
+function cancelReply(){ replyTo=null; $('replybar').classList.add('hidden'); }
+function startEdit(m){ cancelReply(); editing=m; $('edt').textContent=m.text; $('editbar').classList.remove('hidden'); $('inp').value=m.text; autosize(); updSendIcon(); $('inp').focus(); }
+function cancelEdit(){ if(editing){ $('inp').value=''; autosize(); updSendIcon(); } editing=null; $('editbar').classList.add('hidden'); }
+$('rpx').onclick=cancelReply; $('edx').onclick=cancelEdit;
+
+/* ---------------- পাঠানো ---------------- */
+async function sendMessage(payload){
+  if(!canWrite()) return; const o=other(cur);
+  try{
+    await ensureChat();
+    const m={from:me.phone,ts:ts_(),...payload};
+    if(replyTo) m.replyTo={id:replyTo.id,from:replyTo.from,text:msgText(replyTo).slice(0,90)};
+    cancelReply();
+    const type=payload.type||'text';
+    await addDoc(collection(db,'chats',cur.id,'messages'),m);
+    await updateDoc(doc(db,'chats',cur.id),{last:type==='text'?payload.text.slice(0,120):'',lastType:type,lastTs:m.ts,lastFrom:me.phone,[`unread.${o.phone}`]:increment(1),[`typing.${me.phone}`]:0});
+    return true;
+  }catch(e){ console.warn(e); toast(e.code==='permission-denied'?'Firestore Rules সেট করা হয়নি':'মেসেজ পাঠানো যায়নি — ইন্টারনেট চেক করুন'); return false; }
+}
+async function sendText(){
+  const t=$('inp').value.trim(); if(!t||!cur) return;
+  if(editing){ const m=editing; cancelEdit(); if(t!==m.text) try{ await updateDoc(msgDoc(m.id),{text:t,edited:true}); }catch(e){ toast('সম্পাদনা করা যায়নি'); } return; }
+  $('inp').value=''; autosize(); updSendIcon(); $('emo').classList.add('hidden');
+  const ok=await sendMessage({type:'text',text:t}); if(ok===false) $('inp').value=t;
+}
+const autosize=()=>{ const i=$('inp'); i.style.height='auto'; i.style.height=Math.min(i.scrollHeight,130)+'px'; };
+function updSendIcon(){ $('send').innerHTML = ic($('inp').value.trim()?'send':'mic'); }
+$('inp').addEventListener('input',()=>{ autosize(); updSendIcon();
+  if(cur&&knownChats.has(cur.id)&&$('inp').value&&ts_()-lastTypingSent>2500){ lastTypingSent=ts_(); updateDoc(doc(db,'chats',cur.id),{[`typing.${me.phone}`]:ts_()}).catch(()=>{}); } });
+$('inp').addEventListener('keydown',e=>{ if(e.key==='Enter'&&!e.shiftKey&&innerWidth>760){ e.preventDefault(); sendText(); } });
+$('send').onclick=()=>{ if($('inp').value.trim()) sendText(); else startRec(); };
+
+/* ---------------- ইমোজি ---------------- */
+$('emo').innerHTML='😀 😃 😄 😁 😆 😅 😂 🤣 😊 🙂 😉 😍 🥰 😘 😗 😋 😎 🤩 🥳 😏 😒 😞 😔 😟 😕 🙁 😣 😖 😫 😩 🥺 😢 😭 😤 😠 😡 🤯 😳 🥵 🥶 😱 😨 😰 😥 😓 🤗 🤔 🤭 🤫 😶 😐 😑 😬 🙄 😯 😴 🤤 😷 🤒 🤕 🤢 🤮 🥴 😇 🤠 🤡 👋 🤚 ✋ 👌 ✌️ 🤞 🤟 🤙 👍 👎 👏 🙌 🙏 🤝 💪 ❤️ 🧡 💛 💚 💙 💜 🖤 💔 💕 💖 ✨ 🔥 🎉 🎁 🌹 🌙 ⭐ ☀️ 🕌 📿 🤲'.split(' ').map(e=>`<button>${e}</button>`).join('');
+$('emo').onclick=e=>{ if(e.target.tagName==='BUTTON'){ const i=$('inp'); i.value+=e.target.textContent; autosize(); updSendIcon(); i.focus(); } };
+$('emobtn').onclick=()=>$('emo').classList.toggle('hidden');
+
+/* ============ অডিও প্লেয়ার ============ */
+let curAud=null;
+function stopAllAudio(){ if(curAud){ curAud.el.pause(); curAud=null; } }
+function refreshAud(){ const b=$('msgs'); if(b) b._sig=null; renderMsgs(); }
+function toggleAudio(id){
+  const m=msgsAll.find(x=>x.id===id); if(!m||!m.url) return;
+  if(curAud&&curAud.id===id){ if(curAud.el.paused) curAud.el.play(); else curAud.el.pause(); refreshAud(); return; }
+  stopAllAudio(); const el=new Audio(m.url); curAud={id,el};
+  el.ontimeupdate=()=>{ const i=$('msgs').querySelector(`[data-aud="${id}"] .bar i`); if(i&&el.duration) i.style.width=(el.currentTime/el.duration*100)+'%'; };
+  el.onended=()=>{ curAud=null; refreshAud(); };
+  el.onerror=()=>{ curAud=null; toast('অডিও চালানো যায়নি'); refreshAud(); };
+  el.play().catch(()=>{}); refreshAud();
+}
+
+/* ============ ছবি/ভিডিও ভিউয়ার ============ */
+function openViewer(id){
+  const m=msgsAll.find(x=>x.id===id); if(!m||!m.url) return; const v=$('viewer');
+  v.innerHTML=`<button class="ib" id="vx" style="left:12px">${ic('x')}</button><a class="ib" href="${esc(m.url)}" download="${esc(m.name||'media')}" target="_blank" style="right:12px">${ic('download')}</a>`+
+    (m.type==='video'?`<video src="${esc(m.url)}" controls autoplay playsinline></video>`:`<img src="${esc(m.url)}">`);
+  v.classList.remove('hidden'); history.pushState({viewer:1},'');
+  $('vx').onclick=()=>closeViewer(); v.onclick=e=>{ if(e.target===v) closeViewer(); };
+}
+function closeViewer(fromPop){ const v=$('viewer'); v.querySelector('video')?.pause(); v.classList.add('hidden'); v.innerHTML=''; if(!fromPop&&history.state?.viewer) history.back(); }
+addEventListener('keydown',e=>{ if(e.key==='Escape'){ if(!$('viewer').classList.contains('hidden')) closeViewer(); else if(!$('ov').classList.contains('hidden')) closeSheet(); } });
+
+/* ============ মিডিয়া আপলোড ============ */
+const readDataURL = b => new Promise((res,rej)=>{ const r=new FileReader(); r.onload=()=>res(r.result); r.onerror=rej; r.readAsDataURL(b); });
+const MAXB64=880000, NOCDN_RAW=520*1024;
+function showUpl(t,p){ $('upl').classList.remove('hidden'); $('upt').textContent=t; $('upb').style.width=(p||0)+'%'; }
+const hideUpl=()=>$('upl').classList.add('hidden');
+function cdnUpload(blob,name){
+  return new Promise((res,rej)=>{
+    const fd=new FormData(); fd.append('file',blob,name||'file'); fd.append('upload_preset',CLOUDINARY.preset);
+    const x=new XMLHttpRequest(); x.open('POST',`https://api.cloudinary.com/v1_1/${CLOUDINARY.cloud}/auto/upload`);
+    x.upload.onprogress=e=>{ if(e.lengthComputable) showUpl('আপলোড হচ্ছে… '+bn(Math.round(e.loaded/e.total*100))+'%',e.loaded/e.total*100); };
+    x.onload=()=>{ try{ const j=JSON.parse(x.responseText); if(x.status<300&&j.secure_url) res(j.secure_url); else rej(new Error(j.error?.message||'upload')); }catch(e){ rej(e); } };
+    x.onerror=()=>rej(new Error('network')); x.send(fd);
+  });
+}
+async function toUrl(blob,name){
+  if(HAS_CDN) return cdnUpload(blob,name);
+  if(blob.size>NOCDN_RAW*1.7) throw new Error('big');
+  const u=await readDataURL(blob); if(u.length>MAXB64) throw new Error('big'); return u;
+}
+function compressImage(file,maxDim,q){
+  return new Promise((res,rej)=>{
+    const url=URL.createObjectURL(file), img=new Image();
+    img.onload=()=>{ const s=Math.min(1,maxDim/Math.max(img.width,img.height)), w=Math.round(img.width*s), h=Math.round(img.height*s);
+      const c=document.createElement('canvas'); c.width=w; c.height=h; const g=c.getContext('2d'); g.fillStyle='#fff'; g.fillRect(0,0,w,h); g.drawImage(img,0,0,w,h);
+      URL.revokeObjectURL(url); c.toBlob(b=>b?res({blob:b,w,h}):rej(new Error('img')),'image/jpeg',q); };
+    img.onerror=()=>{ URL.revokeObjectURL(url); rej(new Error('img')); }; img.src=url;
+  });
+}
+const audioDur = f => new Promise(r=>{ const a=new Audio(URL.createObjectURL(f)); a.onloadedmetadata=()=>r(isFinite(a.duration)?Math.round(a.duration):0); a.onerror=()=>r(0); setTimeout(()=>r(0),2500); });
+
+async function processFiles(files){
+  if(!cur) return;
+  for(const f of files){
+    try{
+      const kind=f.type.startsWith('image/')?'image':f.type.startsWith('video/')?'video':f.type.startsWith('audio/')?'audio':'file';
+      if(kind!=='image' && !HAS_CDN && f.size>NOCDN_RAW){
+        toast(`এই ${kind==='video'?'ভিডিও':'ফাইল'} অনেক বড়। বড় ফাইল পাঠাতে Cloudinary সেটআপ করুন (ফ্রি)।`); continue; }
+      showUpl('প্রস্তুত হচ্ছে…',5);
+      let url, extra={};
+      if(kind==='image'){
+        if(HAS_CDN){ const {blob}=await compressImage(f,1600,.82); url=await cdnUpload(blob,'photo.jpg'); extra.size=blob.size; }
+        else{ for(const [d,q] of [[1280,.75],[1024,.62],[800,.52],[640,.42]]){ const {blob}=await compressImage(f,d,q); url=await readDataURL(blob); extra.size=blob.size; if(url.length<MAXB64) break; url=null; } if(!url) throw new Error('big'); }
+      }else{
+        url=await toUrl(f,f.name); extra={name:f.name,size:f.size};
+        if(kind==='audio') extra.dur=await audioDur(f);
+      }
+      showUpl('পাঠানো হচ্ছে…',98);
+      await sendMessage({type:kind,url,...extra});
+    }catch(e){ console.warn(e); toast(e.message==='big'?'ফাইলটি অনেক বড়':'ফাইল পাঠানো যায়নি'); }
+  }
+  hideUpl();
+}
+['fimg','fcam','fdoc','faud'].forEach(id=>$(id).addEventListener('change',e=>{ const fs=[...e.target.files]; e.target.value=''; if(fs.length) processFiles(fs); }));
+$('camb').onclick=()=>$('fcam').click();
+$('attbtn').onclick=()=>{
+  const s=sheet(`<h3>পাঠান</h3><div class="attg">
+    <button id="t1"><span class="c" style="background:#8b5cf6">${ic('image')}</span>ছবি/ভিডিও</button>
+    <button id="t2"><span class="c" style="background:#14b8a6">${ic('camera')}</span>ক্যামেরা</button>
+    <button id="t3"><span class="c" style="background:#3e63dd">${ic('file')}</span>ডকুমেন্ট</button>
+    <button id="t4"><span class="c" style="background:#f76b15">${ic('mic')}</span>অডিও ফাইল</button></div>
+    ${HAS_CDN?'':'<p class="anote" style="padding:0 14px">ছবি, ছোট ফাইল ও ভয়েস এখনই পাঠানো যায়। বড় ভিডিও/ফাইলের জন্য Cloudinary সংযোগ লাগবে।</p>'}`);
+  $('t1').onclick=()=>{ closeSheet(); $('fimg').click(); }; $('t2').onclick=()=>{ closeSheet(); $('fcam').click(); };
+  $('t3').onclick=()=>{ closeSheet(); $('fdoc').click(); }; $('t4').onclick=()=>{ closeSheet(); $('faud').click(); };
+};
+
+/* ============ ভয়েস মেসেজ ============ */
+let rec=null;
+async function startRec(){
+  if(!cur) return;
+  if(!navigator.mediaDevices?.getUserMedia||!window.MediaRecorder) return toast('এই ব্রাউজারে ভয়েস রেকর্ড সাপোর্ট নেই');
+  let stream; try{ stream=await navigator.mediaDevices.getUserMedia({audio:true}); }catch(e){ return toast('মাইক্রোফোনের অনুমতি দিন'); }
+  const mime=['audio/webm;codecs=opus','audio/webm','audio/mp4','audio/ogg;codecs=opus'].find(t=>MediaRecorder.isTypeSupported(t))||'';
+  const mr=new MediaRecorder(stream,{...(mime?{mimeType:mime}:{}),audioBitsPerSecond:HAS_CDN?48000:24000});
+  const chunks=[]; rec={mr,stream,t0:ts_(),cancel:false,timer:null};
+  mr.ondataavailable=e=>e.data.size&&chunks.push(e.data);
+  mr.onstop=async()=>{
+    clearInterval(rec.timer); stream.getTracks().forEach(t=>t.stop()); const r=rec; rec=null;
+    $('recbar').classList.add('hidden'); $('composer').classList.remove('hidden');
+    if(r.cancel||!cur) return; const dur=Math.round((ts_()-r.t0)/1000); if(dur<1) return;
+    const blob=new Blob(chunks,{type:mr.mimeType||'audio/webm'});
+    try{ showUpl('পাঠানো হচ্ছে…',50); const url=await toUrl(blob,'voice'); await sendMessage({type:'audio',url,dur,size:blob.size}); }
+    catch(e){ toast(e.message==='big'?'ভয়েস অনেক লম্বা হয়েছে':'ভয়েস পাঠানো যায়নি'); }
+    hideUpl();
+  };
+  mr.start(); $('composer').classList.add('hidden'); $('recbar').classList.remove('hidden'); $('rectm').textContent=fmtDur(0);
+  const max=HAS_CDN?600:110;
+  rec.timer=setInterval(()=>{ const s=(ts_()-rec.t0)/1000; $('rectm').textContent=fmtDur(s); if(s>=max) mr.stop(); },250);
+}
+$('recok').onclick=()=>rec&&rec.mr.stop();
+$('recx').onclick=()=>{ if(rec){ rec.cancel=true; rec.mr.stop(); } };
+
+/* ============ চ্যাট মেনু / কল ============ */
+$('cvid').onclick=$('ccall').onclick=()=>toast('অডিও/ভিডিও কল শীঘ্রই আসছে 📞');
+$('cmenu').onclick=()=>{
+  if(!cur) return; const o=other(cur);
+  const s=sheet(`<h3>${esc((peer&&peer.name)||o.name)}</h3><p class="anote" style="text-align:left;padding:0 14px 8px;font-size:14px">📱 ${o.phone}<br>${esc((peer&&peer.about)||'')}<br>${isOnline(peer)?'🟢 অনলাইন':esc(lastSeenText(peer))}</p>
+    <button class="mi dg" id="c1"><span data-ic="trash"></span>চ্যাট খালি করুন<small>শুধু আপনার ফোন থেকে মুছবে</small></button>`);
+  hydrateIcons(s);
+  $('c1').onclick=async()=>{ closeSheet(); if(!confirm('এই চ্যাটের সব মেসেজ আপনার কাছ থেকে মুছে ফেলবেন?')) return;
+    try{ await updateDoc(doc(db,'chats',cur.id),{[`clearedAt.${me.phone}`]:ts_()}); toast('চ্যাট খালি হয়েছে'); }catch(e){ toast('সমস্যা হয়েছে'); } };
+};
+
+/* ============ PWA: ইনস্টল / নোটিফিকেশন ============ */
+let deferredInstall=null;
+const isIOS=/iphone|ipad|ipod/i.test(navigator.userAgent);
+const isStandalone=matchMedia('(display-mode:standalone)').matches||navigator.standalone===true;
+addEventListener('beforeinstallprompt',e=>{ e.preventDefault(); deferredInstall=e; if(me) setupBanner(); });
+addEventListener('appinstalled',()=>{ deferredInstall=null; $('banner').classList.add('hidden'); toast('অ্যাপ ইনস্টল হয়েছে ✅'); });
+async function installApp(){
+  if(deferredInstall){ deferredInstall.prompt(); await deferredInstall.userChoice.catch(()=>{}); deferredInstall=null; $('banner').classList.add('hidden'); return; }
+  sheet(`<h3>অ্যাপের মতো ইনস্টল করুন</h3><p class="anote" style="text-align:left;padding:0 14px 10px;font-size:15px;line-height:1.9">${isIOS
+    ?'১) Safari-তে নিচের <b>শেয়ার (⬆️)</b> বাটন চাপুন<br>২) <b>"Add to Home Screen / হোম স্ক্রিনে যোগ করুন"</b> বেছে নিন<br>৩) <b>Add</b> চাপুন'
+    :'১) ব্রাউজারের <b>⋮ মেনু</b> খুলুন<br>২) <b>"Install app" বা "Add to Home screen"</b> চাপুন<br>৩) নিশ্চিত করুন'}</p>`);
+}
+function askNotif(){ if(!('Notification' in window)) return toast('এই ব্রাউজারে নোটিফিকেশন সাপোর্ট নেই');
+  Notification.requestPermission().then(p=>{ toast(p==='granted'?'নোটিফিকেশন চালু হয়েছে 🔔':'নোটিফিকেশন বন্ধ আছে'); setupBanner(); }); }
+function setupBanner(){
+  const b=$('banner'); let act=null, txt='', btn='';
+  if(!isStandalone && (deferredInstall||isIOS) && !localStorage.getItem('mm_ban_i')){ act='install'; txt='ফোনে অ্যাপের মতো ইনস্টল করুন'; btn='ইনস্টল'; }
+  else if('Notification' in window && Notification.permission==='default' && !localStorage.getItem('mm_ban_n')){ act='notif'; txt='নতুন মেসেজের নোটিফিকেশন চালু করুন'; btn='চালু'; }
+  if(!act){ b.classList.add('hidden'); return; }
+  b.dataset.act=act; $('bantxt').textContent=txt; $('banbtn').textContent=btn; b.classList.remove('hidden');
+}
+$('banbtn').onclick=()=>{ const a=$('banner').dataset.act; if(a==='install') installApp(); else askNotif(); };
+$('banx').onclick=()=>{ localStorage.setItem($('banner').dataset.act==='install'?'mm_ban_i':'mm_ban_n','1'); setupBanner(); };
+if('serviceWorker' in navigator) addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
+
+/* ============ ইভেন্ট ও চালু ============ */
+hydrateIcons(); $('themebtn').innerHTML=ic(document.documentElement.dataset.theme==='dark'?'sun':'moon'); updSendIcon();
+$('tabin').onclick=()=>setMode('in'); $('tabup').onclick=()=>setMode('up'); $('abtn').onclick=doAuth;
+['aname','aphone','apass','apass2'].forEach(i=>$(i).addEventListener('keydown',e=>{ if(e.key==='Enter') doAuth(); }));
+$('eye').onclick=()=>{ const p=$('apass'); p.type=p.type==='password'?'text':'password'; };
+$('fab').onclick=newChatSheet; $('menubtn').onclick=()=>me&&mainMenu();
+$('themebtn').onclick=()=>applyTheme(document.documentElement.dataset.theme==='dark'?'light':'dark');
+setMode('in');
+setTimeout(()=>{ if(!$('splash').classList.contains('hidden') && !me){ $('splash').classList.add('hidden'); $('auth').classList.remove('hidden'); } },8000);
+
+</script>
+</body>
+</html>
