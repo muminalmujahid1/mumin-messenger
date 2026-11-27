@@ -1,0 +1,23 @@
+name: APK বানান
+on:
+  workflow_dispatch:
+    inputs:
+      site_url:
+        description: "আপনার সাইটের ঠিকানা (যেমন https://নাম.github.io/mumin-messenger/)"
+        required: true
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: 17 }
+      - uses: android-actions/setup-android@v3
+      - uses: gradle/actions/setup-gradle@v4
+        with: { gradle-version: "8.7" }
+      - name: ডিবাগ কী তৈরি
+        run: mkdir -p ~/.android && keytool -genkey -v -keystore ~/.android/debug.keystore -storepass android -alias androiddebugkey -keypass android -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Mumin"
+      - name: APK বিল্ড
+        run: gradle :app:assembleRelease -PsiteUrl="${{ github.event.inputs.site_url }}"
+      - uses: actions/upload-artifact@v4
+        with: { name: mumin-messenger-apk, path: app/build/outputs/apk/release/*.apk }
