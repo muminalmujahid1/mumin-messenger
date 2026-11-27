@@ -420,6 +420,15 @@ button:active{transform:scale(.95)}
 #godown{position:absolute;right:14px;bottom:10px;width:42px;height:42px;border-radius:50%;border:1px solid var(--line);background:var(--panel);color:var(--p);box-shadow:0 3px 12px rgba(0,0,0,.25);display:flex;align-items:center;justify-content:center;cursor:pointer}
 #godown.hidden{display:none}
 #godown svg{width:24px;height:24px}
+
+/* ---- গ্রুপ ---- */
+.chead .who small{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.gs{font-size:12.5px;font-weight:700;margin:0 0 2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:240px}
+.gm{display:flex;gap:12px;align-items:center;padding:8px 6px}
+.gm .av{width:40px;height:40px;font-size:16px}
+.gm small{display:block;color:var(--sub);font-size:12.5px}
+#grpadd{color:var(--p)}
+#bnav .nv small{font-size:11.5px}
 </style>
 </head>
 <body>
@@ -451,6 +460,7 @@ button:active{transform:scale(.95)}
   <aside id="side">
     <div class="top" id="topbar">
       <h2>DavetChat</h2>
+      <button class="ib hidden" id="grpadd" data-ic="plus" aria-label="নতুন গ্রুপ"></button>
       <button class="ib" id="menubtn" data-ic="settings" aria-label="সেটিংস"></button>
     </div>
     <div class="top hidden" id="selbar">
@@ -470,6 +480,7 @@ button:active{transform:scale(.95)}
       <button class="nv on" data-tab="chats"><span class="ni"><span data-ic="message"></span><i class="nb hidden" id="nbadge"></i></span><small>চ্যাট</small></button>
       <button class="nv" data-tab="calls"><span class="ni"><span data-ic="phone"></span></span><small>কল</small></button>
       <button class="nv" data-tab="contacts"><span class="ni"><span data-ic="users"></span></span><small>কন্টাক্ট</small></button>
+      <button class="nv" data-tab="groups"><span class="ni"><span data-ic="group"></span><i class="nb hidden" id="gbadge"></i></span><small>গ্রুপ</small></button>
     </nav>
   </aside>
   <section id="main">
@@ -534,7 +545,7 @@ button:active{transform:scale(.95)}
    ============================================================ */
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getAuth, onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import { getFirestore, doc, getDoc, setDoc, updateDoc, addDoc, collection, query, where, orderBy, limit, onSnapshot, getDocs, arrayUnion, increment, deleteField, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getFirestore, doc, getDoc, setDoc, updateDoc, addDoc, collection, query, where, orderBy, limit, onSnapshot, getDocs, arrayUnion, arrayRemove, increment, deleteField, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const FIREBASE_CONFIG = {
   apiKey: "AIzaSyBHV2ml0ph5AdICrtBOxP5d5TqwaDqMRBY",
@@ -608,6 +619,7 @@ const P = {
   settings:'<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>',
   pin:'<line x1="12" y1="17" x2="12" y2="22"/><path d="M5 17h14v-1.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V6h1a2 2 0 0 0 0-4H8a2 2 0 0 0 0 4h1v4.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24z"/>',
   bellx:'<path d="M13.73 21a2 2 0 0 1-3.46 0"/><path d="M18.63 13A17.89 17.89 0 0 1 18 8"/><path d="M6.26 6.26A5.86 5.86 0 0 0 6 8c0 7-3 9-3 9h14"/><path d="M18 8a6 6 0 0 0-9.33-5"/><line x1="1" y1="1" x2="23" y2="23"/>',
+  group:'<circle cx="12" cy="8" r="3.5"/><path d="M5 20v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1"/><circle cx="4.5" cy="9.5" r="2.5"/><circle cx="19.5" cy="9.5" r="2.5"/>',
   users:'<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>',
   share:'<circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>',
   qr:'<rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h3v3h-3zM20 14v3M14 20h3M20 20h1"/>',
@@ -649,7 +661,13 @@ let tab = 'chats'; const selIds = new Set(); let callLog = [], callLogBusy = fal
 const notifOn = () => localStorage.getItem('mm_notif_off') !== '1';
 /* QR লিংক: ?u=নম্বর দিয়ে খুললে লগইনের পর সেই চ্যাট খুলবে */
 try{ const qu=new URLSearchParams(location.search).get('u'); if(qu){ localStorage.setItem('mm_pending_u',qu); history.replaceState(null,'',location.pathname); } }catch(e){}
-const other = c => { const p=c.participants.find(x=>x!==me.phone); return {phone:p,name:(c.names&&c.names[p])||p}; };
+const isG = c => !!(c && c.isGroup);
+const other = c => { if(c.isGroup) return {phone:c.id,name:c.groupName||'গ্রুপ',group:true}; const p=c.participants.find(x=>x!==me.phone); return {phone:p,name:(c.names&&c.names[p])||p}; };
+const others = c => c.participants.filter(x=>x!==me.phone);
+/* পড়া/পৌঁছানো: গ্রুপে সবাই দেখলে তবেই টিক নীল */
+const seenBy = (c,key,t) => { const m=c[key]||{}; if(isG(c)){ const o=others(c); return o.length>0&&o.every(p=>(m[p]||0)>=t); } return (m[other(c).phone]||0)>=t; };
+const gname = p => (presence[p]&&presence[p].name)||(cur&&cur.names&&cur.names[p])||p;
+const gpre = c => (isG(c)&&c.lastFrom&&c.lastType!=='sys') ? ((c.lastFrom===me.phone?'আপনি':((c.names||{})[c.lastFrom]||''))+': ') : '';
 const ts_ = () => Date.now();
 
 /* ---------------- ওভারলে/শিট ---------------- */
@@ -795,10 +813,10 @@ function setPeerData(p,data){ const prev=presence[p];
   presence[p]=data; }
 /* অনলাইন = অপরজনের হার্টবিট গত ৫০ সেকেন্ডে বদলেছে (ফোনের ঘড়ি ভুল হলেও কাজ করবে) */
 const isOnline = u => !!(u && u.online && Date.now()-(u._seen||0) < 50000);
-function watchPeers(){ chats.forEach(c=>{ const p=other(c).phone; if(peerSubs[p]) return;
+function watchPeers(){ chats.forEach(c=>{ if(isG(c)) return; const p=other(c).phone; if(peerSubs[p]) return;
   peerSubs[p]=onSnapshot(doc(db,'users',p),s=>{ setPeerData(p,s.exists()?s.data():null);
     if(cur&&other(cur).phone===p){ peer=presence[p]; renderHead(); } renderList(); },()=>{}); }); }
-const typingNow = c => { const o=other(c); return c.typing && ts_()-(c.typing[o.phone]||0) < 5000; };
+const typingNow = c => { if(!c.typing) return false; if(isG(c)) return others(c).some(p=>ts_()-(c.typing[p]||0)<5000); const o=other(c); return ts_()-(c.typing[o.phone]||0) < 5000; };
 
 function onChats(snap){
   const incoming=[];
@@ -819,12 +837,15 @@ function onChats(snap){
   incoming.forEach(({id,d})=>{ const o=other({...d,id}); const visible = cur&&cur.id===id&&!document.hidden;
     if(d.lastType==='call'){ callLogAt=0; if(tab==='calls') loadCallLog(true); }
     if((d.muted||{})[me.phone]) return;
-    if(!visible){ notify(o.name, preview(d), id, false, avatarIcon(o.name,o.phone)); beep(); } else beep(); });
+    if(!visible){ const gp=(d.isGroup&&d.lastType!=='sys')?(((d.names||{})[d.lastFrom]||'')+': '):''; notify(o.name, gp+preview(d), id, false, avatarIcon(o.name,o.phone)); beep(); } else beep(); });
   if(cur){ const c=chats.find(x=>x.id===cur.id); if(c){ cur=c; renderHead(); renderMsgs(); if(!document.hidden) markRead(); } }
   renderList();
   const tot=chats.reduce((n,c)=>n+(mutedOf(c)||hiddenOf(c)?0:((c.unread||{})[me.phone]||0)),0);
   document.title = (tot?`(${bn(tot)}) `:'')+'DavetChat'; navigator.setAppBadge?.(tot).catch?.(()=>{});
-  const nb=$('nbadge'); nb.textContent=bn(tot>99?'99+':tot); nb.classList.toggle('hidden',!tot);
+  const cnt=g=>chats.reduce((n,c)=>n+(isG(c)===g&&!(mutedOf(c)||hiddenOf(c))?((c.unread||{})[me.phone]||0):0),0);
+  const tc=cnt(false), tg=cnt(true);
+  const nb=$('nbadge'); nb.textContent=bn(tc>99?'99+':tc); nb.classList.toggle('hidden',!tc);
+  const gb=$('gbadge'); gb.textContent=bn(tg>99?'99+':tg); gb.classList.toggle('hidden',!tg);
 }
 
 const pinnedOf = c => !!(c.pinned&&c.pinned[me.phone]);
@@ -837,22 +858,22 @@ function renderList(){
   if(tab==='calls') return renderCalls();
   if(tab==='contacts') return renderContacts();
   const L=$('list'), qv=$('q').value.trim().toLowerCase(), qn=norm(qv);
-  let arr=chats.filter(c=>!hiddenOf(c));
+  let arr=chats.filter(c=>!hiddenOf(c)&&(tab==='groups')===isG(c));
   if(qv) arr=arr.filter(c=>{ const o=other(c); return o.name.toLowerCase().includes(qv)||(qn&&o.phone.includes(qn)); });
   arr=arr.slice().sort((a,b)=>(pinnedOf(b)-pinnedOf(a))||((b.lastTs||0)-(a.lastTs||0)));
   let html='';
-  if(qn.length>=10 && qn!==me.phone && !chats.some(c=>other(c).phone===qn))
+  if(tab==='chats' && qn.length>=10 && qn!==me.phone && !chats.some(c=>other(c).phone===qn))
     html+=`<div class="item" data-new="${qn}"><div class="av" style="background:var(--p2)">${ic('plus')}</div><div class="m"><div class="r1"><b>নতুন চ্যাট শুরু করুন</b></div><div class="r2"><span class="p">${qn}</span></div></div></div>`;
-  if(!arr.length && !html){ L.innerHTML = qv ? '<div class="empty">কিছু পাওয়া যায়নি</div>' : `<div class="empty"><div class="big">💬</div>এখনো কোনো চ্যাট নেই।<br>নিচের বাটন চেপে বন্ধুর মোবাইল নম্বর দিয়ে<br>প্রথম মেসেজ পাঠান।</div>`; L._sig=null; return; }
+  if(!arr.length && !html){ L.innerHTML = qv ? '<div class="empty">কিছু পাওয়া যায়নি</div>' : (tab==='groups'?'<div class="empty"><div class="big">👥</div>এখনো কোনো গ্রুপ নেই।<br>উপরের ➕ বাটন চেপে নতুন গ্রুপ বানান।</div>':`<div class="empty"><div class="big">💬</div>এখনো কোনো চ্যাট নেই।<br>নিচের বাটন চেপে বন্ধুর মোবাইল নম্বর দিয়ে<br>প্রথম মেসেজ পাঠান।</div>`); L._sig=null; return; }
   html+=arr.map(c=>{
     const o=other(c), un=(c.unread||{})[me.phone]||0, ty=typingNow(c), sel=cur&&cur.id===c.id, picked=selIds.has(c.id), pn=pinnedOf(c), mu=mutedOf(c);
-    const rdN=((c.readAt||{})[o.phone]||0)>=(c.lastTs||0), dlN=((c.deliveredAt||{})[o.phone]||0)>=(c.lastTs||0);
+    const rdN=seenBy(c,'readAt',c.lastTs||0), dlN=seenBy(c,'deliveredAt',c.lastTs||0);
     const tick = c.lastFrom===me.phone ? `<span class="tk${rdN?' rd':''}">${tickSvg(rdN||dlN?2:1)}</span>` : '';
     const ind=(pn||mu)?`<span class="ind">${mu?ic('bellx'):''}${pn?ic('pin'):''}</span>`:'';
     return `<div class="item${sel&&!selIds.size?' on':''}${un?' un':''}${picked?' sel':''}" data-id="${c.id}">
-      <div class="av" style="background:${colorOf(o.phone)}">${esc((o.name[0]||'?'))}${picked?`<span class="chk">${ic('check')}</span>`:(isOnline(presence[o.phone])?'<span class="dot"></span>':'')}</div>
+      <div class="av" style="background:${colorOf(o.phone)}">${o.group?ic('group'):esc((o.name[0]||'?'))}${picked?`<span class="chk">${ic('check')}</span>`:(!o.group&&isOnline(presence[o.phone])?'<span class="dot"></span>':'')}</div>
       <div class="m"><div class="r1"><b>${esc(o.name)}</b><span>${c.lastTs?fmtTime(c.lastTs):''}</span></div>
-      <div class="r2"><span class="p${ty?' ty':''}">${ty?'লিখছে…':tick+esc(preview(c)||'নতুন চ্যাট')}</span>${(un&&!sel)||ind?`<span style="display:flex;gap:6px;align-items:center">${un&&!sel?`<div class="badge${mu?' mu':''}">${bn(un>99?'99+':un)}</div>`:''}${ind}</span>`:''}</div></div></div>`;
+      <div class="r2"><span class="p${ty?' ty':''}">${ty?'লিখছে…':tick+esc(gpre(c)+(preview(c)||'নতুন চ্যাট'))}</span>${(un&&!sel)||ind?`<span style="display:flex;gap:6px;align-items:center">${un&&!sel?`<div class="badge${mu?' mu':''}">${bn(un>99?'99+':un)}</div>`:''}${ind}</span>`:''}</div></div></div>`;
   }).join('');
   if(L._sig===html) return; L._sig=html; L.innerHTML=html;
 }
@@ -860,14 +881,14 @@ function renderList(){
 /* ---- ট্যাব ---- */
 function setTab(t){
   tab=t; selIds.clear(); updSelUI(true);
-  $('list').classList.toggle('hidden',t!=='chats'); $('clist').classList.toggle('hidden',t!=='calls'); $('plist').classList.toggle('hidden',t!=='contacts');
+  $('list').classList.toggle('hidden',t!=='chats'&&t!=='groups'); $('clist').classList.toggle('hidden',t!=='calls'); $('plist').classList.toggle('hidden',t!=='contacts');
   document.querySelectorAll('#bnav .nv').forEach(b=>b.classList.toggle('on',b.dataset.tab===t));
-  $('q').placeholder = t==='chats'?'চ্যাট বা নম্বর খুঁজুন':t==='calls'?'কল খুঁজুন':'কন্টাক্ট খুঁজুন';
-  $('fab').classList.toggle('hidden',t==='calls');
+  $('q').placeholder = t==='chats'?'চ্যাট বা নম্বর খুঁজুন':t==='calls'?'কল খুঁজুন':t==='groups'?'গ্রুপ খুঁজুন':'কন্টাক্ট খুঁজুন';
+  $('fab').classList.toggle('hidden',t==='calls'||t==='groups'); $('grpadd').classList.toggle('hidden',t!=='groups');
   if(t==='calls'){ if(me) loadCallLog(true); }
   if(me) renderList();
 }
-document.querySelectorAll('#bnav .nv').forEach(b=>b.onclick=()=>{ if(tab!==b.dataset.tab) setTab(b.dataset.tab); else { const l=b.dataset.tab==='chats'?$('list'):b.dataset.tab==='calls'?$('clist'):$('plist'); l.scrollTo({top:0,behavior:'smooth'}); } });
+document.querySelectorAll('#bnav .nv').forEach(b=>b.onclick=()=>{ if(tab!==b.dataset.tab) setTab(b.dataset.tab); else { const l=(b.dataset.tab==='chats'||b.dataset.tab==='groups')?$('list'):b.dataset.tab==='calls'?$('clist'):$('plist'); l.scrollTo({top:0,behavior:'smooth'}); } });
 
 /* ---- কল হিস্টোরি (চ্যাটের কল-মেসেজ থেকে) ---- */
 async function loadCallLog(force){
@@ -876,7 +897,7 @@ async function loadCallLog(force){
   callLogBusy=true;
   try{
     const arr=[];
-    await Promise.all(chats.slice(0,40).map(async c=>{
+    await Promise.all(chats.filter(c=>!isG(c)).slice(0,40).map(async c=>{
       try{ const s=await getDocs(query(collection(db,'chats',c.id,'messages'),orderBy('ts','desc'),limit(40)));
         s.forEach(d=>{ const m=d.data(); if(m.type==='call') arr.push({key:c.id+'/'+d.id,chatId:c.id,phone:other(c).phone,from:m.from,ts:m.ts||0,type:m.callType,result:m.result,dur:m.dur||0}); });
       }catch(e){ console.warn(e); } }));
@@ -918,7 +939,7 @@ $('clist').addEventListener('click',e=>{ const it=e.target.closest('.item'); if(
 /* ---- কন্টাক্ট ---- */
 function contactList(){
   const m=new Map();
-  chats.forEach(c=>{ const o=other(c); const pr=presence[o.phone]; m.set(o.phone,{phone:o.phone,name:(pr&&pr.name)||o.name,about:(pr&&pr.about)||'',chatId:c.id}); });
+  chats.forEach(c=>{ if(isG(c)) return; const o=other(c); const pr=presence[o.phone]; m.set(o.phone,{phone:o.phone,name:(pr&&pr.name)||o.name,about:(pr&&pr.about)||'',chatId:c.id}); });
   return [...m.values()].sort((a,b)=>a.name.localeCompare(b.name,'bn'));
 }
 function renderContacts(){
@@ -1000,7 +1021,7 @@ async function startChatWith(p,fromSheet){
   }catch(e){ err('সমস্যা হয়েছে, আবার চেষ্টা করুন'); }
 }
 async function ensureChat(){
-  if(knownChats.has(cur.id)) return;
+  if(knownChats.has(cur.id)||isG(cur)) return;
   const o=other(cur);
   await setDoc(doc(db,'chats',cur.id),{participants:cur.participants,names:{[me.phone]:me.name,[o.phone]:o.name}},{merge:true});
   knownChats.add(cur.id);
@@ -1092,7 +1113,7 @@ function openChat(c, fromPop){
   cancelReply(); cancelEdit(); $('emo').classList.add('hidden'); $('inp').value=''; autosize(); updSendIcon();
   msgsAll=[]; msgLimit=80; peer=presence[o.phone]||null; $('msgs').innerHTML='';
   $('cav').textContent=o.name[0]||'?'; $('cav').style.background=colorOf(o.phone);
-  unsubPeer&&unsubPeer(); unsubPeer=onSnapshot(doc(db,'users',o.phone),s=>{ setPeerData(o.phone,s.exists()?s.data():null); peer=presence[o.phone]; renderHead(); renderList(); });
+  unsubPeer&&unsubPeer(); unsubPeer=isG(c)?null:onSnapshot(doc(db,'users',o.phone),s=>{ setPeerData(o.phone,s.exists()?s.data():null); peer=presence[o.phone]; renderHead(); renderList(); });
   subMsgs(); renderHead(); renderList();
   if(innerWidth>760) setTimeout(()=>$('inp').focus(),200);
 }
@@ -1128,7 +1149,10 @@ function lastSeenText(u){
   return 'শেষ দেখা: '+fmtDay(u.lastSeen)+' '+fmtTime(u.lastSeen);
 }
 function renderHead(){
-  if(!cur) return; const o=other(cur); $('cname').textContent=(peer&&peer.name)||o.name;
+  if(!cur) return; const o=other(cur); const g=isG(cur); $('cvid').classList.toggle('hidden',g); $('ccall').classList.toggle('hidden',g);
+  if(g){ $('cname').textContent=o.name; $('cav').innerHTML=ic('group'); $('cav').style.background=colorOf(cur.id); const st=$('cstat');
+    if(typingNow(cur)){ st.textContent='কেউ লিখছে…'; st.className='on'; } else { st.className=''; st.textContent=cur.participants.map(x=>x===me.phone?'আপনি':gname(x)).join(', '); } return; }
+  $('cname').textContent=(peer&&peer.name)||o.name;
   const st=$('cstat'); st.className=''; $('cav').innerHTML=esc(o.name[0]||'?')+(isOnline(peer)?'<span class="dot"></span>':'');
   if(typingNow(cur)){ st.textContent='লিখছে…'; st.className='on'; }
   else if(isOnline(peer)){ st.textContent='অনলাইন'; st.className='on'; }
@@ -1140,7 +1164,7 @@ setInterval(()=>{ if(me){ renderHead(); if(cur) renderMsgs(true); renderList(); 
 function tickHtml(m){
   if(m.from!==me.phone) return '';
   if(m.pending) return '<span class="tk">🕓</span>';
-  const o=other(cur).phone, rd=((cur.readAt||{})[o]||0)>=m.ts, dl=((cur.deliveredAt||{})[o]||0)>=m.ts;
+  const rd=seenBy(cur,'readAt',m.ts), dl=seenBy(cur,'deliveredAt',m.ts);
   return `<span class="tk${rd?' rd':''}">${tickSvg(dl||rd?2:1)}</span>`;
 }
 function bodyHtml(m){
@@ -1172,10 +1196,10 @@ function renderMsgs(soft){
     const d=fmtDay(m.ts); if(d!==last){ html+=`<div class="day">${d}</div>`; last=d; }
     const mine=m.from===me.phone;
     let rp='';
-    if(m.replyTo&&!m.deleted) rp=`<div class="rp" data-goto="${esc(m.replyTo.id)}"><b>${m.replyTo.from===me.phone?'আপনি':esc((peer&&peer.name)||o.name)}</b><span>${esc(m.replyTo.text||'')}</span></div>`;
+    if(m.replyTo&&!m.deleted) rp=`<div class="rp" data-goto="${esc(m.replyTo.id)}"><b>${m.replyTo.from===me.phone?'আপনি':esc(isG(cur)?gname(m.replyTo.from):((peer&&peer.name)||o.name))}</b><span>${esc(m.replyTo.text||'')}</span></div>`;
     const rxs={}; Object.values(m.reactions||{}).forEach(e=>rxs[e]=(rxs[e]||0)+1);
     const rx=Object.keys(rxs).length&&!m.deleted?`<div class="rx">${Object.entries(rxs).map(([e,n])=>`<span data-rx="${m.id}">${e}${n>1?' '+bn(n):''}</span>`).join('')}</div>`:'';
-    html+=`<div class="row ${mine?'me':'th'}" data-id="${m.id}"><div class="b ${mine?'me':'th'}${m.deleted?' del':''}">${rp}${bodyHtml(m)}<span class="meta">${m.edited&&!m.deleted?'<span class="tm">সম্পাদিত</span>':''}<span class="tm">${fmtTime(m.ts)}</span>${tickHtml(m)}</span></div>${rx}</div>`;
+    html+=`<div class="row ${mine?'me':'th'}" data-id="${m.id}"><div class="b ${mine?'me':'th'}${m.deleted?' del':''}">${(!mine&&isG(cur))?`<div class="gs" style="color:${colorOf(m.from)}">${esc(gname(m.from))}</div>`:''}${rp}${bodyHtml(m)}<span class="meta">${m.edited&&!m.deleted?'<span class="tm">সম্পাদিত</span>':''}<span class="tm">${fmtTime(m.ts)}</span>${tickHtml(m)}</span></div>${rx}</div>`;
   }
   if(typingNow(cur)) html+='<div class="typing"><i></i><i></i><i></i></div>';
   const sig=html; if(soft && box._sig===sig) return; box._sig=sig;
@@ -1229,7 +1253,7 @@ async function delForMe(m){ try{ await updateDoc(msgDoc(m.id),{deletedFor:arrayU
 async function delForAll(m){ try{ await updateDoc(msgDoc(m.id),{deleted:true,text:'',url:'',name:'',reactions:{}}); }catch(e){ toast('মুছতে সমস্যা হয়েছে'); } }
 
 /* ---------------- রিপ্লাই / এডিট ---------------- */
-function startReply(m){ cancelEdit(); replyTo=m; $('rpn').textContent=m.from===me.phone?'আপনি':((peer&&peer.name)||other(cur).name); $('rpt').textContent=msgText(m); $('replybar').classList.remove('hidden'); $('inp').focus(); }
+function startReply(m){ cancelEdit(); replyTo=m; $('rpn').textContent=m.from===me.phone?'আপনি':(isG(cur)?gname(m.from):((peer&&peer.name)||other(cur).name)); $('rpt').textContent=msgText(m); $('replybar').classList.remove('hidden'); $('inp').focus(); }
 function cancelReply(){ replyTo=null; $('replybar').classList.add('hidden'); }
 function startEdit(m){ cancelReply(); editing=m; $('edt').textContent=m.text; $('editbar').classList.remove('hidden'); $('inp').value=m.text; autosize(); updSendIcon(); $('inp').focus(); }
 function cancelEdit(){ if(editing){ $('inp').value=''; autosize(); updSendIcon(); } editing=null; $('editbar').classList.add('hidden'); }
@@ -1243,9 +1267,9 @@ async function sendMessage(payload){
     const m={from:me.phone,ts:ts_(),...payload};
     if(replyTo) m.replyTo={id:replyTo.id,from:replyTo.from,text:msgText(replyTo).slice(0,90)};
     cancelReply();
-    const type=payload.type||'text';
+    const type=payload.type||'text'; const un={}; others(cur).forEach(p=>{ un['unread.'+p]=increment(1); });
     await addDoc(collection(db,'chats',cur.id,'messages'),m);
-    await updateDoc(doc(db,'chats',cur.id),{last:type==='text'?payload.text.slice(0,120):'',lastType:type,lastTs:m.ts,lastFrom:me.phone,[`unread.${o.phone}`]:increment(1),[`typing.${me.phone}`]:0});
+    await updateDoc(doc(db,'chats',cur.id),{last:type==='text'?payload.text.slice(0,120):'',lastType:type,lastTs:m.ts,lastFrom:me.phone,...un,[`typing.${me.phone}`]:0});
     return true;
   }catch(e){ console.warn(e); toast(e.code==='permission-denied'?'Firestore Rules সেট করা হয়নি':'মেসেজ পাঠানো যায়নি — ইন্টারনেট চেক করুন'); return false; }
 }
@@ -1386,13 +1410,65 @@ $('recx').onclick=()=>{ if(rec){ rec.cancel=true; rec.mr.stop(); } };
 /* ============ চ্যাট মেনু / কল ============ */
 $('cvid').onclick=()=>startCall('video'); $('ccall').onclick=()=>startCall('audio');
 $('cmenu').onclick=()=>{
-  if(!cur) return; const o=other(cur);
+  if(!cur) return; if(isG(cur)) return groupInfo(); const o=other(cur);
   const s=sheet(`<h3>${esc((peer&&peer.name)||o.name)}</h3><p class="anote" style="text-align:left;padding:0 14px 8px;font-size:14px">📱 ${o.phone}<br>${esc((peer&&peer.about)||'')}<br>${isOnline(peer)?'🟢 অনলাইন':esc(lastSeenText(peer))}</p>
     <button class="mi dg" id="c1"><span data-ic="trash"></span>চ্যাট খালি করুন<small>শুধু আপনার ফোন থেকে মুছবে</small></button>`);
   hydrateIcons(s);
   $('c1').onclick=async()=>{ closeSheet(); if(!confirm('এই চ্যাটের সব মেসেজ আপনার কাছ থেকে মুছে ফেলবেন?')) return;
     try{ await updateDoc(doc(db,'chats',cur.id),{[`clearedAt.${me.phone}`]:ts_()}); toast('চ্যাট খালি হয়েছে'); }catch(e){ toast('সমস্যা হয়েছে'); } };
 };
+
+
+/* ============ গ্রুপ ============ */
+$('grpadd').onclick=()=>newGroupSheet();
+document.querySelector('#chat .who').addEventListener('click',()=>{ if(cur&&isG(cur)) groupInfo(); });
+function newGroupSheet(){
+  const sel=new Set(), extra={};
+  const s=sheet(`<h3>নতুন গ্রুপ</h3>
+    <div class="fld"><label>গ্রুপের নাম</label><div class="in"><span data-ic="group"></span><input id="gname" maxlength="40" placeholder="গ্রুপের নাম লিখুন"></div></div>
+    <div class="fld"><label>নম্বর দিয়ে সদস্য যোগ করুন</label><div class="in"><span data-ic="phone"></span><input id="gph" type="tel" inputmode="numeric" placeholder="01XXXXXXXXX"><button id="gphadd" type="button" data-ic="plus" style="color:var(--p)"></button></div></div>
+    <div class="sech" id="gcnt"></div><div id="gmlist" style="max-height:30vh;overflow:auto"></div>
+    <div class="aerr" id="gerr"></div><button class="btn" id="ggo">গ্রুপ তৈরি করুন</button>`);
+  hydrateIcons(s);
+  const cands=()=>{ const m=new Map(); contactList().forEach(x=>m.set(x.phone,x.name)); Object.entries(extra).forEach(([p,n])=>m.set(p,n)); return [...m.entries()].map(([phone,name])=>({phone,name})); };
+  const draw=()=>{ const arr=cands();
+    $('gcnt').textContent=sel.size?bn(sel.size)+' জন বাছা হয়েছে':'সদস্য বাছুন';
+    $('gmlist').innerHTML=arr.length?arr.map(x=>`<div class="item" data-p="${x.phone}"><div class="av" style="background:${colorOf(x.phone)}">${esc(x.name[0]||'?')}${sel.has(x.phone)?`<span class="chk">${ic('check')}</span>`:''}</div><div class="m"><div class="r1"><b>${esc(x.name)}</b></div><div class="r2"><span class="p">${x.phone}</span></div></div></div>`).join(''):'<div class="empty">কোনো কন্টাক্ট নেই। উপরে নম্বর দিয়ে যোগ করুন।</div>'; };
+  draw();
+  $('gmlist').onclick=e=>{ const it=e.target.closest('.item[data-p]'); if(!it) return; const p=it.dataset.p; if(sel.has(p)) sel.delete(p); else sel.add(p); draw(); };
+  const addNum=async()=>{ const p=norm($('gph').value); $('gerr').textContent='';
+    if(p.length<10) return $('gerr').textContent='সঠিক নম্বর দিন';
+    if(p===me.phone) return $('gerr').textContent='আপনি আগে থেকেই গ্রুপে আছেন';
+    try{ const u=await getDoc(doc(db,'users',p)); if(!u.exists()) return $('gerr').textContent='এই নম্বরে DavetChat-এ অ্যাকাউন্ট নেই';
+      extra[p]=u.data().name||p; sel.add(p); $('gph').value=''; draw(); }catch(e){ $('gerr').textContent='সমস্যা হয়েছে, আবার চেষ্টা করুন'; } };
+  $('gphadd').onclick=addNum; $('gph').addEventListener('keydown',e=>{ if(e.key==='Enter'){ e.preventDefault(); addNum(); } });
+  $('ggo').onclick=async()=>{
+    const name=$('gname').value.trim(); $('gerr').textContent='';
+    if(!name) return $('gerr').textContent='গ্রুপের একটি নাম দিন';
+    if(!sel.size) return $('gerr').textContent='কমপক্ষে একজন সদস্য বাছুন';
+    const members=[me.phone,...sel], names={[me.phone]:me.name}; cands().forEach(x=>{ if(sel.has(x.phone)) names[x.phone]=x.name; });
+    const unread={}; sel.forEach(p=>unread[p]=1);
+    const id='g_'+Date.now().toString(36)+Math.random().toString(36).slice(2,7), now=ts_();
+    const data={isGroup:true,groupName:name,admin:me.phone,participants:members,names,created:now,last:me.name+' গ্রুপ তৈরি করেছেন',lastType:'sys',lastTs:now,lastFrom:me.phone,unread};
+    $('ggo').disabled=true;
+    try{ await setDoc(doc(db,'chats',id),data); knownChats.add(id); closeSheet(); setTab('groups'); openChat({id,...data}); toast('গ্রুপ তৈরি হয়েছে ✅'); }
+    catch(e){ console.warn(e); $('ggo').disabled=false; $('gerr').textContent=e.code==='permission-denied'?'Firestore Rules-এ গ্রুপ তৈরির অনুমতি নেই':'গ্রুপ তৈরি করা যায়নি'; }
+  };
+  setTimeout(()=>$('gname').focus(),100);
+}
+function groupInfo(){
+  const c=cur; if(!c) return;
+  const mem=c.participants.map(p=>({p,n:p===me.phone?'আপনি':((presence[p]&&presence[p].name)||(c.names||{})[p]||p)}));
+  const s=sheet(`<h3>${esc(c.groupName||'গ্রুপ')}</h3><p class="anote" style="text-align:left;padding:0 14px 6px;font-size:14px">${bn(mem.length)} জন সদস্য</p>
+    <div style="max-height:38vh;overflow:auto">${mem.map(x=>`<div class="gm"><div class="av" style="background:${colorOf(x.p)}">${esc(x.n[0]||'?')}</div><div><b>${esc(x.n)}</b><small>${x.p}${x.p===c.admin?' · অ্যাডমিন':''}</small></div></div>`).join('')}</div>
+    <button class="mi dg" id="g1"><span data-ic="trash"></span>চ্যাট খালি করুন<small>শুধু আপনার ফোন থেকে মুছবে</small></button>
+    <button class="mi dg" id="g2"><span data-ic="back"></span>গ্রুপ ছেড়ে যান</button>`);
+  hydrateIcons(s);
+  $('g1').onclick=async()=>{ closeSheet(); if(!confirm('এই গ্রুপের সব মেসেজ আপনার কাছ থেকে মুছে ফেলবেন?')) return;
+    try{ await updateDoc(doc(db,'chats',c.id),{[`clearedAt.${me.phone}`]:ts_()}); toast('চ্যাট খালি হয়েছে'); }catch(e){ toast('সমস্যা হয়েছে'); } };
+  $('g2').onclick=async()=>{ closeSheet(); if(!confirm('আপনি কি গ্রুপ ছেড়ে যেতে চান?')) return;
+    try{ await updateDoc(doc(db,'chats',c.id),{participants:arrayRemove(me.phone)}); if(cur&&cur.id===c.id) closeChat(); toast('গ্রুপ ছেড়ে এসেছেন'); }catch(e){ toast('গ্রুপ ছাড়া যায়নি'); } };
+}
 
 /* ============ PWA: ইনস্টল / নোটিফিকেশন ============ */
 let deferredInstall=null;
