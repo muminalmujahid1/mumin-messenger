@@ -702,12 +702,9 @@ onAuthStateChanged(auth, async user=>{
     $('auth').classList.remove('hidden'); $('aerr').textContent = e.code==='permission-denied' ? 'Firestore Rules সেট করা হয়নি — firestore.rules ফাইলের কোড Publish করুন।' : authErr(e); return;
   }
   $('auth').classList.add('hidden'); $('app').classList.remove('hidden');
-  startSession(); regNative();
+  startSession();
 });
 
-/* Android অ্যাপ থেকে পুশ-টোকেন নিয়ে ইউজারের ডকুমেন্টে রাখা (কল-পুশের জন্য) */
-function regNative(){ try{ const t=window.MuminNative&&window.MuminNative.getToken(); if(t&&me) updateDoc(doc(db,'users',me.phone),{fcm:t}).catch(()=>{}); }catch(e){} }
-window.onNativeToken=regNative;
 function teardown(){
   stopCallWatch(); if(call) try{ finish(call); }catch(e){}
   unsubChats&&unsubChats(); unsubMsgs&&unsubMsgs(); unsubPeer&&unsubPeer();
