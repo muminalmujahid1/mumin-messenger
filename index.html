@@ -347,6 +347,72 @@ img.media,video.media{max-height:320px;min-width:180px;object-fit:cover}
 @media (prefers-reduced-motion:reduce){#cin .cb.acc{animation:none}}
 #callui #cdbg{display:none}
 body.dbg #callui #cdbg{display:block}
+
+/* ===== ডিজাইন v3: আধুনিক ও প্রফেশনাল ===== */
+:root{--p:#5b3df0;--p2:#10b3a3;--bg:#f3f2f9;--panel:#fff;--line:#e9e7f3;--chatbg:#eeecf7;--hover:#f5f3fc;--shadow:0 1px 2px rgba(30,20,80,.10);--ease:cubic-bezier(.2,.8,.2,1)}
+:root[data-theme=dark]{--bg:#0d0c15;--panel:#15141f;--line:#232136;--chatbg:#0b0a12;--hover:#1b1a2a;--in:#201f32}
+body{-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+button{transition:transform .15s var(--ease),background .2s,opacity .2s}
+button:active{transform:scale(.95)}
+.ib{border-radius:50%;transition:background .2s,transform .15s var(--ease)}
+.ib:active{background:rgba(91,61,240,.14);transform:scale(.9)}
+/* সাইডবার */
+#side{background:var(--panel)}
+.top{padding-top:calc(14px + env(safe-area-inset-top))}
+.top h2{font-size:23px;font-weight:700;letter-spacing:-.2px}
+.srch{background:var(--bg);border:1px solid transparent;border-radius:16px;transition:border-color .2s,box-shadow .2s,background .2s}
+.srch:focus-within{background:var(--panel);border-color:rgba(91,61,240,.45);box-shadow:0 0 0 4px rgba(91,61,240,.10)}
+#list .item,#clist .item{margin:2px 8px;border-radius:18px;padding:11px 10px;position:relative;transition:background .18s,transform .15s var(--ease);animation:rise .38s var(--ease) both}
+#list .item:active,#clist .item:active{transform:scale(.985);background:var(--hover)}
+#list .item:nth-child(2){animation-delay:.03s}#list .item:nth-child(3){animation-delay:.06s}#list .item:nth-child(4){animation-delay:.09s}#list .item:nth-child(5){animation-delay:.12s}#list .item:nth-child(n+6){animation-delay:.15s}
+@keyframes rise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+.item .r1 b{font-weight:700;font-size:16.5px}
+.av{font-weight:700;letter-spacing:0}
+.av .dot,.av .on{box-shadow:0 0 0 3px var(--panel)}
+#fab{border-radius:22px;width:60px;height:60px;animation:pop .5s var(--ease) both .2s}
+@keyframes pop{from{transform:scale(.4);opacity:0}to{transform:none;opacity:1}}
+#bnav{backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);background:color-mix(in srgb,var(--panel) 90%,transparent);border-top:1px solid var(--line)}
+#bnav .nv.on .ni{background:rgba(91,61,240,.15);animation:pop .3s var(--ease)}
+#bnav .nv.on{font-weight:700}
+/* চ্যাট */
+#chat{background:var(--chatbg);background-image:radial-gradient(circle at 20% 10%,rgba(91,61,240,.06),transparent 40%),radial-gradient(circle at 85% 80%,rgba(16,179,163,.07),transparent 42%)}
+.chead{padding-top:calc(8px + env(safe-area-inset-top));background:color-mix(in srgb,var(--panel) 92%,transparent);border-bottom:1px solid var(--line);box-shadow:0 4px 18px rgba(40,25,100,.05)}
+.chead .who b{font-weight:700;font-size:16.5px}
+#msgs{padding:14px 12px 10px;scroll-behavior:smooth}
+.b{font-size:15.5px;line-height:1.5;border-radius:20px;animation:bin .28s var(--ease) both;max-width:min(82%,520px)}
+.b.me{background:linear-gradient(135deg,#5b3df0,#7552f3);color:#fff;border-bottom-right-radius:6px;box-shadow:0 6px 16px rgba(91,61,240,.28)}
+.b.th{background:var(--panel);border-bottom-left-radius:6px;box-shadow:0 2px 8px rgba(30,20,80,.07);border:1px solid var(--line)}
+@keyframes bin{from{opacity:0;transform:translateY(8px) scale(.96)}to{opacity:1;transform:none}}
+.day{font-weight:600;font-size:12.5px;padding:5px 14px;border-radius:14px;background:color-mix(in srgb,var(--panel) 80%,transparent);border:1px solid var(--line);color:var(--sub);box-shadow:none}
+#composer{padding:8px 10px calc(10px + env(safe-area-inset-bottom));background:transparent}
+#composer .box{border-radius:26px;border:1px solid var(--line);box-shadow:0 6px 22px rgba(40,25,100,.09);transition:box-shadow .2s,border-color .2s}
+#composer .box:focus-within{border-color:rgba(91,61,240,.45);box-shadow:0 0 0 4px rgba(91,61,240,.10),0 6px 22px rgba(40,25,100,.09)}
+#send{width:50px;height:50px;box-shadow:0 8px 20px rgba(91,61,240,.45);animation:pop .25s var(--ease)}
+#toast{border-radius:16px}
+/* মেনু, শিট */
+#ov .sheet,#ov .menu,#ov .dlg{border-radius:24px;box-shadow:0 24px 70px rgba(20,10,60,.35);animation:rise .25s var(--ease)}
+/* লগইন */
+.acard{animation:rise .6s var(--ease) both .1s}
+.hero .lg{animation:float 4.5s ease-in-out infinite}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+.hero h1{font-size:28px}
+/* কল স্ক্রিন */
+#callui{background:radial-gradient(120% 70% at 50% 0%,color-mix(in srgb,var(--ac) 55%,#0a0914) 0%,#0a0914 66%)}
+#callui .cuav{width:140px;height:140px;font-size:62px;margin-bottom:28px}
+#callui .cuav::before,#callui .cuav::after{inset:-14px;border-width:2px;border-color:rgba(255,255,255,.3);animation:cring 2.2s ease-out infinite}
+#callui .cuav::after{animation-delay:1.1s}
+@keyframes cring{0%{transform:scale(.92);opacity:.9}100%{transform:scale(1.65);opacity:0}}
+#callui h2{font-size:30px;letter-spacing:-.2px}
+#callui .cbox p{font-size:17px;letter-spacing:.3px}
+#callui.ringing .cbox p::after{content:"";display:inline-block;width:1.2em;text-align:left;animation:dots 1.4s steps(4,end) infinite}
+@keyframes dots{0%{content:""}25%{content:"."}50%{content:".."}75%{content:"..."}}
+#callui .cctl{border-radius:44px;background:rgba(255,255,255,.12);box-shadow:0 18px 50px rgba(0,0,0,.4)}
+#cin .cb{width:78px;height:78px;box-shadow:0 14px 34px rgba(0,0,0,.4)}
+#cin .cb.end{background:linear-gradient(135deg,#ff5a5f,#e5303a)}
+#cin .cb.acc{background:linear-gradient(135deg,#34d56f,#17a84f)}
+#cin .cb.acc svg{animation:shake 1.1s ease-in-out infinite}
+@keyframes shake{0%,100%{transform:rotate(0)}15%{transform:rotate(-14deg)}30%{transform:rotate(12deg)}45%{transform:rotate(-8deg)}60%{transform:rotate(0)}}
+@media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;animation-iteration-count:1!important}}
 </style>
 </head>
 <body>
@@ -1417,15 +1483,21 @@ function attachRemote(ctx){ const el=ctx.type==='video'?$('rvid'):$('raud'); if(
 let ringWake=null;
 function ringOnce(){
   try{ audioCtx=audioCtx||new (window.AudioContext||window.webkitAudioContext)(); audioCtx.resume?.();
-    const c=audioCtx, comp=c.createDynamicsCompressor(); comp.connect(c.destination);
-    [0,.62].forEach(off=>{ [[440,.55,'triangle'],[480,.55,'triangle'],[960,.16,'sine']].forEach(([f,peak,type])=>{
-      const o=c.createOscillator(), g=c.createGain(); o.type=type; o.frequency.value=f; o.connect(g); g.connect(comp);
-      const t=c.currentTime+off; g.gain.setValueAtTime(.0001,t); g.gain.linearRampToValueAtTime(peak,t+.02); g.gain.setValueAtTime(peak,t+.42); g.gain.linearRampToValueAtTime(.0001,t+.5); o.start(t); o.stop(t+.55); }); });
-    navigator.vibrate?.([450,200,450,200,450]); }catch(e){}
+    const c=audioCtx, comp=c.createDynamicsCompressor(); comp.threshold.value=-18; comp.ratio.value=8; comp.connect(c.destination);
+    const master=c.createGain(); master.gain.value=1.0; master.connect(comp);
+    /* ফোনের মতো "পিপ-পিপ-পিপ-পিপ ... পিপ-পিপ-পিপ-পিপ": দুই গুচ্ছ, প্রতিটিতে ৪টি ছোট বিপ */
+    const t0=c.currentTime+.02;
+    [0,1.0].forEach(grp=>{ for(let k=0;k<4;k++){
+      const t=t0+grp+k*.15;
+      [[1318,.5,'square'],[1976,.22,'triangle'],[659,.3,'sine']].forEach(([f,pk,ty])=>{
+        const o=c.createOscillator(), g=c.createGain(); o.type=ty; o.frequency.value=f; o.connect(g); g.connect(master);
+        g.gain.setValueAtTime(.0001,t); g.gain.linearRampToValueAtTime(pk*.55,t+.008); g.gain.setValueAtTime(pk*.55,t+.07); g.gain.linearRampToValueAtTime(.0001,t+.10);
+        o.start(t); o.stop(t+.12); }); } });
+    navigator.vibrate?.([300,150,300,150,300,150,300,1000]); }catch(e){}
 }
-function startRing(){ stopRing(); ringOnce(); ringIv=setInterval(ringOnce,2600);
+function startRing(){ stopRing(); $('callui')?.classList.add('ringing'); ringOnce(); ringIv=setInterval(ringOnce,3000);
   try{ navigator.wakeLock?.request('screen').then(w=>ringWake=w).catch(()=>{}); }catch(e){} }
-function stopRing(){ clearInterval(ringIv); ringIv=null; navigator.vibrate?.(0); try{ ringWake&&ringWake.release(); }catch(e){} ringWake=null; }
+function stopRing(){ $('callui')?.classList.remove('ringing'); clearInterval(ringIv); ringIv=null; navigator.vibrate?.(0); try{ ringWake&&ringWake.release(); }catch(e){} ringWake=null; }
 /* প্রথম টাচেই অডিও "আনলক" — নইলে ব্রাউজার পরে আসা কলে শব্দ বাজতে দেয় না */
 ['pointerdown','touchstart','keydown'].forEach(ev=>addEventListener(ev,()=>{ try{ audioCtx=audioCtx||new (window.AudioContext||window.webkitAudioContext)(); if(audioCtx.state==='suspended') audioCtx.resume(); }catch(e){} },{passive:true}));
 
