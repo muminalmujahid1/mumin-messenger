@@ -234,6 +234,7 @@ img.media,video.media{max-height:320px;min-width:180px;object-fit:cover}
 .call svg{width:18px;height:18px}
 .call.miss{color:#ff6b6b}
 .b.me .call.miss{color:#ffd1d1}
+#callui #cdbg{font-size:11px;opacity:.55;margin-top:16px;direction:ltr;min-height:14px}
 
 </style>
 </head>
@@ -309,7 +310,7 @@ img.media,video.media{max-height:320px;min-width:180px;object-fit:cover}
 <div id="callui" class="hidden">
   <video id="rvid" autoplay playsinline></video>
   <audio id="raud" autoplay></audio>
-  <div class="cbox"><div class="cuav" id="cuav"></div><h2 id="cunm"></h2><p id="custat"></p></div>
+  <div class="cbox"><div class="cuav" id="cuav"></div><h2 id="cunm"></h2><p id="custat"></p><p id="cdbg"></p></div>
   <video id="lvid" autoplay playsinline muted></video>
   <div class="cctl hidden" id="cctl">
     <button class="cb" id="cmute"></button><button class="cb" id="ccam"></button><button class="cb" id="cflip"></button><button class="cb end" id="cend"></button>
@@ -343,6 +344,8 @@ const FIREBASE_CONFIG = {
 /* ভিডিও/বড় ফাইল/লম্বা ভয়েস পাঠাতে Cloudinary (ফ্রি) বসান:
    cloud = আপনার Cloud name, preset = Unsigned upload preset এর নাম */
 const CLOUDINARY = { cloud: "", preset: "" };
+/* কল যেন সব নেটওয়ার্কে লাগে: metered.ca (ফ্রি ২০GB/মাস) এ অ্যাকাউন্ট খুলে App name ও API key এখানে বসান */
+const TURN_CFG = { app: "", key: "" };
 const HAS_CDN = !!(CLOUDINARY.cloud && CLOUDINARY.preset);
 
 const app = initializeApp(FIREBASE_CONFIG);
@@ -997,16 +1000,26 @@ setMode('in');
 setTimeout(()=>{ if(!$('splash').classList.contains('hidden') && !me){ $('splash').classList.add('hidden'); $('auth').classList.remove('hidden'); } },8000);
 
 /* ============ অডিও / ভিডিও কল (WebRTC + Firestore সিগন্যালিং) ============ */
-const RTC_CFG = { iceServers: [
-  { urls: ['stun:stun.l.google.com:19302','stun:stun1.l.google.com:19302'] },
+const DEFAULT_ICE = [
+  { urls: ['stun:stun.l.google.com:19302','stun:stun1.l.google.com:19302','stun:stun.cloudflare.com:3478','stun:global.stun.twilio.com:3478'] },
   { urls: ['turn:openrelay.metered.ca:80','turn:openrelay.metered.ca:443','turn:openrelay.metered.ca:443?transport=tcp'], username: 'openrelayproject', credential: 'openrelayproject' }
-]};
+];
+let iceCache=null;
+async function getIce(){
+  if(iceCache) return iceCache;
+  if(TURN_CFG.app && TURN_CFG.key){
+    try{ const ctl=new AbortController(); setTimeout(()=>ctl.abort(),4000);
+      const r=await fetch(`https://${TURN_CFG.app}.metered.live/api/v1/turn/credentials?apiKey=${TURN_CFG.key}`,{signal:ctl.signal});
+      const j=await r.json(); if(Array.isArray(j)&&j.length){ iceCache=j; setTimeout(()=>iceCache=null,10*60*1000); return j; } }catch(e){ console.warn('TURN fetch failed',e); }
+  }
+  return DEFAULT_ICE;
+}
 let call = null, unsubInbox = null, inboxFirst = true, ringIv = null, wake = null;
 const seenCalls = new Set();
 
 function newCtx(role,type,peerPhone,peerName,chatId,participants,names){
   return {role,type,peerPhone,peerName,chatId,participants,names,id:null,pc:null,local:null,remote:new MediaStream(),unsubs:[],
-    outCands:[],inCands:[],docReady:false,answered:false,accepted:false,closing:false,ended:false,t0:0,timer:null,timeout:null,dcT:null,facing:'user',offer:null};
+    outCands:[],inCands:[],cc:{host:0,srflx:0,relay:0},ice:null,connT:null,docReady:false,answered:false,accepted:false,closing:false,ended:false,t0:0,timer:null,timeout:null,dcT:null,facing:'user',offer:null};
 }
 const mediaC = (type,facing) => ({ audio:{echoCancellation:true,noiseSuppression:true,autoGainControl:true},
   video: type==='video' ? {facingMode:facing,width:{ideal:640},height:{ideal:480}} : false });
@@ -1043,8 +1056,9 @@ function stopRing(){ clearInterval(ringIv); ringIv=null; navigator.vibrate?.(0);
 /* ---------- PeerConnection ---------- */
 const pushCand = (ctx,c) => addDoc(collection(db,'calls',ctx.id,'cands'),{from:me.phone,c}).catch(()=>{});
 function makePC(ctx){
-  const pc=new RTCPeerConnection(RTC_CFG); ctx.pc=pc;
-  pc.onicecandidate=e=>{ if(!e.candidate) return; const c=e.candidate.toJSON(); if(ctx.docReady) pushCand(ctx,c); else ctx.outCands.push(c); };
+  const pc=new RTCPeerConnection({iceServers:ctx.ice||DEFAULT_ICE,iceCandidatePoolSize:2}); ctx.pc=pc;
+  pc.oniceconnectionstatechange=()=>updateDbg(ctx);
+  pc.onicecandidate=e=>{ if(!e.candidate) return; const ty=e.candidate.type; if(ty&&ctx.cc[ty]!==undefined) ctx.cc[ty]++; updateDbg(ctx); const c=e.candidate.toJSON(); if(ctx.docReady) pushCand(ctx,c); else ctx.outCands.push(c); };
   pc.ontrack=e=>{ (e.streams[0]?e.streams[0].getTracks():[e.track]).forEach(t=>{ if(!ctx.remote.getTracks().includes(t)) ctx.remote.addTrack(t); }); attachRemote(ctx); };
   pc.onconnectionstatechange=()=>{
     const s=pc.connectionState;
@@ -1054,6 +1068,9 @@ function makePC(ctx){
   };
   return pc;
 }
+function updateDbg(ctx){ if(call!==ctx) return; $('cdbg').textContent='ICE: '+(ctx.pc?ctx.pc.iceConnectionState:'-')+' · host '+ctx.cc.host+' · srflx '+ctx.cc.srflx+' · relay '+ctx.cc.relay; }
+function armConnTimer(ctx){ clearTimeout(ctx.connT); ctx.connT=setTimeout(()=>{ if(call===ctx&&!ctx.t0&&!ctx.ended){
+  setCallStat('সংযোগ হচ্ছে না'); toast(ctx.cc.relay?'নেটওয়ার্ক কল আটকে দিচ্ছে — কল কেটে আবার চেষ্টা করুন':'নেটওয়ার্ক কল আটকে দিচ্ছে — TURN সার্ভার বসাতে হবে'); } },25000); }
 async function flushRemoteCands(ctx){
   if(!ctx.pc||!ctx.pc.remoteDescription) return;
   while(ctx.inCands.length){ const c=ctx.inCands.shift(); try{ await ctx.pc.addIceCandidate(c); }catch(e){} }
@@ -1068,7 +1085,7 @@ function listenCall(ctx){
     const d=s.data(); if(!d||ctx.ended||ctx.closing) return;
     if(ctx.role==='caller' && d.answer && ctx.pc && !ctx.pc.currentRemoteDescription && !ctx.settingRemote){
       ctx.settingRemote=true;
-      try{ await ctx.pc.setRemoteDescription(d.answer); ctx.answered=true; clearTimeout(ctx.timeout); setCallStat('সংযোগ হচ্ছে…'); await flushRemoteCands(ctx); }catch(e){ console.warn(e); }
+      try{ await ctx.pc.setRemoteDescription(d.answer); ctx.answered=true; clearTimeout(ctx.timeout); setCallStat('সংযোগ হচ্ছে…'); armConnTimer(ctx); await flushRemoteCands(ctx); }catch(e){ console.warn(e); }
     }
     if(['declined','busy','ended','missed','cancelled'].includes(d.status)) remoteEnded(ctx,d);
   }));
@@ -1091,6 +1108,7 @@ async function startCall(type){
   attachLocal(ctx); updCtl();
   try{
     ctx.id=doc(collection(db,'calls')).id;
+    ctx.ice=await getIce(); updateDbg(ctx);
     const pc=makePC(ctx); ctx.local.getTracks().forEach(t=>pc.addTrack(t,ctx.local));
     const offer=await pc.createOffer(); await pc.setLocalDescription(offer);
     await setDoc(doc(db,'calls',ctx.id),{from:me.phone,to:o.phone,participants:[me.phone,o.phone],type,status:'ringing',
@@ -1132,6 +1150,7 @@ async function acceptCall(){
   catch(e){ toast('মাইক/ক্যামেরার অনুমতি দিন'); hangup('declined'); return; }
   attachLocal(ctx); updCtl();
   try{
+    ctx.ice=await getIce(); armConnTimer(ctx);
     const pc=makePC(ctx); ctx.local.getTracks().forEach(t=>pc.addTrack(t,ctx.local));
     await pc.setRemoteDescription(ctx.offer); await flushRemoteCands(ctx);
     const ans=await pc.createAnswer(); await pc.setLocalDescription(ans);
@@ -1151,7 +1170,7 @@ async function logCall(ctx,result,dur){
 }
 function finish(ctx){
   if(ctx.ended) return; ctx.ended=true;
-  clearInterval(ctx.timer); clearTimeout(ctx.timeout); clearTimeout(ctx.dcT); stopRing();
+  clearInterval(ctx.timer); clearTimeout(ctx.timeout); clearTimeout(ctx.dcT); clearTimeout(ctx.connT); stopRing(); $('cdbg').textContent='';
   ctx.unsubs.forEach(u=>{ try{u();}catch(e){} }); try{ ctx.pc&&ctx.pc.close(); }catch(e){}
   [ctx.local,ctx.remote].forEach(s=>s&&s.getTracks().forEach(t=>t.stop()));
   $('rvid').srcObject=null; $('lvid').srcObject=null; $('raud').srcObject=null; $('callui').classList.add('hidden');
