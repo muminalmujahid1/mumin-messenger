@@ -1,4 +1,4 @@
-const CACHE = 'mumin-messenger-v3';
+const CACHE = 'mumin-messenger-v2';
 const SHELL = ['./', 'index.html', 'manifest.webmanifest', 'icon.svg'];
 
 self.addEventListener('install', e => {
@@ -9,23 +9,25 @@ self.addEventListener('activate', e => {
 });
 self.addEventListener('fetch', e => {
   const r = e.request;
-  if (r.method !== 'GET' || new URL(r.url).origin !== location.origin) return; // Firebase/Cloudinary সরাসরি নেটওয়ার্কে
+  if (r.method !== 'GET' || new URL(r.url).origin !== location.origin) return; // Firebase/TURN সরাসরি নেটওয়ার্কে
   e.respondWith(
     fetch(r).then(res => { const copy = res.clone(); caches.open(CACHE).then(c => c.put(r, copy)); return res; })
       .catch(() => caches.match(r).then(m => m || caches.match('index.html')))
   );
 });
+
+// নোটিফিকেশনে চাপ / "ধরুন" / "কাটুন"
 self.addEventListener('notificationclick', e => {
-  e.notification.close();
-  const act = e.action;
-  e.waitUntil(self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(async list => {
-    const msg = act === 'decline' ? { type: 'call-decline' } : act === 'answer' ? { type: 'call-answer' } : null;
-    if (list.length) {
-      const c = list[0];
-      if (act !== 'decline' && 'focus' in c) { try { await c.focus(); } catch (err) {} }
-      if (msg) c.postMessage(msg);
-      return;
+  const n = e.notification, act = e.action, isCall = n.tag === 'call';
+  n.close();
+  e.waitUntil((async () => {
+    const list = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+    if (isCall && (act === 'answer' || act === 'decline')) {
+      const msg = { type: act === 'answer' ? 'call-answer' : 'call-decline' };
+      if (list.length) { list.forEach(c => c.postMessage(msg)); if (act === 'answer' && 'focus' in list[0]) await list[0].focus(); return; }
+      return self.clients.openWindow('./?callaction=' + (act === 'answer' ? 'answer' : 'decline'));
     }
-    if (act !== 'decline') return self.clients.openWindow('./');
-  }));
+    for (const c of list) if ('focus' in c) { await c.focus(); return; }
+    return self.clients.openWindow('./');
+  })());
 });
