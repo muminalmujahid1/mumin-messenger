@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#075e54">
+<title>বার্তা — চ্যাট অ্যাপ</title>
+<style>
+:root{--g:#075e54;--g2:#128c7e;--g3:#25d366;--bubble-out:#d9fdd3;--bg:#efeae2;--line:#e9edef;--txt:#111b21;--sub:#667781}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;font-family:system-ui,-apple-system,"Noto Sans Bengali","Segoe UI",sans-serif;color:var(--txt);background:#d1d7db}
+button{font:inherit;cursor:pointer;border:none;background:none;color:inherit}
+input{font:inherit;color:inherit}
+.hidden{display:none!important}
+
+/* login */
+#login{height:100%;display:flex;align-items:center;justify-content:center;background:linear-gradient(var(--g) 0 220px,#d1d7db 220px);padding:16px}
+.card{background:#fff;border-radius:14px;padding:28px 24px;width:100%;max-width:380px;box-shadow:0 8px 30px rgba(0,0,0,.15)}
+.card h1{font-size:24px;color:var(--g);text-align:center}
+.card p.s{text-align:center;color:var(--sub);font-size:14px;margin:6px 0 20px}
+.logo{width:64px;height:64px;border-radius:50%;background:var(--g3);margin:0 auto 12px;display:flex;align-items:center;justify-content:center;font-size:32px}
+.card label{display:block;font-size:13px;color:var(--sub);margin:12px 0 4px}
+.card input{width:100%;padding:12px;border:1px solid #ccd0d3;border-radius:8px;font-size:16px;outline:none}
+.card input:focus{border-color:var(--g2)}
+.btn{width:100%;margin-top:20px;padding:13px;background:var(--g2);color:#fff;border-radius:24px;font-weight:600;font-size:16px}
+.btn:active{background:var(--g)}
+.err{color:#d33;font-size:13px;margin-top:10px;text-align:center;min-height:16px}
+.demo{background:#fff8e1;border:1px solid #ffe08a;color:#7a5b00;border-radius:8px;font-size:12px;padding:8px 10px;margin-top:14px;line-height:1.5}
+
+/* app */
+#app{height:100%;display:flex;max-width:1400px;margin:0 auto;background:#fff;box-shadow:0 0 20px rgba(0,0,0,.1)}
+#side{width:100%;max-width:420px;border-right:1px solid var(--line);display:flex;flex-direction:column;background:#fff;min-width:0}
+#main{flex:1;display:flex;flex-direction:column;background:var(--bg);min-width:0}
+header.bar{background:var(--g);color:#fff;padding:10px 14px;display:flex;align-items:center;gap:12px;min-height:58px}
+header.bar .t{flex:1;min-width:0}
+header.bar .t b{display:block;font-size:17px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+header.bar .t small{font-size:12px;opacity:.8}
+.ic{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;flex:none}
+.ic:active{background:rgba(255,255,255,.2)}
+.av{width:44px;height:44px;border-radius:50%;flex:none;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:18px}
+.av.sm{width:38px;height:38px;font-size:16px}
+#newbox{padding:10px 12px;border-bottom:1px solid var(--line);background:#f0f2f5}
+#newbox .row{display:flex;gap:8px}
+#newbox input{flex:1;padding:10px 12px;border:1px solid #ccd0d3;border-radius:8px;outline:none;font-size:15px;min-width:0}
+#newbox button{background:var(--g2);color:#fff;padding:0 16px;border-radius:8px;font-weight:600}
+#newerr{font-size:12px;color:#d33;margin-top:6px}
+#list{flex:1;overflow-y:auto}
+.item{display:flex;gap:12px;padding:12px 14px;align-items:center;border-bottom:1px solid var(--line);cursor:pointer}
+.item:hover,.item.on{background:#f0f2f5}
+.item .m{flex:1;min-width:0}
+.item .r1{display:flex;justify-content:space-between;gap:8px}
+.item .r1 b{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.item .r1 span{font-size:12px;color:var(--sub);flex:none}
+.item .r2{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:2px}
+.item .r2 span.p{font-size:14px;color:var(--sub);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.badge{background:var(--g3);color:#fff;border-radius:11px;min-width:22px;height:22px;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;padding:0 6px;flex:none}
+.empty{padding:40px 24px;text-align:center;color:var(--sub);font-size:14px;line-height:1.7}
+
+#welcome{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--sub);text-align:center;padding:24px;background:#f0f2f5}
+#welcome .logo{width:90px;height:90px;font-size:44px}
+#chat{flex:1;display:flex;flex-direction:column;min-height:0}
+#msgs{flex:1;overflow-y:auto;padding:12px 8%;display:flex;flex-direction:column;gap:3px;background:var(--bg) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60'%3E%3Ccircle cx='10' cy='10' r='1.5' fill='%23000' fill-opacity='.04'/%3E%3Ccircle cx='40' cy='35' r='1.5' fill='%23000' fill-opacity='.04'/%3E%3C/svg%3E")}
+.day{align-self:center;background:#fff;color:var(--sub);font-size:12px;padding:4px 12px;border-radius:8px;margin:8px 0;box-shadow:0 1px 1px rgba(0,0,0,.08)}
+.b{max-width:78%;padding:6px 9px 4px;border-radius:8px;background:#fff;box-shadow:0 1px 1px rgba(0,0,0,.12);font-size:15px;line-height:1.4;word-wrap:break-word;overflow-wrap:anywhere;white-space:pre-wrap;position:relative}
+.b.me{align-self:flex-end;background:var(--bubble-out);border-top-right-radius:0}
+.b.th{align-self:flex-start;border-top-left-radius:0}
+.b .tm{float:right;font-size:11px;color:var(--sub);margin:6px 0 0 10px;white-space:nowrap}
+.b.me .tm::after{content:" ✓✓";color:#53bdeb}
+#emo{display:flex;flex-wrap:wrap;gap:2px;padding:8px;background:#f0f2f5;border-top:1px solid var(--line)}
+#emo button{font-size:24px;padding:4px 6px;border-radius:6px}
+#emo button:active{background:#ddd}
+#composer{display:flex;align-items:flex-end;gap:8px;padding:8px 10px;background:#f0f2f5}
+#composer .box{flex:1;background:#fff;border-radius:22px;display:flex;align-items:flex-end;padding:2px 6px}
+#composer textarea{flex:1;border:none;outline:none;resize:none;padding:10px 6px;font:inherit;font-size:16px;max-height:120px;background:none;line-height:1.35}
+#send{width:46px;height:46px;border-radius:50%;background:var(--g2);color:#fff;font-size:20px;flex:none;display:flex;align-items:center;justify-content:center}
+#send:active{background:var(--g)}
+
+#back{display:none}
+@media(max-width:760px){
+  #side{max-width:none}
+  #main{position:fixed;inset:0;transform:translateX(100%);transition:transform .22s;z-index:5}
+  #app.open #main{transform:none}
+  #back{display:flex}
+  #msgs{padding:10px 10px}
+  .b{max-width:86%}
+}
+</style>
+</head>
+<body>
+
+<!-- লগইন -->
+<div id="login">
+  <div class="card">
+    <div class="logo">💬</div>
+    <h1>বার্তা</h1>
+    <p class="s">বন্ধু ও পরিবারের সাথে যেকোনো জায়গা থেকে চ্যাট করুন</p>
+    <label>আপনার নাম</label>
+    <input id="lname" placeholder="যেমন: রহিম উদ্দিন" autocomplete="name">
+    <label>মোবাইল নম্বর</label>
+    <input id="lphone" type="tel" inputmode="numeric" placeholder="01XXXXXXXXX" autocomplete="tel">
+    <label>পিন (৪+ সংখ্যা/অক্ষর)</label>
+    <input id="lpin" type="password" placeholder="••••" autocomplete="current-password">
+    <button class="btn" id="lbtn">প্রবেশ করুন</button>
+    <div class="err" id="lerr"></div>
+    <div class="demo hidden" id="demonote">⚠️ <b>ডেমো মোড:</b> Firebase কনফিগ দেওয়া নেই, তাই মেসেজ শুধু এই ব্রাউজারের ভিন্ন ট্যাবের মধ্যে চলবে। আসল ডিভাইস-থেকে-ডিভাইস চ্যাটের জন্য ফাইলের উপরের অংশে <code>FIREBASE_CONFIG</code> বসান।</div>
+    <p class="s" style="margin-top:14px;font-size:12px">নতুন হলে নাম, নম্বর ও পিন দিন — অ্যাকাউন্ট নিজে থেকেই খুলে যাবে।</p>
+  </div>
+</div>
+
+<!-- অ্যাপ -->
+<div id="app" class="hidden">
+  <aside id="side">
+    <header class="bar">
+      <div class="av sm" id="meav"></div>
+      <div class="t"><b id="mename"></b><small id="mephone"></small></div>
+      <button class="ic" id="newbtn" title="নতুন চ্যাট">✚</button>
+      <button class="ic" id="logout" title="লগআউট">⏻</button>
+    </header>
+    <div id="newbox" class="hidden">
+      <div class="row"><input id="np" type="tel" inputmode="numeric" placeholder="যার সাথে চ্যাট করবেন তার মোবাইল নম্বর"><button id="ngo">শুরু</button></div>
+      <div id="newerr"></div>
+    </div>
+    <div id="list"></div>
+  </aside>
+  <section id="main">
+    <div id="welcome">
+      <div class="logo">💬</div>
+      <h2 style="color:var(--txt)">বার্তা</h2>
+      <p style="margin-top:8px;max-width:300px;line-height:1.6">বাম পাশ থেকে একটি চ্যাট বেছে নিন, অথবা ✚ চেপে নম্বর দিয়ে নতুন চ্যাট শুরু করুন।</p>
+    </div>
+    <div id="chat" class="hidden">
+      <header class="bar">
+        <button class="ic" id="back">←</button>
+        <div class="av sm" id="cav"></div>
+        <div class="t"><b id="cname"></b><small id="cphone"></small></div>
+      </header>
+      <div id="msgs"></div>
+      <div id="emo" class="hidden"></div>
+      <div id="composer">
+        <button class="ic" id="emobtn" style="color:var(--sub)">😊</button>
+        <div class="box"><textarea id="inp" rows="1" placeholder="মেসেজ লিখুন"></textarea></div>
+        <button id="send">➤</button>
+      </div>
+    </div>
+  </section>
+</div>
+
+<script type="module">
+/* ============================================================
+   🔧 সেটআপ: Firebase Console → Project settings → Your apps (Web)
+   থেকে কনফিগ কপি করে এখানে বসান। ফাঁকা থাকলে ডেমো মোডে চলবে।
+   ============================================================ */
+const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyBHV2ml0ph5AdICrtBOxP5d5TqwaDqMRBY",
+  authDomain: "mumin-messenger.firebaseapp.com",
+  projectId: "mumin-messenger",
+  storageBucket: "mumin-messenger.firebasestorage.app",
+  messagingSenderId: "315677520507",
+  appId: "1:315677520507:web:704763268b428bf1a068de",
+  measurementId: "G-CW1R9VR7CS"
+};
+const USE_FB = !!FIREBASE_CONFIG.projectId;
+
+const $ = id => document.getElementById(id);
+const esc = s => s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const bn = n => String(n).replace(/\d/g, d => '০১২৩৪৫৬৭৮৯'[d]);
+const colors = ['#e53935','#8e24aa','#3949ab','#039be5','#00897b','#43a047','#fb8c00','#6d4c41','#d81b60','#546e7a'];
+const colorOf = s => colors[[...s].reduce((a,c)=>a+c.charCodeAt(0),0) % colors.length];
+const norm = p => { p = (p||'').replace(/[০-৯]/g, d => '০১২৩৪৫৬৭৮৯'.indexOf(d)).replace(/\D/g,''); if(p.startsWith('880')) p='0'+p.slice(3); return p; };
+const cid = (a,b) => [a,b].sort().join('_');
+async function hash(s){
+  try{ const b = await crypto.subtle.digest('SHA-256', new TextEncoder().encode('bartaX'+s)); return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join(''); }
+  catch(e){ let h=0; for(const c of 'bartaX'+s) h=(h*31+c.charCodeAt(0))|0; return String(h); }
+}
+
+/* ---------------- ব্যাকএন্ড লেয়ার ---------------- */
+let B;
+async function makeBackend(){
+  if(USE_FB){
+    const V='10.12.2', base=`https://www.gstatic.com/firebasejs/${V}/`;
+    const { initializeApp } = await import(base+'firebase-app.js');
+    const F = await import(base+'firebase-firestore.js');
+    const db = F.getFirestore(initializeApp(FIREBASE_CONFIG));
+    return {
+      async getUser(p){ const s = await F.getDoc(F.doc(db,'users',p)); return s.exists()? s.data() : null; },
+      async createUser(p,name,pin){ await F.setDoc(F.doc(db,'users',p),{name,pin,phone:p,created:Date.now()}); },
+      async openChat(a,an,b,bn_){ await F.setDoc(F.doc(db,'chats',cid(a,b)),{participants:[a,b],names:{[a]:an,[b]:bn_}},{merge:true}); },
+      subChats(me,cb){ return F.onSnapshot(F.query(F.collection(db,'chats'),F.where('participants','array-contains',me)), s=>cb(s.docs.map(d=>({id:d.id,...d.data()})))); },
+      subMsgs(id,cb){ return F.onSnapshot(F.query(F.collection(db,'chats',id,'messages'),F.orderBy('ts')), s=>cb(s.docs.map(d=>({id:d.id,...d.data()})))); },
+      async send(id,from,text){
+        const ts = Date.now();
+        await F.addDoc(F.collection(db,'chats',id,'messages'),{from,text,ts});
+        await F.setDoc(F.doc(db,'chats',id),{last:text,lastTs:ts,lastFrom:from},{merge:true});
+      }
+    };
+  }
+  /* ডেমো: localStorage + পোলিং (একই ব্রাউজারের একাধিক ট্যাব) */
+  const K='barta_demo';
+  const load=()=>{ try{return JSON.parse(localStorage.getItem(K))||{users:{},chats:{},msgs:{}}}catch(e){return {users:{},chats:{},msgs:{}}} };
+  const save=d=>localStorage.setItem(K,JSON.stringify(d));
+  const poll=(get,cb)=>{ let prev=''; const run=()=>{ const v=get(); const j=JSON.stringify(v); if(j!==prev){prev=j;cb(v);} }; run(); const t=setInterval(run,600); return ()=>clearInterval(t); };
+  return {
+    async getUser(p){ return load().users[p]||null; },
+    async createUser(p,name,pin){ const d=load(); d.users[p]={name,pin,phone:p}; save(d); },
+    async openChat(a,an,b,bn_){ const d=load(), id=cid(a,b); d.chats[id]={...(d.chats[id]||{}),id,participants:[a,b],names:{[a]:an,[b]:bn_}}; save(d); },
+    subChats(me,cb){ return poll(()=>Object.values(load().chats).filter(c=>c.participants.includes(me)),cb); },
+    subMsgs(id,cb){ return poll(()=>load().msgs[id]||[],cb); },
+    async send(id,from,text){ const d=load(), ts=Date.now(); (d.msgs[id]=d.msgs[id]||[]).push({id:ts+'_'+Math.random().toString(36).slice(2,7),from,text,ts}); d.chats[id]={...d.chats[id],last:text,lastTs:ts,lastFrom:from}; save(d); }
+  };
+}
+
+/* ---------------- স্টেট ---------------- */
+let me = null, cur = null, unsubChats = null, unsubMsgs = null, chats = [];
+const readKey = id => `barta_read_${me.phone}_${id}`;
+const getRead = id => +localStorage.getItem(readKey(id))||0;
+
+const fmtTime = ts => { const d=new Date(ts); let h=d.getHours(), m=d.getMinutes(); const ap=h<12?'AM':'PM'; h=h%12||12; return bn(h)+':'+bn(String(m).padStart(2,'0'))+' '+ap; };
+const fmtDay = ts => { const d=new Date(ts), t=new Date(); const y=new Date(); y.setDate(t.getDate()-1);
+  if(d.toDateString()===t.toDateString()) return 'আজ'; if(d.toDateString()===y.toDateString()) return 'গতকাল';
+  return bn(d.getDate())+'/'+bn(d.getMonth()+1)+'/'+bn(d.getFullYear()); };
+const other = c => { const p=c.participants.find(x=>x!==me.phone); return {phone:p,name:(c.names&&c.names[p])||p}; };
+
+/* ---------------- লগইন ---------------- */
+async function login(){
+  const name=$('lname').value.trim(), phone=norm($('lphone').value), pin=$('lpin').value;
+  const err=m=>$('lerr').textContent=m;
+  if(!name) return err('নাম লিখুন');
+  if(phone.length<8) return err('সঠিক মোবাইল নম্বর দিন');
+  if(pin.length<4) return err('পিন কমপক্ষে ৪ অক্ষরের হতে হবে');
+  $('lbtn').disabled=true; $('lbtn').textContent='অপেক্ষা করুন…'; err('');
+  try{
+    const h=await hash(pin), u=await B.getUser(phone);
+    if(u){ if(u.pin!==h) throw new Error('পিন ভুল হয়েছে'); me={phone,name:u.name}; }
+    else { await B.createUser(phone,name,h); me={phone,name}; }
+    localStorage.setItem('barta_me',JSON.stringify(me));
+    enter();
+  }catch(e){ err(e.message||'সমস্যা হয়েছে, আবার চেষ্টা করুন'); }
+  $('lbtn').disabled=false; $('lbtn').textContent='প্রবেশ করুন';
+}
+
+function enter(){
+  $('login').classList.add('hidden'); $('app').classList.remove('hidden');
+  $('meav').textContent=me.name[0]; $('meav').style.background=colorOf(me.phone);
+  $('mename').textContent=me.name; $('mephone').textContent=me.phone;
+  unsubChats=B.subChats(me.phone,list=>{ chats=list.sort((a,b)=>(b.lastTs||0)-(a.lastTs||0)); renderList(); });
+}
+
+function logout(){
+  unsubChats&&unsubChats(); unsubMsgs&&unsubMsgs(); cur=null; me=null;
+  localStorage.removeItem('barta_me'); location.reload();
+}
+
+/* ---------------- চ্যাট লিস্ট ---------------- */
+function renderList(){
+  const L=$('list');
+  if(!chats.length){ L.innerHTML='<div class="empty">এখনো কোনো চ্যাট নেই।<br>উপরে ✚ চেপে বন্ধুর মোবাইল নম্বর দিয়ে চ্যাট শুরু করুন।</div>'; return; }
+  L.innerHTML=chats.map(c=>{
+    const o=other(c), unread = c.last && c.lastFrom!==me.phone && (c.lastTs||0)>getRead(c.id) && !(cur&&cur.id===c.id);
+    return `<div class="item ${cur&&cur.id===c.id?'on':''}" data-id="${c.id}">
+      <div class="av" style="background:${colorOf(o.phone)}">${esc(o.name[0]||'?')}</div>
+      <div class="m"><div class="r1"><b>${esc(o.name)}</b><span>${c.lastTs?fmtTime(c.lastTs):''}</span></div>
+      <div class="r2"><span class="p">${c.last?(c.lastFrom===me.phone?'✓✓ ':'')+esc(c.last):'নতুন চ্যাট'}</span>${unread?'<div class="badge">●</div>':''}</div></div></div>`;
+  }).join('');
+  L.querySelectorAll('.item').forEach(el=>el.onclick=()=>openChat(chats.find(c=>c.id===el.dataset.id)));
+}
+
+async function startNew(){
+  const p=norm($('np').value), e=$('newerr'); e.textContent='';
+  if(p.length<8) return e.textContent='সঠিক নম্বর দিন';
+  if(p===me.phone) return e.textContent='নিজের সাথে চ্যাট করা যাবে না';
+  try{
+    const u=await B.getUser(p);
+    if(!u) return e.textContent='এই নম্বরে কোনো অ্যাকাউন্ট নেই। বন্ধুকে আগে অ্যাপে ঢুকতে বলুন।';
+    await B.openChat(me.phone,me.name,p,u.name);
+    $('np').value=''; $('newbox').classList.add('hidden');
+    openChat({id:cid(me.phone,p),participants:[me.phone,p],names:{[me.phone]:me.name,[p]:u.name}});
+  }catch(x){ e.textContent='সমস্যা হয়েছে'; }
+}
+
+/* ---------------- চ্যাট স্ক্রিন ---------------- */
+function openChat(c){
+  cur=c; const o=other(c);
+  $('welcome').classList.add('hidden'); $('chat').classList.remove('hidden'); $('app').classList.add('open');
+  $('cav').textContent=o.name[0]; $('cav').style.background=colorOf(o.phone);
+  $('cname').textContent=o.name; $('cphone').textContent=o.phone;
+  $('msgs').innerHTML=''; $('emo').classList.add('hidden');
+  unsubMsgs&&unsubMsgs();
+  unsubMsgs=B.subMsgs(c.id,renderMsgs);
+  localStorage.setItem(readKey(c.id),Date.now()); renderList();
+  setTimeout(()=>$('inp').focus(),250);
+}
+
+function renderMsgs(list){
+  const box=$('msgs'), near = box.scrollHeight-box.scrollTop-box.clientHeight<120 || !box.children.length;
+  let html='', last='';
+  for(const m of list){
+    const d=fmtDay(m.ts); if(d!==last){ html+=`<div class="day">${d}</div>`; last=d; }
+    html+=`<div class="b ${m.from===me.phone?'me':'th'}">${esc(m.text)}<span class="tm">${fmtTime(m.ts)}</span></div>`;
+  }
+  box.innerHTML=html||'<div class="day">কথা শুরু করুন 👋</div>';
+  if(near) box.scrollTop=box.scrollHeight;
+  if(cur){ localStorage.setItem(readKey(cur.id),Date.now()); }
+}
+
+async function sendMsg(){
+  const t=$('inp').value.trim(); if(!t||!cur) return;
+  $('inp').value=''; autosize(); $('emo').classList.add('hidden');
+  try{ await B.openChat(me.phone,me.name,other(cur).phone,other(cur).name); await B.send(cur.id,me.phone,t); }
+  catch(e){ alert('মেসেজ পাঠানো যায়নি। ইন্টারনেট চেক করুন।'); $('inp').value=t; }
+}
+const autosize=()=>{ const i=$('inp'); i.style.height='auto'; i.style.height=Math.min(i.scrollHeight,120)+'px'; };
+
+/* ---------------- ইভেন্ট ---------------- */
+$('emo').innerHTML=['😀','😂','😍','🥰','😊','😎','🤔','😢','😭','😡','👍','🙏','❤️','🔥','🎉','👋','🤝','😴','🤗','😅','🙂','💪','✅','🌹'].map(e=>`<button>${e}</button>`).join('');
+$('emo').onclick=e=>{ if(e.target.tagName==='BUTTON'){ $('inp').value+=e.target.textContent; $('inp').focus(); } };
+$('emobtn').onclick=()=>$('emo').classList.toggle('hidden');
+$('lbtn').onclick=login;
+['lname','lphone','lpin'].forEach(i=>$(i).addEventListener('keydown',e=>{ if(e.key==='Enter') login(); }));
+$('logout').onclick=()=>{ if(confirm('লগআউট করবেন?')) logout(); };
+$('newbtn').onclick=()=>{ $('newbox').classList.toggle('hidden'); $('np').focus(); };
+$('ngo').onclick=startNew;
+$('np').addEventListener('keydown',e=>{ if(e.key==='Enter') startNew(); });
+$('send').onclick=sendMsg;
+$('inp').addEventListener('input',autosize);
+$('inp').addEventListener('keydown',e=>{ if(e.key==='Enter'&&!e.shiftKey&&window.innerWidth>760){ e.preventDefault(); sendMsg(); } });
+$('back').onclick=()=>{ $('app').classList.remove('open'); unsubMsgs&&unsubMsgs(); cur=null; $('chat').classList.add('hidden'); $('welcome').classList.remove('hidden'); renderList(); };
+history.scrollRestoration='manual';
+
+/* ---------------- চালু ---------------- */
+(async()=>{
+  try{ B=await makeBackend(); }catch(e){ $('lerr').textContent='সার্ভারের সাথে সংযোগ হয়নি'; return; }
+  if(!USE_FB) $('demonote').classList.remove('hidden');
+  try{ const s=JSON.parse(localStorage.getItem('barta_me')); if(s&&s.phone){ me=s; enter(); } }catch(e){}
+})();
+</script>
+</body>
+</html>
