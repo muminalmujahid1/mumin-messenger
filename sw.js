@@ -1,6 +1,6 @@
-const CACHE = 'davetchat-v4';
+const CACHE = 'davetchat-v5';
 const LIB = 'davetchat-lib-v1'; // Firebase লাইব্রেরি ও ফন্ট (ঠিকানা না বদলালে একই থাকে)
-const SHELL = ['./', 'manifest.webmanifest', 'icon-192.png', 'icon-512.png', 'icon-maskable-512.png'];
+const SHELL = ['./', 'manifest.webmanifest', 'icon-192.png', 'icon-512.png', 'icon-maskable-512.png', 'badge-96.png'];
 const SDK = ['app', 'auth', 'firestore'].map(n => 'https://www.gstatic.com/firebasejs/10.12.2/firebase-' + n + '.js');
 const isLib = u => u.href.startsWith('https://www.gstatic.com/firebasejs/') || u.hostname === 'fonts.googleapis.com' || u.hostname === 'fonts.gstatic.com';
 
