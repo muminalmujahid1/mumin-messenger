@@ -336,6 +336,17 @@ img.media,video.media{max-height:320px;min-width:180px;object-fit:cover}
 .qrc b{font-size:19px;margin-top:10px}.qrc small{color:var(--sub);direction:ltr}
 .qrc p{color:var(--sub);font-size:13px;line-height:1.6;max-width:300px}
 .lnk{width:calc(100% - 20px);margin:8px 10px 0;padding:12px;border-radius:12px;border:1.5px solid var(--line);background:var(--bg);font-size:13px;direction:ltr}
+
+/* ইনকামিং কল: পূর্ণ পর্দা, বড় বাটন ও লেখা */
+#cin{background:none!important;border:none!important;box-shadow:none!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important;gap:64px!important;padding:14px 30px 44px!important}
+#cin .cb{position:relative;overflow:visible;width:76px;height:76px}
+#cin .cb svg{width:30px;height:30px}
+#cin .cb::after{content:attr(data-l);position:absolute;top:calc(100% + 12px);left:50%;transform:translateX(-50%);font-size:15px;font-weight:600;white-space:nowrap;color:#fff;text-shadow:0 1px 6px rgba(0,0,0,.5)}
+#cin .cb.acc{animation:accp 1.5s ease-in-out infinite}
+@keyframes accp{0%,100%{box-shadow:0 0 0 0 rgba(34,197,94,.6),0 6px 18px rgba(34,197,94,.45)}50%{box-shadow:0 0 0 18px rgba(34,197,94,0),0 6px 18px rgba(34,197,94,.45)}}
+@media (prefers-reduced-motion:reduce){#cin .cb.acc{animation:none}}
+#callui #cdbg{display:none}
+body.dbg #callui #cdbg{display:block}
 </style>
 </head>
 <body>
@@ -666,11 +677,14 @@ async function notify(title, body, id, force){
 
 async function notifyCall(title, body){
   if(!('Notification' in window) || Notification.permission!=='granted') return;
-  const opts={body,icon:'icon.svg',badge:'icon.svg',tag:'call',renotify:true,requireInteraction:true,vibrate:[500,250,500,250,500,250,500],data:{id:'call'},actions:[{action:'answer',title:'ধরুন'},{action:'decline',title:'কাটুন'}]};
+  const opts={body,icon:'icon.svg',badge:'icon.svg',tag:'call',renotify:true,requireInteraction:true,silent:false,timestamp:Date.now(),vibrate:[500,250,500,250,500,250,500,250,500],data:{id:'call'},actions:[{action:'answer',title:'ধরুন'},{action:'decline',title:'কাটুন'}]};
   try{ const reg=await Promise.race([navigator.serviceWorker?.ready, sleep(1500).then(()=>null)]);
     if(reg&&reg.showNotification){ await reg.showNotification(title,opts); return; } }catch(e){}
   try{ new Notification(title,{body,icon:'icon.svg',tag:'call'}); }catch(e){}
 }
+let pendingCallAct=null;
+try{ const ca=new URLSearchParams(location.search).get('callaction'); if(ca){ pendingCallAct=ca; history.replaceState(null,'',location.pathname); } }catch(e){}
+if(/[?&]debug\b/.test(location.search)) document.body.classList.add('dbg');
 const closeCallNotif = () => { try{ navigator.serviceWorker?.ready.then(r=>r.getNotifications({tag:'call'}).then(a=>a.forEach(n=>n.close()))); }catch(e){} };
 if('serviceWorker' in navigator) navigator.serviceWorker.addEventListener('message',e=>{
   const t=e.data&&e.data.type; if(!call||call.role!=='callee'||call.accepted||call.ended) return;
@@ -1360,7 +1374,7 @@ function showCallUI(ctx, incoming){
   $('cunm').textContent=ctx.peerName; $('cuav').textContent=ctx.peerName[0]||'?'; $('cuav').style.background=colorOf(ctx.peerPhone);
   $('cin').classList.toggle('hidden',!incoming); $('cctl').classList.toggle('hidden',!!incoming);
   $('ccam').classList.toggle('hidden',ctx.type!=='video'); $('cflip').classList.toggle('hidden',ctx.type!=='video');
-  $('cdec').innerHTML=ic('phone'); $('cacc').innerHTML=ic(ctx.type==='video'?'video':'phone');
+  $('cdec').innerHTML=ic('phone'); $('cdec').dataset.l='কাটুন'; $('cacc').dataset.l='ধরুন'; $('cacc').innerHTML=ic(ctx.type==='video'?'video':'phone');
   setCallStat(incoming?(ctx.type==='video'?'ভিডিও কল আসছে…':'অডিও কল আসছে…'):''); updCtl();
 }
 function updCtl(){
@@ -1398,14 +1412,22 @@ function attachLocal(ctx){ if(ctx.type==='video'){ const l=$('lvid'); l.srcObjec
 function attachRemote(ctx){ const el=ctx.type==='video'?$('rvid'):$('raud'); if(el.srcObject!==ctx.remote) el.srcObject=ctx.remote; applyVol(); el.play?.().catch(()=>{}); if(ctx.type==='video'&&!ctx.rvT) watchRemote(ctx); }
 
 /* ---------- রিংটোন ---------- */
+/* রিংটোন: জোরালো দুই-টোনের "ring-ring", কম্প্রেসর দিয়ে যাতে ফাটা না শোনায়; কল চলাকালীন স্ক্রিন জেগে থাকে।
+   (ওয়েব অ্যাপ ফোনের নিজস্ব রিংটোন বা রিংটোন-ভলিউম পড়তে পারে না — মিডিয়া ভলিউম অনুযায়ী বাজে) */
+let ringWake=null;
 function ringOnce(){
   try{ audioCtx=audioCtx||new (window.AudioContext||window.webkitAudioContext)(); audioCtx.resume?.();
-    [0,.5].forEach((off,i)=>{ const o=audioCtx.createOscillator(), g=audioCtx.createGain(); o.frequency.value=i?520:440; o.connect(g); g.connect(audioCtx.destination);
-      const t=audioCtx.currentTime+off; g.gain.setValueAtTime(.0001,t); g.gain.exponentialRampToValueAtTime(.2,t+.03); g.gain.exponentialRampToValueAtTime(.0001,t+.4); o.start(t); o.stop(t+.42); });
-    navigator.vibrate?.([300,150,300]); }catch(e){}
+    const c=audioCtx, comp=c.createDynamicsCompressor(); comp.connect(c.destination);
+    [0,.62].forEach(off=>{ [[440,.55,'triangle'],[480,.55,'triangle'],[960,.16,'sine']].forEach(([f,peak,type])=>{
+      const o=c.createOscillator(), g=c.createGain(); o.type=type; o.frequency.value=f; o.connect(g); g.connect(comp);
+      const t=c.currentTime+off; g.gain.setValueAtTime(.0001,t); g.gain.linearRampToValueAtTime(peak,t+.02); g.gain.setValueAtTime(peak,t+.42); g.gain.linearRampToValueAtTime(.0001,t+.5); o.start(t); o.stop(t+.55); }); });
+    navigator.vibrate?.([450,200,450,200,450]); }catch(e){}
 }
-function startRing(){ stopRing(); ringOnce(); ringIv=setInterval(ringOnce,2200); }
-function stopRing(){ clearInterval(ringIv); ringIv=null; navigator.vibrate?.(0); }
+function startRing(){ stopRing(); ringOnce(); ringIv=setInterval(ringOnce,2600);
+  try{ navigator.wakeLock?.request('screen').then(w=>ringWake=w).catch(()=>{}); }catch(e){} }
+function stopRing(){ clearInterval(ringIv); ringIv=null; navigator.vibrate?.(0); try{ ringWake&&ringWake.release(); }catch(e){} ringWake=null; }
+/* প্রথম টাচেই অডিও "আনলক" — নইলে ব্রাউজার পরে আসা কলে শব্দ বাজতে দেয় না */
+['pointerdown','touchstart','keydown'].forEach(ev=>addEventListener(ev,()=>{ try{ audioCtx=audioCtx||new (window.AudioContext||window.webkitAudioContext)(); if(audioCtx.state==='suspended') audioCtx.resume(); }catch(e){} },{passive:true}));
 
 /* ---------- PeerConnection ---------- */
 const pushCand = (ctx,c) => addDoc(collection(db,'calls',ctx.id,'cands'),{from:me.phone,c}).catch(()=>{});
@@ -1494,6 +1516,7 @@ function showIncoming(id,c,fromName){
   const ctx=newCtx('callee',c.type,c.from,nm,c.chatId,c.participants,{[me.phone]:me.name,[c.from]:nm});
   ctx.id=id; ctx.offer=c.offer; ctx.docReady=true; call=ctx;
   showCallUI(ctx,true); startRing(); listenCall(ctx);
+  { const pa=pendingCallAct; pendingCallAct=null; if(pa==='answer') setTimeout(()=>{ try{ acceptCall(); }catch(e){} },300); else if(pa==='decline') setTimeout(()=>hangup('declined'),300); }
   if(document.hidden) notifyCall('📞 '+(c.type==='video'?'ভিডিও':'অডিও')+' কল',nm+' আপনাকে কল করছে');
   ctx.timeout=setTimeout(()=>{ if(call===ctx&&!ctx.accepted) finish(ctx); },45000);
 }
