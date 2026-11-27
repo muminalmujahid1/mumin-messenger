@@ -1,4 +1,4 @@
-const CACHE = 'mumin-messenger-v1';
+const CACHE = 'mumin-messenger-v3';
 const SHELL = ['./', 'index.html', 'manifest.webmanifest', 'icon.svg'];
 
 self.addEventListener('install', e => {
@@ -17,8 +17,15 @@ self.addEventListener('fetch', e => {
 });
 self.addEventListener('notificationclick', e => {
   e.notification.close();
-  e.waitUntil(self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(list => {
-    for (const c of list) if ('focus' in c) return c.focus();
-    return self.clients.openWindow('./');
+  const act = e.action;
+  e.waitUntil(self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(async list => {
+    const msg = act === 'decline' ? { type: 'call-decline' } : act === 'answer' ? { type: 'call-answer' } : null;
+    if (list.length) {
+      const c = list[0];
+      if (act !== 'decline' && 'focus' in c) { try { await c.focus(); } catch (err) {} }
+      if (msg) c.postMessage(msg);
+      return;
+    }
+    if (act !== 'decline') return self.clients.openWindow('./');
   }));
 });
