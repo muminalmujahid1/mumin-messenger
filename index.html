@@ -362,7 +362,7 @@ button:active{transform:scale(.95)}
 .top h2{font-size:23px;font-weight:700;letter-spacing:-.2px}
 .srch{background:var(--bg);border:1px solid transparent;border-radius:16px;transition:border-color .2s,box-shadow .2s,background .2s}
 .srch:focus-within{background:var(--panel);border-color:rgba(91,61,240,.45);box-shadow:0 0 0 4px rgba(91,61,240,.10)}
-#list .item,#clist .item{margin:2px 8px;border-radius:18px;padding:11px 10px;position:relative;transition:background .18s,transform .15s var(--ease);animation:rise .38s var(--ease) both}
+#list .item,#clist .item{margin:2px 8px;border-radius:18px;padding:11px 10px;position:relative;transition:background .18s,transform .15s var(--ease)}
 #list .item:active,#clist .item:active{transform:scale(.985);background:var(--hover)}
 #list .item:nth-child(2){animation-delay:.03s}#list .item:nth-child(3){animation-delay:.06s}#list .item:nth-child(4){animation-delay:.09s}#list .item:nth-child(5){animation-delay:.12s}#list .item:nth-child(n+6){animation-delay:.15s}
 @keyframes rise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
@@ -378,8 +378,9 @@ button:active{transform:scale(.95)}
 #chat{background:var(--chatbg);background-image:radial-gradient(circle at 20% 10%,rgba(91,61,240,.06),transparent 40%),radial-gradient(circle at 85% 80%,rgba(16,179,163,.07),transparent 42%)}
 .chead{padding-top:calc(8px + env(safe-area-inset-top));background:color-mix(in srgb,var(--panel) 92%,transparent);border-bottom:1px solid var(--line);box-shadow:0 4px 18px rgba(40,25,100,.05)}
 .chead .who b{font-weight:700;font-size:16.5px}
-#msgs{padding:14px 12px 10px;scroll-behavior:smooth}
-.b{font-size:15.5px;line-height:1.5;border-radius:20px;animation:bin .28s var(--ease) both;max-width:min(82%,520px)}
+#msgs{padding:14px 12px 10px}
+.b{font-size:15.5px;line-height:1.5;border-radius:20px;max-width:min(82%,520px)}
+.b.nw{animation:bin .28s var(--ease) both}
 .b.me{background:linear-gradient(135deg,#5b3df0,#7552f3);color:#fff;border-bottom-right-radius:6px;box-shadow:0 6px 16px rgba(91,61,240,.28)}
 .b.th{background:var(--panel);border-bottom-left-radius:6px;box-shadow:0 2px 8px rgba(30,20,80,.07);border:1px solid var(--line)}
 @keyframes bin{from{opacity:0;transform:translateY(8px) scale(.96)}to{opacity:1;transform:none}}
@@ -562,6 +563,8 @@ const CLOUDINARY = { cloud: "", preset: "" };
 /* কল যেন সব নেটওয়ার্কে লাগে: metered.ca (ফ্রি ২০GB/মাস) এ অ্যাকাউন্ট খুলে App name ও API key এখানে বসান */
 const TURN_CFG = { app: "muminchat", key: "783a2446e2607faca42bd686eea60d95fc24" };
 const HAS_CDN = !!(CLOUDINARY.cloud && CLOUDINARY.preset);
+/* ইনকামিং কল পুশ (FCM): Firebase Console → Project settings → Cloud Messaging → Web Push certificates → Key pair এর মান এখানে বসান */
+const FCM_VAPID_KEY = "";
 
 const app = initializeApp(FIREBASE_CONFIG);
 const auth = getAuth(app);
@@ -764,7 +767,7 @@ addEventListener('pagehide',()=>setPresence(false));
 function startSession(){
   setPresence(true); clearInterval(hb); hb=setInterval(()=>{ if(!document.hidden) setPresence(true); },20000);
   unsubChats = onSnapshot(query(collection(db,'chats'),where('participants','array-contains',me.phone)), onChats, e=>console.warn(e));
-  setupBanner(); watchCalls();
+  setupBanner(); watchCalls(); registerPush();
   const pu=localStorage.getItem('mm_pending_u');
   if(pu){ localStorage.removeItem('mm_pending_u'); let n=0; const w=setInterval(()=>{ if(chatsReady||++n>20){ clearInterval(w); if(me) startChatWith(norm(pu)); } },300); }
 }
@@ -795,10 +798,44 @@ async function notifyCall(title, body){
     if(reg&&reg.showNotification){ await reg.showNotification(title,opts); return; } }catch(e){}
   try{ new Notification(title,{body,icon:'icon-192.png',tag:'call'}); }catch(e){}
 }
-let pendingCallAct=null;
+let pendingCallAct=null, pendingCallId=null, pendingCallAt=Date.now();
 try{ const ca=new URLSearchParams(location.search).get('callaction'); if(ca){ pendingCallAct=ca; history.replaceState(null,'',location.pathname); } }catch(e){}
 if(/[?&]debug\b/.test(location.search)) document.body.classList.add('dbg');
-const closeCallNotif = () => { try{ navigator.serviceWorker?.ready.then(r=>r.getNotifications({tag:'call'}).then(a=>a.forEach(n=>n.close()))); }catch(e){} };
+const closeCallNotif = id => { try{ navigator.serviceWorker?.ready.then(r=>r.getNotifications({tag:'call'}).then(a=>a.forEach(n=>n.close()))); }catch(e){}
+  try{ NA&&NA.dismissCall&&NA.dismissCall(id||''); }catch(e){} };
+
+/* ---------------- ইনকামিং কল: Android অ্যাপ সংযোগ ও পুশ (FCM) ----------------
+   NA = Android অ্যাপ (Capacitor) এর ভেতরে চললে থাকে; সাধারণ ব্রাউজার/PWA তে null, তখন কিছুই বদলায় না। */
+var NA = window.DavetNative || null;
+try{ const s=NA&&NA.consumePendingAction&&NA.consumePendingAction(); if(s){ const j=JSON.parse(s); if(j&&j.action){ pendingCallAct=j.action; pendingCallId=j.callId||null; pendingCallAt=Date.now(); } } }catch(e){}
+/* Android অ্যাপ চালু থাকা অবস্থায় নোটিফিকেশনের "ধরুন/কাটুন" এখান দিয়ে আসে */
+window.__davetCallAction = (act,callId) => { try{
+  if(call && call.role==='callee' && !call.accepted && !call.ended && (!callId || call.id===callId)){
+    if(act==='answer') acceptCall(); else if(act==='decline') hangup('declined').then(()=>{ try{ NA&&NA.moveToBack&&NA.moveToBack(); }catch(e){} });
+  } else { pendingCallAct=act; pendingCallId=callId||null; pendingCallAt=Date.now(); }
+}catch(e){ console.warn(e); } };
+async function saveToken(kind,token){
+  if(!me||!token) return;
+  try{ await setDoc(doc(db,'fcmTokens',me.phone),{[kind]:arrayUnion(token),updatedAt:ts_()},{merge:true}); localStorage.setItem('mm_fcm_'+kind,token); }
+  catch(e){ console.warn('fcm save',e); }
+}
+async function registerPush(){
+  if(!me) return;
+  try{
+    if(NA && NA.getFcmToken){ const t=NA.getFcmToken(); if(t) await saveToken('android',t); return; }
+    if(!FCM_VAPID_KEY || !('Notification' in window) || Notification.permission!=='granted' || !('serviceWorker' in navigator) || !('PushManager' in window)) return;
+    const { getMessaging, getToken, isSupported } = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-messaging.js");
+    if(!(await isSupported())) return;
+    const reg=await Promise.race([navigator.serviceWorker.ready, sleep(5000).then(()=>null)]); if(!reg) return;
+    const t=await getToken(getMessaging(app),{vapidKey:FCM_VAPID_KEY,serviceWorkerRegistration:reg});
+    if(t) await saveToken('web',t);
+  }catch(e){ console.warn('push',e); }
+}
+async function unregisterPush(){
+  try{ for(const k of ['android','web']){ const t=localStorage.getItem('mm_fcm_'+k);
+    if(t&&me){ await updateDoc(doc(db,'fcmTokens',me.phone),{[k]:arrayRemove(t)}); localStorage.removeItem('mm_fcm_'+k); } } }catch(e){}
+}
+addEventListener('davet-fcm-token',e=>{ if(me&&e.detail) saveToken('android',e.detail); });
 if('serviceWorker' in navigator) navigator.serviceWorker.addEventListener('message',e=>{
   const t=e.data&&e.data.type; if(!call||call.role!=='callee'||call.accepted||call.ended) return;
   if(t==='call-decline') hangup('declined'); else if(t==='call-answer'){ try{ acceptCall(); }catch(err){} } });
@@ -1068,7 +1105,7 @@ function refreshSettings(){
       else if(Notification.permission==='denied') notifHelp('denied');
       else toast('নোটিফিকেশন চালু হয়েছে 🔔'); }
     refreshSettings(); };
-  $('setout').onclick=async()=>{ closeSettings(); await setPresence(false); dropCache(); await signOut(auth); };
+  $('setout').onclick=async()=>{ closeSettings(); await setPresence(false); await unregisterPush(); dropCache(); await signOut(auth); };
 }
 function openSettings(){ if(!me) return; clearSel(); const el=$('settings'); el.classList.remove('hidden'); refreshSettings(); el.scrollTop=0; history.pushState({settings:1},''); }
 function closeSettings(){ const el=$('settings'); if(el.classList.contains('hidden')) return; el.classList.add('hidden'); if(history.state&&history.state.settings){ skipPop=true; history.back(); } }
@@ -1186,7 +1223,8 @@ function bodyHtml(m){
 }
 function renderMsgs(soft){
   if(!cur) return;
-  const box=$('msgs'), near=box.scrollHeight-box.scrollTop-box.clientHeight<140||!box.children.length, prevH=box.scrollHeight, prevT=box.scrollTop;
+  const box=$('msgs'); if(box._seenFor!==cur.id){ box._seenFor=cur.id; box._seen=new Set(); }
+  const near=box.scrollHeight-box.scrollTop-box.clientHeight<140||!box.children.length, prevH=box.scrollHeight, prevT=box.scrollTop;
   const clr=(cur.clearedAt||{})[me.phone]||0, o=other(cur);
   const list=msgsAll.filter(m=>m.ts>clr && !(m.deletedFor||[]).includes(me.phone));
   let html='', last='';
@@ -1194,15 +1232,16 @@ function renderMsgs(soft){
   if(!list.length) html+='<div class="day">🔒 কথা শুরু করুন — "আসসালামু আলাইকুম" 👋</div>';
   for(const m of list){
     const d=fmtDay(m.ts); if(d!==last){ html+=`<div class="day">${d}</div>`; last=d; }
-    const mine=m.from===me.phone;
+    const mine=m.from===me.phone, isNew=!box._seen.has(m.id)&&Date.now()-(m.ts||0)<15000;
     let rp='';
     if(m.replyTo&&!m.deleted) rp=`<div class="rp" data-goto="${esc(m.replyTo.id)}"><b>${m.replyTo.from===me.phone?'আপনি':esc(isG(cur)?gname(m.replyTo.from):((peer&&peer.name)||o.name))}</b><span>${esc(m.replyTo.text||'')}</span></div>`;
     const rxs={}; Object.values(m.reactions||{}).forEach(e=>rxs[e]=(rxs[e]||0)+1);
     const rx=Object.keys(rxs).length&&!m.deleted?`<div class="rx">${Object.entries(rxs).map(([e,n])=>`<span data-rx="${m.id}">${e}${n>1?' '+bn(n):''}</span>`).join('')}</div>`:'';
-    html+=`<div class="row ${mine?'me':'th'}" data-id="${m.id}"><div class="b ${mine?'me':'th'}${m.deleted?' del':''}">${(!mine&&isG(cur))?`<div class="gs" style="color:${colorOf(m.from)}">${esc(gname(m.from))}</div>`:''}${rp}${bodyHtml(m)}<span class="meta">${m.edited&&!m.deleted?'<span class="tm">সম্পাদিত</span>':''}<span class="tm">${fmtTime(m.ts)}</span>${tickHtml(m)}</span></div>${rx}</div>`;
+    html+=`<div class="row ${mine?'me':'th'}" data-id="${m.id}"><div class="b ${mine?'me':'th'}${m.deleted?' del':''}${isNew?' nw':''}">${(!mine&&isG(cur))?`<div class="gs" style="color:${colorOf(m.from)}">${esc(gname(m.from))}</div>`:''}${rp}${bodyHtml(m)}<span class="meta">${m.edited&&!m.deleted?'<span class="tm">সম্পাদিত</span>':''}<span class="tm">${fmtTime(m.ts)}</span>${tickHtml(m)}</span></div>${rx}</div>`;
   }
   if(typingNow(cur)) html+='<div class="typing"><i></i><i></i><i></i></div>';
-  const sig=html; if(soft && box._sig===sig) return; box._sig=sig;
+  list.forEach(m=>box._seen.add(m.id));
+  const sig=html.replace(/ nw"/g,'"'); if(soft && box._sig===sig) return; box._sig=sig;
   box.innerHTML=html;
   if(near) box.scrollTop=box.scrollHeight; else box.scrollTop=prevT+(box.scrollHeight-prevH>0&&msgLimitGrew?box.scrollHeight-prevH:0);
   msgLimitGrew=false;
@@ -1494,7 +1533,7 @@ async function askNotif(){
   if(Notification.permission==='granted'){ await testNotif(); return; }
   if(Notification.permission==='denied') return notifHelp('denied');
   let p; try{ p=await Notification.requestPermission(); }catch(e){ p=await new Promise(r=>Notification.requestPermission(r)); }
-  if(p==='granted'){ toast('নোটিফিকেশন চালু হয়েছে 🔔'); await testNotif(); }
+  if(p==='granted'){ toast('নোটিফিকেশন চালু হয়েছে 🔔'); registerPush(); await testNotif(); }
   else if(p==='denied') notifHelp('denied'); else toast('অনুমতি দেওয়া হয়নি');
   setupBanner();
 }
@@ -1699,13 +1738,13 @@ function showIncoming(id,c,fromName){
   const ctx=newCtx('callee',c.type,c.from,nm,c.chatId,c.participants,{[me.phone]:me.name,[c.from]:nm});
   ctx.id=id; ctx.offer=c.offer; ctx.docReady=true; call=ctx;
   showCallUI(ctx,true); startRing(); listenCall(ctx);
-  { const pa=pendingCallAct; pendingCallAct=null; if(pa==='answer') setTimeout(()=>{ try{ acceptCall(); }catch(e){} },300); else if(pa==='decline') setTimeout(()=>hangup('declined'),300); }
-  if(document.hidden) notifyCall('📞 '+(c.type==='video'?'ভিডিও':'অডিও')+' কল',nm+' আপনাকে কল করছে');
+  { const okp=(!pendingCallId||pendingCallId===id)&&Date.now()-pendingCallAt<30000, pa=okp?pendingCallAct:null; if(okp){ pendingCallAct=null; pendingCallId=null; } if(pa==='answer') setTimeout(()=>{ try{ acceptCall(); }catch(e){} },300); else if(pa==='decline') setTimeout(()=>hangup('declined').then(()=>{ try{ NA&&NA.moveToBack&&NA.moveToBack(); }catch(e){} }),300); }
+  if(document.hidden && !NA) notifyCall('📞 '+(c.type==='video'?'ভিডিও':'অডিও')+' কল',nm+' আপনাকে কল করছে');
   ctx.timeout=setTimeout(()=>{ if(call===ctx&&!ctx.accepted) finish(ctx); },45000);
 }
 async function acceptCall(){
   const ctx=call; if(!ctx||ctx.role!=='callee'||ctx.accepted||ctx.ended) return;
-  ctx.accepted=true; stopRing(); clearTimeout(ctx.timeout); showCallUI(ctx,false); setCallStat('সংযোগ হচ্ছে…');
+  ctx.accepted=true; stopRing(); closeCallNotif(ctx.id); clearTimeout(ctx.timeout); showCallUI(ctx,false); setCallStat('সংযোগ হচ্ছে…');
   try{ ctx.local=await navigator.mediaDevices.getUserMedia(mediaC(ctx.type,'user')); }
   catch(e){ toast('মাইক/ক্যামেরার অনুমতি দিন'); hangup('declined'); return; }
   attachLocal(ctx); updCtl();
@@ -1730,14 +1769,14 @@ async function logCall(ctx,result,dur){
 }
 function finish(ctx){
   if(ctx.ended) return; ctx.ended=true;
-  closeCallNotif(); callLogAt=0; if(tab==='calls') setTimeout(()=>loadCallLog(true),800); clearInterval(ctx.timer); clearInterval(ctx.rvT); clearTimeout(volT); clearTimeout(ctx.timeout); clearTimeout(ctx.dcT); clearTimeout(ctx.connT); stopRing(); $('cdbg').textContent='';
+  closeCallNotif(ctx.id); callLogAt=0; if(tab==='calls') setTimeout(()=>loadCallLog(true),800); clearInterval(ctx.timer); clearInterval(ctx.rvT); clearTimeout(volT); clearTimeout(ctx.timeout); clearTimeout(ctx.dcT); clearTimeout(ctx.connT); stopRing(); $('cdbg').textContent='';
   ctx.unsubs.forEach(u=>{ try{u();}catch(e){} }); try{ ctx.pc&&ctx.pc.close(); }catch(e){}
   [ctx.local,ctx.remote].forEach(s=>s&&s.getTracks().forEach(t=>t.stop()));
   $('rvid').srcObject=null; $('lvid').srcObject=null; $('raud').srcObject=null; $('callui').classList.add('hidden'); $('callui').classList.remove('rv'); $('cvolp').classList.add('hidden');
   try{ wake&&wake.release(); }catch(e){} wake=null; if(call===ctx) call=null;
 }
 async function hangup(result){
-  const ctx=call; if(!ctx||ctx.closing||ctx.ended) return; ctx.closing=true; stopRing();
+  const ctx=call; if(!ctx||ctx.closing||ctx.ended) return; ctx.closing=true; stopRing(); closeCallNotif(ctx.id);
   const dur=ctx.t0?Math.round((Date.now()-ctx.t0)/1000):0;
   const st=result||(ctx.answered?'ended':(ctx.role==='caller'?'cancelled':'declined'));
   setCallStat('কল শেষ হচ্ছে…');
@@ -1746,7 +1785,7 @@ async function hangup(result){
   finish(ctx);
 }
 function remoteEnded(ctx,d){
-  if(ctx.closing||ctx.ended) return; ctx.closing=true; stopRing();
+  if(ctx.closing||ctx.ended) return; ctx.closing=true; stopRing(); closeCallNotif(ctx.id);
   const dur=ctx.t0?Math.round((Date.now()-ctx.t0)/1000):(d.dur||0);
   setCallStat({declined:'কল প্রত্যাখ্যান করা হয়েছে',busy:'তিনি অন্য কলে ব্যস্ত',missed:'মিসড কল',cancelled:'কলটি বাতিল হয়েছে',ended:'কল শেষ হয়েছে'}[d.status]||'কল শেষ');
   if(ctx.role==='caller') logCall(ctx,d.status,dur);
