@@ -756,15 +756,18 @@ let audioCtx;
 function beep(){ if(!notifOn()) return; try{ audioCtx=audioCtx||new (window.AudioContext||window.webkitAudioContext)(); audioCtx.resume?.(); const t=audioCtx.currentTime;
   [[988,0],[1318,.14]].forEach(([f,d])=>{ const o=audioCtx.createOscillator(),g=audioCtx.createGain(); o.type='sine'; o.frequency.value=f; o.connect(g); g.connect(audioCtx.destination);
     g.gain.setValueAtTime(.0001,t+d); g.gain.exponentialRampToValueAtTime(.22,t+d+.02); g.gain.exponentialRampToValueAtTime(.001,t+d+.3); o.start(t+d); o.stop(t+d+.32); }); }catch(e){} }
-async function notify(title, body, id, force){
+function avatarIcon(name, phone){ try{ const c=document.createElement('canvas'); c.width=c.height=192; const x=c.getContext('2d');
+  x.fillStyle=colorOf(phone||name||'?'); x.fillRect(0,0,192,192); x.fillStyle='#fff'; x.textAlign='center'; x.textBaseline='middle';
+  x.font='700 96px "Noto Sans Bengali","Hind Siliguri",system-ui,sans-serif'; x.fillText([...String(name||'?')][0]||'?',96,102); return c.toDataURL('image/png'); }catch(e){ return 'icon-192.png'; } }
+async function notify(title, body, id, force, avatar){
   if(!force && !notifOn()) return;
   if(!('Notification' in window) || Notification.permission!=='granted') return;
-  const opts={body,icon:'icon-192.png',badge:'badge-96.png',tag:id,renotify:true,silent:false,timestamp:Date.now(),vibrate:[120,60,120],data:{id}};
+  const opts={body,icon:avatar||'icon-192.png',badge:'badge-96.png',tag:id,renotify:true,silent:false,timestamp:Date.now(),vibrate:[120,60,120],data:{id}};
   try{
     const reg=await Promise.race([navigator.serviceWorker?.ready, sleep(1500).then(()=>null)]);
     if(reg&&reg.showNotification){ await reg.showNotification(title,opts); return; }
   }catch(e){}
-  try{ new Notification(title,{body,icon:'icon-192.png',tag:id}); }catch(e){}
+  try{ new Notification(title,{body,icon:avatar||'icon-192.png',tag:id}); }catch(e){}
 }
 
 async function notifyCall(title, body){
@@ -816,7 +819,7 @@ function onChats(snap){
   incoming.forEach(({id,d})=>{ const o=other({...d,id}); const visible = cur&&cur.id===id&&!document.hidden;
     if(d.lastType==='call'){ callLogAt=0; if(tab==='calls') loadCallLog(true); }
     if((d.muted||{})[me.phone]) return;
-    if(!visible){ notify(o.name, preview(d), id); beep(); } else beep(); });
+    if(!visible){ notify(o.name, preview(d), id, false, avatarIcon(o.name,o.phone)); beep(); } else beep(); });
   if(cur){ const c=chats.find(x=>x.id===cur.id); if(c){ cur=c; renderHead(); renderMsgs(); if(!document.hidden) markRead(); } }
   renderList();
   const tot=chats.reduce((n,c)=>n+(mutedOf(c)||hiddenOf(c)?0:((c.unread||{})[me.phone]||0)),0);
