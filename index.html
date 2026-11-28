@@ -840,6 +840,8 @@ function initNative(){   // Android অ্যাপের ভেতরে: Notif
     else if(j&&j.action){ pendingCallAct=j.action; pendingCallId=j.callId||null; pendingCallAt=Date.now(); } } }catch(e){}
 }
 initNative(); addEventListener('load',initNative);
+/* কল চলাকালীন অ্যাপ পেছনে গেলেও মাইক চালু রাখতে Android অ্যাপকে জানানো (পুরনো APK-তে কিছুই হয় না) */
+function nativeCall(on,name){ try{ NA=window.DavetNative||NA; if(NA&&NA.setCallActive) NA.setCallActive(!!on,name||''); }catch(e){} }
 /* Android অ্যাপ চালু থাকা অবস্থায় নোটিফিকেশনের "ধরুন/কাটুন" এখান দিয়ে আসে */
 window.__davetCallAction = (act,callId) => { try{
   if(call && call.role==='callee' && !call.accepted && !call.ended && (!callId || call.id===callId)){
@@ -1743,7 +1745,7 @@ async function startCall(type){
   call=ctx; showCallUI(ctx,false); setCallStat('মাইক/ক্যামেরা চালু হচ্ছে…');
   try{ ctx.local=await navigator.mediaDevices.getUserMedia(mediaC(type,'user')); }
   catch(e){ finish(ctx); return toast(type==='video'?'ক্যামেরা ও মাইকের অনুমতি দিন':'মাইকের অনুমতি দিন'); }
-  attachLocal(ctx); updCtl();
+  attachLocal(ctx); updCtl(); nativeCall(true,ctx.peerName);
   try{
     ctx.id=doc(collection(db,'calls')).id;
     ctx.ice=await getIce(); updateDbg(ctx);
@@ -1788,7 +1790,7 @@ async function acceptCall(){
   ctx.accepted=true; stopRing(); closeCallNotif(ctx.id); clearTimeout(ctx.timeout); showCallUI(ctx,false); setCallStat('সংযোগ হচ্ছে…');
   try{ ctx.local=await navigator.mediaDevices.getUserMedia(mediaC(ctx.type,'user')); }
   catch(e){ toast('মাইক/ক্যামেরার অনুমতি দিন'); hangup('declined'); return; }
-  attachLocal(ctx); updCtl();
+  attachLocal(ctx); updCtl(); nativeCall(true,ctx.peerName);
   try{
     ctx.ice=await getIce(); armConnTimer(ctx);
     const pc=makePC(ctx); ctx.local.getTracks().forEach(t=>pc.addTrack(t,ctx.local));
@@ -1810,7 +1812,7 @@ async function logCall(ctx,result,dur){
   }catch(e){ console.warn(e); try{ toast(e&&e.code==='permission-denied'?'কল হিস্ট্রি সেভ হয়নি: Firestore Rules চেক করুন':'কল হিস্ট্রি সেভ হয়নি ('+((e&&e.code)||'error')+')'); }catch(_){} }
 }
 function finish(ctx){
-  if(ctx.ended) return; ctx.ended=true;
+  if(ctx.ended) return; ctx.ended=true; nativeCall(false);
   closeCallNotif(ctx.id); callLogAt=0; if(tab==='calls') setTimeout(()=>loadCallLog(true),800); clearInterval(ctx.timer); clearInterval(ctx.rvT); clearTimeout(volT); clearTimeout(ctx.timeout); clearTimeout(ctx.dcT); clearTimeout(ctx.connT); stopRing(); $('cdbg').textContent='';
   ctx.unsubs.forEach(u=>{ try{u();}catch(e){} }); try{ ctx.pc&&ctx.pc.close(); }catch(e){}
   [ctx.local,ctx.remote].forEach(s=>s&&s.getTracks().forEach(t=>t.stop()));
