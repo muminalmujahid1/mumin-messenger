@@ -1781,7 +1781,7 @@ async function logCall(ctx,result,dur){
     const m={from:me.phone,ts:ts_(),type:'call',callType:ctx.type,result,dur:dur||0};
     await addDoc(collection(db,'chats',ctx.chatId,'messages'),m);
     await updateDoc(doc(db,'chats',ctx.chatId),{last:'',lastType:'call',lastTs:m.ts,lastFrom:me.phone,[`unread.${ctx.peerPhone}`]:increment(result==='ended'||result==='declined'||result==='busy'?0:1)});
-  }catch(e){ console.warn(e); }
+  }catch(e){ console.warn(e); try{ toast(e&&e.code==='permission-denied'?'কল হিস্ট্রি সেভ হয়নি: Firestore Rules চেক করুন':'কল হিস্ট্রি সেভ হয়নি ('+((e&&e.code)||'error')+')'); }catch(_){} }
 }
 function finish(ctx){
   if(ctx.ended) return; ctx.ended=true;
