@@ -778,7 +778,7 @@ function startSession(){
 
 /* ---------------- নোটিফিকেশন ---------------- */
 let audioCtx;
-function beep(){ if(!notifOn()) return; try{ audioCtx=audioCtx||new (window.AudioContext||window.webkitAudioContext)(); audioCtx.resume?.(); const t=audioCtx.currentTime;
+function beep(){ if(!notifOn()) return; try{ if(NA&&NA.isForeground&&!NA.isForeground()) return; }catch(e){}   /* Android অ্যাপ ব্যাকগ্রাউন্ডে: শব্দ Notification-ই করবে */ try{ audioCtx=audioCtx||new (window.AudioContext||window.webkitAudioContext)(); audioCtx.resume?.(); const t=audioCtx.currentTime;
   [[988,0],[1318,.14]].forEach(([f,d])=>{ const o=audioCtx.createOscillator(),g=audioCtx.createGain(); o.type='sine'; o.frequency.value=f; o.connect(g); g.connect(audioCtx.destination);
     g.gain.setValueAtTime(.0001,t+d); g.gain.exponentialRampToValueAtTime(.22,t+d+.02); g.gain.exponentialRampToValueAtTime(.001,t+d+.3); o.start(t+d); o.stop(t+d+.32); }); }catch(e){} }
 function avatarIcon(name, phone){ try{ const c=document.createElement('canvas'); c.width=c.height=192; const x=c.getContext('2d');
@@ -812,8 +812,16 @@ const closeCallNotif = id => { try{ navigator.serviceWorker?.ready.then(r=>r.get
 
 /* ---------------- ইনকামিং কল: Android অ্যাপ সংযোগ ও পুশ (FCM) ----------------
    NA = Android অ্যাপ (Capacitor) এর ভেতরে চললে থাকে; সাধারণ ব্রাউজার/PWA তে null, তখন কিছুই বদলায় না। */
-var NA = window.DavetNative || null;
-try{ const s=NA&&NA.consumePendingAction&&NA.consumePendingAction(); if(s){ const j=JSON.parse(s); if(j&&j.action){ pendingCallAct=j.action; pendingCallId=j.callId||null; pendingCallAt=Date.now(); } } }catch(e){}
+var NA = window.DavetNative || null, pendingOpenChat = null;
+function tryOpenPending(){ try{ if(!pendingOpenChat||!me||!chatsReady) return; const c=chats.find(x=>x.id===pendingOpenChat); pendingOpenChat=null; if(c) openChat(c); }catch(e){} }
+window.__davetOpenChat = id => { pendingOpenChat=id; tryOpenPending(); };
+function initNative(){   // Android অ্যাপের ভেতরে: Notification থেকে এলে কী করতে হবে তা পড়ে (বারবার ডাকলেও নিরাপদ)
+  NA = window.DavetNative || NA;
+  try{ const s=NA&&NA.consumePendingAction&&NA.consumePendingAction(); if(s){ const j=JSON.parse(s);
+    if(j&&j.action==='open-chat'){ pendingOpenChat=j.chatId||null; tryOpenPending(); }
+    else if(j&&j.action){ pendingCallAct=j.action; pendingCallId=j.callId||null; pendingCallAt=Date.now(); } } }catch(e){}
+}
+initNative(); addEventListener('load',initNative);
 /* Android অ্যাপ চালু থাকা অবস্থায় নোটিফিকেশনের "ধরুন/কাটুন" এখান দিয়ে আসে */
 window.__davetCallAction = (act,callId) => { try{
   if(call && call.role==='callee' && !call.accepted && !call.ended && (!callId || call.id===callId)){
@@ -882,7 +890,7 @@ function onChats(snap){
   snap.docs.forEach(d=>{ const c=d.data(); if(d.metadata.hasPendingWrites) return;
     if(c.lastFrom && c.lastFrom!==me.phone && (c.lastTs||0) > ((c.deliveredAt||{})[me.phone]||0))
       updateDoc(d.ref,{[`deliveredAt.${me.phone}`]:c.lastTs}).catch(()=>{}); });
-  chatsReady=true;
+  chatsReady=true; tryOpenPending();
   if(!snap.metadata.fromCache) writeJSON('mm_chats',{phone:me.phone,list:chats.slice(0,60)});
   incoming.forEach(({id,d})=>{ const o=other({...d,id}); const visible = cur&&cur.id===id&&!document.hidden;
     if(d.lastType==='call'){ callLogAt=0; if(tab==='calls') loadCallLog(true); }
@@ -1752,7 +1760,7 @@ function showIncoming(id,c,fromName){
   const ch=chats.find(x=>x.id===c.chatId), nm=(ch&&other(ch).name)||fromName||c.from;
   const ctx=newCtx('callee',c.type,c.from,nm,c.chatId,c.participants,{[me.phone]:me.name,[c.from]:nm});
   ctx.id=id; ctx.offer=c.offer; ctx.docReady=true; call=ctx;
-  showCallUI(ctx,true); startRing(); listenCall(ctx);
+  showCallUI(ctx,true); { let bg=false; try{ bg=!!(NA&&NA.isForeground&&!NA.isForeground()); }catch(e){} if(!bg) startRing(); } listenCall(ctx);   // Android অ্যাপ ব্যাকগ্রাউন্ডে: রিংটোন Notification-ই বাজায়
   { const okp=(!pendingCallId||pendingCallId===id)&&Date.now()-pendingCallAt<30000, pa=okp?pendingCallAct:null; if(okp){ pendingCallAct=null; pendingCallId=null; } if(pa==='answer') setTimeout(()=>{ try{ acceptCall(); }catch(e){} },300); else if(pa==='decline') setTimeout(()=>hangup('declined').then(()=>{ try{ NA&&NA.moveToBack&&NA.moveToBack(); }catch(e){} }),300); }
   if(document.hidden && !NA) notifyCall('📞 '+(c.type==='video'?'ভিডিও':'অডিও')+' কল',nm+' আপনাকে কল করছে');
   ctx.timeout=setTimeout(()=>{ if(call===ctx&&!ctx.accepted) finish(ctx); },45000);
