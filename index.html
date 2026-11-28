@@ -564,6 +564,8 @@ const CLOUDINARY = { cloud: "", preset: "" };
 const TURN_CFG = { app: "muminchat", key: "783a2446e2607faca42bd686eea60d95fc24" };
 const HAS_CDN = !!(CLOUDINARY.cloud && CLOUDINARY.preset);
 /* ইনকামিং কল পুশ (FCM): Firebase Console → Project settings → Cloud Messaging → Web Push certificates → Key pair এর মান এখানে বসান */
+/* কল পুশ সার্ভার (Cloudflare Worker) এর ঠিকানা */
+const PUSH_URL = "https://davetchat.muminalmujahid21.workers.dev";
 const FCM_VAPID_KEY = "BFNzUwLIveoGQAb58ztA6b_mfCyJumGr7AKlSwl4c-AF39kclFWkOTtHhiiyfskNqnlUnR7-acDEIBEmohTIzKc";
 
 const app = initializeApp(FIREBASE_CONFIG);
@@ -761,11 +763,13 @@ function teardown(){
 /* ---------------- প্রেজেন্স (অনলাইন/শেষ দেখা) ---------------- */
 let hb=null;
 const setPresence = on => { if(!me) return; updateDoc(doc(db,'users',me.phone),{online:on,lastSeen:ts_()}).catch(()=>{}); };
-document.addEventListener('visibilitychange',()=>{ if(!me) return; setPresence(!document.hidden); if(!document.hidden && cur) markRead(); });
+/* অনলাইন মানে ফোনে নেট চালু ও অ্যাপ চালু: অন্য অ্যাপে গেলেও "অ্যাক্টিভ" থাকবে। অফলাইন হবে শুধু অ্যাপ বন্ধ হলে বা নেট না থাকলে (হার্টবিট থামলে) */
+document.addEventListener('visibilitychange',()=>{ if(!me) return; setPresence(true); if(!document.hidden && cur) markRead(); });
+addEventListener('online',()=>{ if(me) setPresence(true); });
 addEventListener('pagehide',()=>setPresence(false));
 
 function startSession(){
-  setPresence(true); clearInterval(hb); hb=setInterval(()=>{ if(!document.hidden) setPresence(true); },20000);
+  setPresence(true); clearInterval(hb); hb=setInterval(()=>{ if(navigator.onLine!==false) setPresence(true); },20000);
   unsubChats = onSnapshot(query(collection(db,'chats'),where('participants','array-contains',me.phone)), onChats, e=>console.warn(e));
   setupBanner(); watchCalls(); registerPush();
   const pu=localStorage.getItem('mm_pending_u');
@@ -786,7 +790,9 @@ async function notify(title, body, id, force, avatar){
   const opts={body,icon:avatar||'icon-192.png',badge:'badge-96.png',tag:id,renotify:true,silent:false,timestamp:Date.now(),vibrate:[120,60,120],data:{id}};
   try{
     const reg=await Promise.race([navigator.serviceWorker?.ready, sleep(1500).then(()=>null)]);
-    if(reg&&reg.showNotification){ await reg.showNotification(title,opts); return; }
+    if(reg&&reg.showNotification){
+      try{ const ex=await reg.getNotifications({tag:id}); if(ex.some(n=>n.body===body&&Date.now()-(n.timestamp||0)<8000)) return; }catch(e){}   // পুশ থেকে একই নোটিফিকেশন আগেই এলে দ্বিতীয়বার নয়
+      await reg.showNotification(title,opts); return; }
   }catch(e){}
   try{ new Notification(title,{body,icon:avatar||'icon-192.png',tag:id}); }catch(e){}
 }
@@ -799,7 +805,7 @@ async function notifyCall(title, body){
   try{ new Notification(title,{body,icon:'icon-192.png',tag:'call'}); }catch(e){}
 }
 let pendingCallAct=null, pendingCallId=null, pendingCallAt=Date.now();
-try{ const qp=new URLSearchParams(location.search); const ca=qp.get('callaction'); if(ca){ pendingCallAct=ca; pendingCallId=qp.get('callid')||null; history.replaceState(null,'',location.pathname); } }catch(e){}
+try{ const ca=new URLSearchParams(location.search).get('callaction'); if(ca){ pendingCallAct=ca; history.replaceState(null,'',location.pathname); } }catch(e){}
 if(/[?&]debug\b/.test(location.search)) document.body.classList.add('dbg');
 const closeCallNotif = id => { try{ navigator.serviceWorker?.ready.then(r=>r.getNotifications({tag:'call'}).then(a=>a.forEach(n=>n.close()))); }catch(e){}
   try{ NA&&NA.dismissCall&&NA.dismissCall(id||''); }catch(e){} };
@@ -831,25 +837,21 @@ async function registerPush(){
     if(t) await saveToken('web',t);
   }catch(e){ console.warn('push',e); }
 }
+/* Worker-কে জানানো: /call = কল শুরু (ওপাশে পুশ যাবে), /end = কল শেষ/বাতিল (Popup সরবে বা "মিসড কল")। ব্যর্থ হলে কলে কোনো প্রভাব নেই। */
+async function pushApi(path,callId,key){
+  try{ if(!PUSH_URL||!callId||!auth.currentUser) return; const t=await auth.currentUser.getIdToken();
+    fetch(PUSH_URL+path,{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+t},body:JSON.stringify({[key||'callId']:callId}),keepalive:true}).catch(()=>{}); }catch(e){}
+}
 async function unregisterPush(){
   try{ for(const k of ['android','web']){ const t=localStorage.getItem('mm_fcm_'+k);
     if(t&&me){ await updateDoc(doc(db,'fcmTokens',me.phone),{[k]:arrayRemove(t)}); localStorage.removeItem('mm_fcm_'+k); } } }catch(e){}
 }
 addEventListener('davet-fcm-token',e=>{ if(me&&e.detail) saveToken('android',e.detail); });
 if('serviceWorker' in navigator) navigator.serviceWorker.addEventListener('message',e=>{
-  const d=e.data||{}, t=d.type;
-  if(t!=='call-decline' && t!=='call-answer') return;
-  // কল UI/Firestore listener প্রস্তুত হওয়ার আগে action এলে queue করে রাখি।
-  if(!call || call.role!=='callee' || call.accepted || call.ended){
-    pendingCallAct=t==='call-answer'?'answer':'decline';
-    pendingCallId=d.callId||null;
-    pendingCallAt=Date.now();
-    return;
-  }
-  if(d.callId && call.id!==d.callId) return;
-  if(t==='call-decline') hangup('declined');
-  else { try{ acceptCall(); }catch(err){} }
-});
+  const t=e.data&&e.data.type;
+  if(t==='open-chat'){ try{ const c=me&&chats.find(x=>x.id===e.data.chatId); if(c) openChat(c); }catch(err){} return; }
+  if(!call||call.role!=='callee'||call.accepted||call.ended) return;
+  if(t==='call-decline') hangup('declined'); else if(t==='call-answer'){ try{ acceptCall(); }catch(err){} } });
 
 /* ---------------- চ্যাট লিস্ট ---------------- */
 const lastTsMap = {};
@@ -860,7 +862,7 @@ function setPeerData(p,data){ const prev=presence[p];
   if(data) data._seen=(prev&&prev.lastSeen===data.lastSeen&&prev.online===data.online)?prev._seen:Date.now();
   presence[p]=data; }
 /* অনলাইন = অপরজনের হার্টবিট গত ৫০ সেকেন্ডে বদলেছে (ফোনের ঘড়ি ভুল হলেও কাজ করবে) */
-const isOnline = u => !!(u && u.online && Date.now()-(u._seen||0) < 50000);
+const isOnline = u => !!(u && u.online && Date.now()-(u._seen||0) < 90000);   // ব্যাকগ্রাউন্ডে ব্রাউজার টাইমার ধীর করলেও অ্যাক্টিভ থাকে
 function watchPeers(){ chats.forEach(c=>{ if(isG(c)) return; const p=other(c).phone; if(peerSubs[p]) return;
   peerSubs[p]=onSnapshot(doc(db,'users',p),s=>{ setPeerData(p,s.exists()?s.data():null);
     if(cur&&other(cur).phone===p){ peer=presence[p]; renderHead(); } renderList(); },()=>{}); }); }
@@ -1311,7 +1313,7 @@ $('rpx').onclick=cancelReply; $('edx').onclick=cancelEdit;
 
 /* ---------------- পাঠানো ---------------- */
 async function sendMessage(payload){
-  if(!canWrite()) return; const o=other(cur);
+  if(!canWrite()) return; const o=other(cur), cid=cur.id;
   try{
     await ensureChat();
     const m={from:me.phone,ts:ts_(),...payload};
@@ -1320,6 +1322,7 @@ async function sendMessage(payload){
     const type=payload.type||'text'; const un={}; others(cur).forEach(p=>{ un['unread.'+p]=increment(1); });
     await addDoc(collection(db,'chats',cur.id,'messages'),m);
     await updateDoc(doc(db,'chats',cur.id),{last:type==='text'?payload.text.slice(0,120):'',lastType:type,lastTs:m.ts,lastFrom:me.phone,...un,[`typing.${me.phone}`]:0});
+    pushApi('/msg',cid,'chatId');
     return true;
   }catch(e){ console.warn(e); toast(e.code==='permission-denied'?'Firestore Rules সেট করা হয়নি':'মেসেজ পাঠানো যায়নি — ইন্টারনেট চেক করুন'); return false; }
 }
@@ -1724,6 +1727,7 @@ async function startCall(type){
       offer:{type:offer.type,sdp:offer.sdp},createdAt:serverTimestamp(),chatId:cur.id});
     ctx.docReady=true; ctx.outCands.splice(0).forEach(c=>pushCand(ctx,c));
     await setDoc(doc(db,'callinbox',o.phone),{callId:ctx.id,from:me.phone,fromName:me.name,type,ts:ts_()});
+    pushApi('/call',ctx.id);
   }catch(e){ console.warn(e); finish(ctx); return toast(e.code==='permission-denied'?'Firestore Rules আপডেট করুন (কলের নিয়ম যোগ করতে হবে)':'কল শুরু করা যায়নি'); }
   setCallStat('রিং হচ্ছে…'); listenCall(ctx);
   ctx.timeout=setTimeout(()=>{ if(call===ctx&&!ctx.answered) hangup('missed'); },45000);
@@ -1765,6 +1769,7 @@ async function acceptCall(){
     await pc.setRemoteDescription(ctx.offer); await flushRemoteCands(ctx);
     const ans=await pc.createAnswer(); await pc.setLocalDescription(ans);
     await updateDoc(doc(db,'calls',ctx.id),{answer:{type:ans.type,sdp:ans.sdp},status:'accepted'});
+    pushApi('/end',ctx.id);
     ctx.answered=true;
   }catch(e){ console.warn(e); toast('কল সংযুক্ত করা যায়নি'); hangup('declined'); }
 }
@@ -1791,7 +1796,7 @@ async function hangup(result){
   const dur=ctx.t0?Math.round((Date.now()-ctx.t0)/1000):0;
   const st=result||(ctx.answered?'ended':(ctx.role==='caller'?'cancelled':'declined'));
   setCallStat('কল শেষ হচ্ছে…');
-  if(ctx.id){ try{ await updateDoc(doc(db,'calls',ctx.id),{status:st,endedBy:me.phone,dur}); }catch(e){} }
+  if(ctx.id){ try{ await updateDoc(doc(db,'calls',ctx.id),{status:st,endedBy:me.phone,dur}); pushApi('/end',ctx.id); }catch(e){} }
   if(ctx.role==='caller') await logCall(ctx,st,dur);
   finish(ctx);
 }
