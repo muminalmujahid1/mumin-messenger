@@ -2,7 +2,8 @@
 <html lang="bn">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="format-detection" content="telephone=no">
 <title>DavetChat</title>
 <meta name="description" content="প্রিয়জনের সাথে নিরাপদে চ্যাট করুন">
 <meta name="theme-color" content="#6b4cf6">
@@ -448,6 +449,19 @@ button:active{transform:scale(.95)}
 :root[data-theme=dark] #composer .box:focus-within{background:#262440;border-color:#8b74ff;box-shadow:0 0 0 4px rgba(139,116,255,.2)}
 :root[data-theme=dark] #composer .box .ib{color:#a9a5c9}
 :root[data-theme=dark] #composer textarea::placeholder{color:#8a86a8}
+
+/* ---- নেটিভ অ্যাপের মতো আচরণ ---- */
+html,body{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-text-size-adjust:100%;text-size-adjust:100%}
+input,textarea,.b,.lnk{-webkit-user-select:text;user-select:text;-webkit-touch-callout:default}
+button,a,.item,.mi{touch-action:manipulation}
+img,svg{-webkit-user-drag:none;user-drag:none}
+/* ---- শেয়ার শিট ---- */
+.shg{display:grid;grid-template-columns:repeat(4,1fr);gap:18px 4px;padding:18px 6px 6px}
+.shi{display:flex;flex-direction:column;align-items:center;gap:7px;color:var(--txt);font-size:12.5px;font-weight:500;background:none;border:0;cursor:pointer}
+.shi i{width:54px;height:54px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;box-shadow:0 4px 12px rgba(0,0,0,.18);transition:transform .12s}
+.shi:active i{transform:scale(.92)}
+.shi svg{width:26px;height:26px;fill:none;stroke:#fff;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.shp{margin:6px 10px 0;padding:10px 12px;border-radius:14px;background:var(--bg);color:var(--sub);font-size:13px;line-height:1.5;max-height:64px;overflow:hidden;word-break:break-all}
 </style>
 </head>
 <body>
@@ -716,8 +730,8 @@ const authErr = e => ({
   'auth/weak-password':'পাসওয়ার্ড কমপক্ষে ৬ অক্ষরের দিন।',
   'auth/too-many-requests':'অনেকবার ভুল চেষ্টা হয়েছে। কিছুক্ষণ পরে আবার চেষ্টা করুন।',
   'auth/network-request-failed':'ইন্টারনেট সংযোগ চেক করুন।',
-  'auth/operation-not-allowed':'Firebase Console → Authentication → Sign-in method থেকে "Email/Password" চালু করুন।',
-  'auth/configuration-not-found':'Firebase Console-এ Authentication → "Get started" চাপুন, তারপর Email/Password চালু করুন।'
+  'auth/operation-not-allowed':'এই মুহূর্তে লগইন করা যাচ্ছে না। কিছুক্ষণ পরে আবার চেষ্টা করুন।',
+  'auth/configuration-not-found':'এই মুহূর্তে লগইন করা যাচ্ছে না। কিছুক্ষণ পরে আবার চেষ্টা করুন।'
 }[e.code] || ('সমস্যা হয়েছে: ' + (e.code||e.message)));
 
 async function doAuth(){
@@ -854,7 +868,7 @@ async function saveToken(kind,token){
   catch(e){ console.warn('fcm save',e); }
 }
 async function registerPush(){
-  if(!me) return;
+  if(!me || !notifOn()) return;
   try{
     if(NA && NA.getFcmToken){ const t=NA.getFcmToken(); if(t) await saveToken('android',t); return; }
     if(!FCM_VAPID_KEY || !('Notification' in window) || Notification.permission!=='granted' || !('serviceWorker' in navigator) || !('PushManager' in window)) return;
@@ -874,7 +888,7 @@ async function unregisterPush(){
   try{ for(const k of ['android','web']){ const t=localStorage.getItem('mm_fcm_'+k);
     if(t&&me){ await updateDoc(doc(db,'fcmTokens',me.phone),{[k]:arrayRemove(t)}); localStorage.removeItem('mm_fcm_'+k); } } }catch(e){}
 }
-addEventListener('davet-fcm-token',e=>{ if(me&&e.detail) saveToken('android',e.detail); });
+addEventListener('davet-fcm-token',e=>{ if(me&&e.detail&&notifOn()) saveToken('android',e.detail); });
 if('serviceWorker' in navigator) navigator.serviceWorker.addEventListener('message',e=>{
   const t=e.data&&e.data.type;
   if(t==='open-chat'){ try{ const c=me&&chats.find(x=>x.id===e.data.chatId); if(c) openChat(c); }catch(err){} return; }
@@ -1108,14 +1122,17 @@ async function ensureChat(){
 /* ---------------- সেটিংস ---------------- */
 const baseUrl = () => location.origin + location.pathname.replace(/index\.html$/,'');
 const profileLink = () => baseUrl() + '?u=' + me.phone;
+/* Android অ্যাপ (WebView) এ চলছে কি না */
+function inApp(){ try{ return !!(NA || window.DavetNative || window.Capacitor || /; wv\)/.test(navigator.userAgent)); }catch(e){ return !!NA; } }
 function notifStatusText(){
   if(!notifOn()) return 'বন্ধ আছে';
-  if(!('Notification' in window)) return 'এই ব্রাউজারে সাপোর্ট নেই';
-  return Notification.permission==='granted'?'চালু আছে':Notification.permission==='denied'?'ব্রাউজারে ব্লক করা আছে':'চালু করতে চাপুন';
+  if(inApp()) return 'চালু আছে';
+  if(!('Notification' in window)) return 'এই ডিভাইসে সাপোর্ট নেই';
+  return Notification.permission==='granted'?'চালু আছে':Notification.permission==='denied'?'ব্লক করা আছে':'চালু করতে চাপুন';
 }
 function refreshSettings(){
   const el=$('settings'); if(!el||!me||el.classList.contains('hidden')) return;
-  const th=document.documentElement.dataset.theme, inst=(deferredInstall||(isIOS&&!isStandalone))&&!isStandalone;
+  const th=document.documentElement.dataset.theme, inst=!inApp()&&(deferredInstall||(isIOS&&!isStandalone))&&!isStandalone;
   el.innerHTML=`<div class="wrap"><div class="sh"><button class="ib" id="setback" aria-label="পেছনে">${ic('back')}</button><h2>সেটিংস</h2></div>
     <div class="pcard"><div class="av big" style="background:${colorOf(me.phone)}">${esc(me.name[0]||'?')}</div>
       <div class="pi"><b>${esc(me.name)}</b><span>${me.phone}</span></div>
@@ -1125,7 +1142,7 @@ function refreshSettings(){
       <button class="mi" id="setshp"><span>${ic('share')}</span><div class="tx">প্রোফাইল শেয়ার করুন<small>আপনার লিংক কাউকে পাঠান</small></div>${ic('chev')}</button>
     </div>
     <div class="sec"><div class="st">থিম</div><div class="seg"><button data-th="light" class="${th==='light'?'on':''}">${ic('sun')} লাইট</button><button data-th="dark" class="${th==='dark'?'on':''}">${ic('moon')} ডার্ক</button></div></div>
-    <div class="sec"><button class="mi" id="setnot"><span>${ic('bell')}</span><div class="tx">নোটিফিকেশন<small>${notifStatusText()}</small></div><i class="sw${notifOn()&&'Notification' in window&&Notification.permission==='granted'?' on':''}"></i></button></div>
+    <div class="sec"><button class="mi" id="setnot"><span>${ic('bell')}</span><div class="tx">নোটিফিকেশন<small>${notifStatusText()}</small></div><i class="sw${notifOn()&&(inApp()||('Notification' in window&&Notification.permission==='granted'))?' on':''}"></i></button></div>
     <div class="sec">
       <button class="mi" id="setapp"><span>${ic('share')}</span><div class="tx">অ্যাপ শেয়ার করুন<small>বন্ধু ও পরিবারকে অ্যাপটি পাঠান</small></div>${ic('chev')}</button>
       ${inst?`<button class="mi" id="setins"><span>${ic('install')}</span><div class="tx">অ্যাপ ইনস্টল করুন<small>ফোনের হোম স্ক্রিনে যোগ করুন</small></div>${ic('chev')}</button>`:''}
@@ -1139,6 +1156,11 @@ function refreshSettings(){
   $('setins')&&($('setins').onclick=installApp);
   el.querySelectorAll('[data-th]').forEach(b=>b.onclick=()=>applyTheme(b.dataset.th));
   $('setnot').onclick=async()=>{
+    if(inApp()){   /* Android অ্যাপ: ক্লিক করলে অন, আবার ক্লিক করলে অফ */
+      if(notifOn()){ localStorage.setItem('mm_notif_off','1'); await unregisterPush(); toast('নোটিফিকেশন বন্ধ করা হয়েছে'); }
+      else { localStorage.removeItem('mm_notif_off'); await registerPush(); toast('নোটিফিকেশন চালু হয়েছে 🔔'); }
+      refreshSettings(); return;
+    }
     if(notifOn()&&'Notification' in window&&Notification.permission==='granted'){ localStorage.setItem('mm_notif_off','1'); toast('নোটিফিকেশন বন্ধ করা হয়েছে'); }
     else { localStorage.removeItem('mm_notif_off');
       if(!('Notification' in window)) notifHelp('unsupported');
@@ -1150,11 +1172,37 @@ function refreshSettings(){
 }
 function openSettings(){ if(!me) return; clearSel(); const el=$('settings'); el.classList.remove('hidden'); refreshSettings(); el.scrollTop=0; history.pushState({settings:1},''); }
 function closeSettings(){ const el=$('settings'); if(el.classList.contains('hidden')) return; el.classList.add('hidden'); if(history.state&&history.state.settings){ skipPop=true; history.back(); } }
+async function copyText(t){
+  try{ await navigator.clipboard.writeText(t); return true; }catch(e){}
+  try{ const a=document.createElement('textarea'); a.value=t; a.style.cssText='position:fixed;opacity:0;top:0;left:0'; document.body.appendChild(a); a.focus(); a.select(); const ok=document.execCommand('copy'); a.remove(); return ok; }catch(e){ return false; }
+}
+function openExternal(u){ try{ if(inApp()) location.href=u; else window.open(u,'_blank','noopener'); }catch(e){} }
 async function shareLink(title,text,url){
+  const full=text+'\n'+url;
+  /* ১) অ্যাপ/ব্রাউজারের নিজস্ব শেয়ার মেনু থাকলে সেটাই (সব অ্যাপ দেখাবে) */
+  try{ if(NA&&NA.share){ NA.share(title,text,url); return; } }catch(e){}
   try{ if(navigator.share){ await navigator.share({title,text,url}); return; } }catch(e){ if(e&&e.name==='AbortError') return; }
-  const s=sheet(`<h3>${esc(title)}</h3><p class="anote" style="text-align:left;padding:0 14px">${esc(text)}</p><input class="lnk" id="lnkv" readonly value="${esc(url)}"><button class="btn" id="lnkc">লিংক কপি করুন</button>`);
-  $('lnkv').onfocus=e=>e.target.select();
-  $('lnkc').onclick=async()=>{ try{ await navigator.clipboard.writeText(text+'\n'+url); toast('লিংক কপি হয়েছে'); closeSheet(); }catch(e){ $('lnkv').select(); toast('লিংকটি চেপে ধরে কপি করুন'); } };
+  /* ২) না থাকলে নিজস্ব শেয়ার শিট */
+  const E=encodeURIComponent, ic=p=>`<svg viewBox="0 0 24 24">${p}</svg>`;
+  const chat=ic('<path d="M21 11.5a8.4 8.4 0 0 1-12.3 7.4L3 20.5l1.7-5.4A8.4 8.4 0 1 1 21 11.5z"/>');
+  const send=ic('<path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4 20-7z"/>');
+  const mail=ic('<rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/>');
+  const sms=ic('<path d="M4 4h16v12H8l-4 4V4z"/>');
+  const link=ic('<path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3A4 4 0 0 0 10 18.7l1-1"/>');
+  const fb=ic('<path d="M14 8h3V4h-3a4 4 0 0 0-4 4v3H7v4h3v6h4v-6h3l1-4h-4V8z"/>');
+  const items=[
+    ['WhatsApp','#25a244',chat,()=>openExternal('https://wa.me/?text='+E(full))],
+    ['Messenger','#0a84ff',chat,()=>openExternal('fb-messenger://share/?link='+E(url))],
+    ['Telegram','#2a9fd6',send,()=>openExternal('https://t.me/share/url?url='+E(url)+'&text='+E(text))],
+    ['Facebook','#1877f2',fb,()=>openExternal('https://www.facebook.com/sharer/sharer.php?u='+E(url))],
+    ['SMS','#34a853',sms,()=>openExternal('sms:?&body='+E(full))],
+    ['ইমেইল','#ea6b3c',mail,()=>openExternal('mailto:?subject='+E(title)+'&body='+E(full))],
+    ['X','#111111',send,()=>openExternal('https://twitter.com/intent/tweet?text='+E(text)+'&url='+E(url))],
+    ['কপি','#6b4cf6',link,async()=>{ const ok=await copyText(full); toast(ok?'লিংক কপি হয়েছে':'কপি করা যায়নি'); if(ok) closeSheet(); }]
+  ];
+  sheet(`<h3>শেয়ার করুন</h3><div class="shp">${esc(text)}<br>${esc(url)}</div>
+    <div class="shg">${items.map((x,i)=>`<button class="shi" data-i="${i}"><i style="background:${x[1]}">${x[2]}</i>${x[0]}</button>`).join('')}</div>`);
+  document.querySelectorAll('#ov .shi').forEach(b=>b.onclick=()=>items[+b.dataset.i][3]());
 }
 function qrSheet(){
   const url=profileLink(); let svg='';
@@ -1164,7 +1212,7 @@ function qrSheet(){
     <p>বন্ধু তার ফোনের ক্যামেরা বা QR স্ক্যানার দিয়ে এটি স্ক্যান করলে আপনার সাথে চ্যাট খুলবে।</p></div>
     <button class="btn" id="qrsh">শেয়ার করুন</button><button class="btn ghost" id="qrcp">লিংক কপি করুন</button>`);
   $('qrsh').onclick=()=>shareLink('DavetChat',`${me.name} — DavetChat-এ আমাকে যোগ করুন:`,url);
-  $('qrcp').onclick=async()=>{ try{ await navigator.clipboard.writeText(url); toast('লিংক কপি হয়েছে'); }catch(e){ toast('কপি করা যায়নি'); } };
+  $('qrcp').onclick=async()=>{ toast(await copyText(url)?'লিংক কপি হয়েছে':'কপি করা যায়নি'); };
 }
 function profileSheet(){
   sheet(`<h3>নাম পরিবর্তন</h3>
@@ -1466,7 +1514,7 @@ $('attbtn').onclick=()=>{
 let rec=null;
 async function startRec(){
   if(!cur) return;
-  if(!navigator.mediaDevices?.getUserMedia||!window.MediaRecorder) return toast('এই ব্রাউজারে ভয়েস রেকর্ড সাপোর্ট নেই');
+  if(!navigator.mediaDevices?.getUserMedia||!window.MediaRecorder) return toast('এই ডিভাইসে ভয়েস রেকর্ড সাপোর্ট নেই');
   let stream; try{ stream=await navigator.mediaDevices.getUserMedia({audio:true}); }catch(e){ return toast('মাইক্রোফোনের অনুমতি দিন'); }
   const mime=['audio/webm;codecs=opus','audio/webm','audio/mp4','audio/ogg;codecs=opus'].find(t=>MediaRecorder.isTypeSupported(t))||'';
   const mr=new MediaRecorder(stream,{...(mime?{mimeType:mime}:{}),audioBitsPerSecond:HAS_CDN?48000:24000});
@@ -1563,14 +1611,16 @@ async function installApp(){
     ?'১) Safari-তে নিচের <b>শেয়ার (⬆️)</b> বাটন চাপুন<br>২) <b>"Add to Home Screen / হোম স্ক্রিনে যোগ করুন"</b> বেছে নিন<br>৩) <b>Add</b> চাপুন'
     :'১) ব্রাউজারের <b>⋮ মেনু</b> খুলুন<br>২) <b>"Install app" বা "Add to Home screen"</b> চাপুন<br>৩) নিশ্চিত করুন'}</p>`);
 }
-const notifStatus=()=>!('Notification' in window)?'এই ব্রাউজারে সাপোর্ট নেই':Notification.permission==='granted'?'চালু আছে ✅ (চেপে টেস্ট করুন)':Notification.permission==='denied'?'ব্লক করা আছে — চেপে দেখুন কীভাবে চালু করবেন':'বন্ধ — চেপে চালু করুন';
+const notifStatus=()=>!('Notification' in window)?'এই ডিভাইসে সাপোর্ট নেই':Notification.permission==='granted'?'চালু আছে ✅ (চেপে টেস্ট করুন)':Notification.permission==='denied'?'ব্লক করা আছে — চেপে দেখুন কীভাবে চালু করবেন':'বন্ধ — চেপে চালু করুন';
 async function testNotif(){ await notify('DavetChat','নোটিফিকেশন ঠিকমতো কাজ করছে ✅','test'); toast('টেস্ট নোটিফিকেশন পাঠানো হয়েছে'); }
 function notifHelp(why){
+  if(inApp()){ sheet(`<h3>নোটিফিকেশন চালু করবেন যেভাবে</h3><p class="anote" style="text-align:left;padding:0 14px 10px;font-size:15px;line-height:1.9">ফোনের <b>Settings → Apps → DavetChat → Notifications</b> থেকে নোটিফিকেশন চালু করুন।</p>`); return; }
   sheet(`<h3>নোটিফিকেশন চালু করবেন যেভাবে</h3><p class="anote" style="text-align:left;padding:0 14px 10px;font-size:15px;line-height:1.9">${why==='unsupported'
-    ?(isIOS?'iPhone-এ নোটিফিকেশন পেতে আগে অ্যাপটি <b>Home Screen-এ ইনস্টল</b> করে সেখান থেকে খুলুন (iOS ১৬.৪+ লাগবে)।':'এই ব্রাউজারে নোটিফিকেশন সাপোর্ট নেই। <b>Chrome</b> ব্যবহার করুন।')
+    ?(isIOS?'iPhone-এ নোটিফিকেশন পেতে আগে অ্যাপটি <b>Home Screen-এ ইনস্টল</b> করে সেখান থেকে খুলুন (iOS ১৬.৪+ লাগবে)।':'এই ডিভাইসে নোটিফিকেশন সাপোর্ট নেই। অ্যাপটি সর্বশেষ সংস্করণে আপডেট করুন।')
     :'আপনি আগে নোটিফিকেশন ব্লক করেছেন। চালু করতে:<br>১) ঠিকানা বারের পাশের <b>🔒 / ⓘ</b> চাপুন<br>২) <b>Permissions / অনুমতি → Notifications</b> → <b>Allow</b><br>৩) পেজ রিফ্রেশ করুন<br><br>অ্যাপ হিসেবে ইনস্টল করা থাকলে: ফোনের <b>Settings → Apps → DavetChat → Notifications</b> চালু করুন।'}</p>`);
 }
 async function askNotif(){
+  if(inApp()){ localStorage.removeItem('mm_notif_off'); registerPush(); toast('নোটিফিকেশন চালু হয়েছে 🔔'); setupBanner(); return; }
   if(!('Notification' in window)) return notifHelp('unsupported');
   if(Notification.permission==='granted'){ await testNotif(); return; }
   if(Notification.permission==='denied') return notifHelp('denied');
@@ -1581,6 +1631,7 @@ async function askNotif(){
 }
 function setupBanner(){
   const b=$('banner'); let act=null, txt='', btn='';
+  if(inApp()){ b.classList.add('hidden'); return; }
   if(!isStandalone && (deferredInstall||isIOS) && !localStorage.getItem('mm_ban_i')){ act='install'; txt='ফোনে অ্যাপের মতো ইনস্টল করুন'; btn='ইনস্টল'; }
   else if('Notification' in window && Notification.permission==='default' && !localStorage.getItem('mm_ban_n')){ act='notif'; txt='নতুন মেসেজের নোটিফিকেশন চালু করুন'; btn='চালু'; }
   if(!act){ b.classList.add('hidden'); return; }
@@ -1739,7 +1790,7 @@ function listenCall(ctx){
 async function startCall(type){
   if(!cur||!me) return;
   if(call) return toast('আপনি এখন অন্য কলে আছেন');
-  if(!navigator.mediaDevices?.getUserMedia||!window.RTCPeerConnection) return toast('এই ব্রাউজারে কল সাপোর্ট নেই');
+  if(!navigator.mediaDevices?.getUserMedia||!window.RTCPeerConnection) return toast('এই ডিভাইসে কল সাপোর্ট নেই');
   const o=other(cur), name=(peer&&peer.name)||o.name;
   const ctx=newCtx('caller',type,o.phone,name,cur.id,cur.participants,{[me.phone]:me.name,[o.phone]:name});
   call=ctx; showCallUI(ctx,false); setCallStat('মাইক/ক্যামেরা চালু হচ্ছে…');
