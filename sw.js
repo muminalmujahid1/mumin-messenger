@@ -1,183 +1,126 @@
 const CACHE = 'davetchat-v7';
-const LIB = 'davetchat-lib-v1'; // Firebase লাইব্রেরি ও ফন্ট
+const LIB = 'davetchat-lib-v1'; // Firebase লাইব্রেরি ও ফন্ট (ঠিকানা না বদলালে একই থাকে)
 const SHELL = ['./', 'manifest.webmanifest', 'icon-192.png', 'icon-512.png', 'icon-maskable-512.png', 'badge-96.png'];
 const SDK = ['app', 'auth', 'firestore'].map(n => 'https://www.gstatic.com/firebasejs/10.12.2/firebase-' + n + '.js');
 const isLib = u => u.href.startsWith('https://www.gstatic.com/firebasejs/') || u.hostname === 'fonts.googleapis.com' || u.hostname === 'fonts.gstatic.com';
 
-// Redirect হওয়া Response-কে Cache-এ রাখার উপযোগী করে
+// রিডাইরেক্ট হওয়া উত্তর সরাসরি পেজ খোলায় ব্যবহার করা যায় না, তাই নতুন করে সাজানো হয়
 const clean = res => res.redirected ? new Response(res.body, { status: res.status, statusText: res.statusText, headers: res.headers }) : res;
-
 async function update(cacheName, key, url, opts) {
   const res = await fetch(url, opts);
-  if (res.ok) {
-    const c = await caches.open(cacheName);
-    await c.put(key, clean(res.clone()));
-  }
+  if (res.ok) { const c = await caches.open(cacheName); await c.put(key, clean(res.clone())); }
   return clean(res);
 }
 
-self.addEventListener('install', event => {
-  event.waitUntil(Promise.allSettled([
-    ...SHELL.map(url => update(CACHE, url, url, { cache: 'reload' })),
-    ...SDK.map(url => update(LIB, url, url, { mode: 'cors', credentials: 'omit' }))
+self.addEventListener('install', e => {
+  e.waitUntil(Promise.allSettled([
+    ...SHELL.map(u => update(CACHE, u, u, { cache: 'reload' })),
+    ...SDK.map(u => update(LIB, u, u, { mode: 'cors', credentials: 'omit' }))
   ]).then(() => self.skipWaiting()));
 });
-
-self.addEventListener('activate', event => {
-  event.waitUntil(
-    caches.keys()
-      .then(keys => Promise.all(
-        // শুধু DavetChat-এর পুরোনো Cache মুছবে; একই Origin-এর অন্য অ্যাপের Cache নয়
-        keys.filter(key => key.startsWith('davetchat-') && key !== CACHE && key !== LIB)
-          .map(key => caches.delete(key))
-      ))
-      .then(() => self.clients.claim())
-  );
+self.addEventListener('activate', e => {
+  e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k !== CACHE && k !== LIB).map(k => caches.delete(k)))).then(() => self.clients.claim()));
 });
+self.addEventListener('fetch', e => {
+  const r = e.request;
+  if (r.method !== 'GET') return;
+  const u = new URL(r.url);
 
-self.addEventListener('fetch', event => {
-  const request = event.request;
-  if (request.method !== 'GET') return;
-  const url = new URL(request.url);
-
-  if (isLib(url)) {
-    event.respondWith(
-      caches.open(LIB)
-        .then(cache => cache.match(request.url))
-        .then(match => match || update(LIB, request.url, request.url, { mode: 'cors', credentials: 'omit' }))
-    );
+  if (isLib(u)) { // আগে ফোনের কপি
+    e.respondWith(caches.open(LIB).then(c => c.match(r.url)).then(m => m || update(LIB, r.url, r.url, { mode: 'cors', credentials: 'omit' })));
     return;
   }
+  if (u.origin !== location.origin) return; // Firebase/TURN সরাসরি নেটওয়ার্কে
 
-  if (url.origin !== self.location.origin) return; // Firebase/TURN সরাসরি নেটওয়ার্কে
-
+  // ফোনের কপি সাথে সাথে দেখাও, পেছনে নতুন সংস্করণ এনে রাখো (পরেরবার খুললে দেখা যাবে)
   const root = new URL('./', self.registration.scope).pathname;
-  const isHome = request.mode === 'navigate' && (url.pathname === root || url.pathname === root + 'index.html');
-  const key = isHome ? './' : request.url;
-  const fresh = update(CACHE, key, request.url, { cache: 'no-cache' });
-
-  // পুরোনো কপি দ্রুত দেখাও; ব্যাকগ্রাউন্ডে নতুন কপি Cache-এ রাখো
-  event.waitUntil(fresh.catch(() => {}));
-  event.respondWith(
-    caches.open(CACHE)
-      .then(cache => cache.match(key))
-      .then(match => match || fresh.catch(async () => {
-        const home = request.mode === 'navigate' ? await caches.match('./') : null;
-        return home || Response.error();
-      }))
-  );
+  const isHome = r.mode === 'navigate' && (u.pathname === root || u.pathname === root + 'index.html');
+  const key = isHome ? './' : r.url;
+  const fresh = update(CACHE, key, r.url, { cache: 'no-cache' });
+  e.waitUntil(fresh.catch(() => {}));
+  e.respondWith(caches.open(CACHE).then(c => c.match(key)).then(m => m || fresh.catch(async () => {
+    const home = r.mode === 'navigate' && await caches.match('./');
+    return home || Response.error();
+  })));
 });
 
-// Firebase Cloud Messaging Web Push
-// Incoming payload: type=incoming_call, callId, callerName/fromName, callerPhoto/photo, body (optional).
-// Cancellation types: call_cancelled, call_ended, call_answered.
-async function readPushPayload(event) {
-  if (!event.data) return {};
-  try {
-    return event.data.json();
-  } catch (_) {
-    try {
-      return JSON.parse(event.data.text());
-    } catch (_) {
-      return {};
+// নোটিফিকেশনে চাপ / "ধরুন" / "কাটুন"
+self.addEventListener('notificationclick', e => {
+  const n = e.notification, act = e.action, isCall = n.tag === 'call';
+  n.close();
+  e.waitUntil((async () => {
+    const list = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+    if (isCall && (act === 'answer' || act === 'decline')) {
+      const msg = { type: act === 'answer' ? 'call-answer' : 'call-decline', callId: (n.data && n.data.callId) || '' };
+      if (list.length) { list.forEach(c => c.postMessage(msg)); if (act === 'answer' && 'focus' in list[0]) await list[0].focus(); return; }
+      return self.clients.openWindow('./?callaction=' + (act === 'answer' ? 'answer' : 'decline'));
     }
-  }
-}
-
-function pushData(payload) {
-  const data = payload && payload.data && typeof payload.data === 'object' ? payload.data : (payload || {});
-  return { ...data, notification: payload && payload.notification ? payload.notification : data.notification };
-}
-
-self.addEventListener('push', event => {
-  event.waitUntil((async () => {
-    const payload = await readPushPayload(event);
-    const data = pushData(payload);
-    const type = String(data.type || data.event || '').toLowerCase();
-    const callId = String(data.callId || data.call_id || '');
-    const cancelTypes = ['call_cancelled', 'call-cancelled', 'call_ended', 'call-ended', 'call_answered', 'call-answered'];
-
-    if (cancelTypes.includes(type)) {
-      const notifications = await self.registration.getNotifications({ tag: 'call' });
-      notifications.forEach(notification => {
-        if (!callId || !notification.data || !notification.data.callId || notification.data.callId === callId) {
-          notification.close();
-        }
-      });
-      return;
-    }
-
-    const incomingTypes = ['incoming_call', 'incoming-call', 'call', 'call_incoming'];
-    if (!incomingTypes.includes(type)) return;
-
-    // অ্যাপ সামনে থাকলে বিদ্যমান Firestore কল UI-কে জানাও; আলাদা Push popup দেখিও না
-    const windows = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
-    const appFocused = windows.some(client => client.visibilityState === 'visible' && client.focused);
-    if (appFocused) {
-      windows.filter(client => client.visibilityState === 'visible').forEach(client => {
-        client.postMessage({
-          type: 'incoming-call-push',
-          callId,
-          from: data.from || data.callerPhone || '',
-          callerName: data.callerName || data.fromName || data.name || 'নতুন কল'
-        });
-      });
-      return;
-    }
-
-    const callerName = String(data.callerName || data.fromName || data.name || 'অজানা ব্যক্তি');
-    const callerPhoto = data.callerPhoto || data.photo || data.avatar || '';
-    const title = String((data.notification && data.notification.title) || 'ইনকামিং কল');
-    const body = String((data.notification && data.notification.body) || data.body || (callerName + ' আপনাকে কল করছেন'));
-
-    await self.registration.showNotification(title, {
-      body,
-      icon: callerPhoto || './icon-192.png',
-      badge: './badge-96.png',
-      tag: 'call',
-      renotify: false,
-      requireInteraction: true,
-      vibrate: [250, 150, 250, 150, 400],
-      timestamp: Date.now(),
-      actions: [
-        { action: 'answer', title: 'ধরুন' },
-        { action: 'decline', title: 'কাটুন' }
-      ],
-      data: { type: 'incoming_call', callId, from: data.from || data.callerPhone || '', callerName }
-    });
+    const chatId = n.data && n.data.chatId;
+    for (const c of list) if ('focus' in c) { if (chatId) c.postMessage({ type: 'open-chat', chatId }); await c.focus(); return; }
+    return self.clients.openWindow('./');
   })());
 });
 
-// Notification-এ চাপ / 'ধরুন' / 'কাটুন'
-self.addEventListener('notificationclick', event => {
-  const notification = event.notification;
-  const action = event.action;
-  const isCall = notification.data && notification.data.type === 'incoming_call';
-  const callId = notification.data && notification.data.callId ? String(notification.data.callId) : '';
-  notification.close();
+/* ---------------- ইনকামিং কল পুশ (FCM) ----------------
+   সার্ভার শুধু "data" মেসেজ পাঠায়: { type:'call'|'call-cancel'|'call-end', callId, fromName, fromPhone, callType, status, ts } */
+const AV_COLORS = ['#e5484d','#8e4ec6','#3e63dd','#0091ff','#12a594','#30a46c','#f76b15','#ab6400','#d6409f','#5c6c7a'];
+// অ্যাপের ভেতরের avatarIcon এর মতোই: রঙিন গোল/বর্গ + নামের প্রথম অক্ষর
+async function avatarFor(name, phone) {
+  try {
+    if (typeof OffscreenCanvas === 'undefined') return 'icon-192.png';
+    const c = new OffscreenCanvas(192, 192), x = c.getContext('2d');
+    const col = AV_COLORS[[...String(phone || name || '?')].reduce((a, ch) => a + ch.charCodeAt(0), 0) % AV_COLORS.length];
+    x.fillStyle = col; x.fillRect(0, 0, 192, 192); x.fillStyle = '#fff'; x.textAlign = 'center'; x.textBaseline = 'middle';
+    x.font = '700 96px "Noto Sans Bengali","Hind Siliguri",system-ui,sans-serif';
+    x.fillText([...String(name || '?')][0] || '?', 96, 102);
+    const blob = await c.convertToBlob({ type: 'image/png' });
+    return await new Promise(res => { const r = new FileReader(); r.onload = () => res(r.result); r.onerror = () => res('icon-192.png'); r.readAsDataURL(blob); });
+  } catch (_) { return 'icon-192.png'; }
+}
+const closeCallNotifs = async () => (await self.registration.getNotifications({ tag: 'call' })).forEach(n => n.close());
 
-  event.waitUntil((async () => {
-    const windows = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+self.addEventListener('push', e => {
+  e.waitUntil((async () => {
+    let p = {}; try { p = e.data ? e.data.json() : {}; } catch (_) {}
+    const d = p.data || p;                       // FCM ওয়েব ডেটা মেসেজে মূল তথ্য "data" এর ভেতরে থাকে
+    const type = d.type;
+    if (type !== 'call' && type !== 'call-cancel' && type !== 'call-end' && type !== 'msg') return;
 
-    if (isCall && (action === 'answer' || action === 'decline')) {
-      const message = { type: action === 'answer' ? 'call-answer' : 'call-decline', callId };
-      if (windows.length) {
-        for (const client of windows) client.postMessage(message);
-        if (action === 'answer' && 'focus' in windows[0]) await windows[0].focus();
-        return;
-      }
+    const wins = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+    const visible = wins.some(w => w.visibilityState === 'visible');
 
-      const query = '?callaction=' + (action === 'answer' ? 'answer' : 'decline') +
-        (callId ? '&callid=' + encodeURIComponent(callId) : '');
-      return self.clients.openWindow(new URL('./' + query, self.registration.scope).href);
+    if (type === 'msg') {                          // নতুন চ্যাট মেসেজ
+      if (visible) return;                          // অ্যাপ সামনে খোলা: অ্যাপ নিজেই দেখাবে/শব্দ করবে
+      const tag = d.chatId || 'msg', ex = await self.registration.getNotifications({ tag });
+      if (ex.some(n => n.body === d.body && Date.now() - (n.timestamp || 0) < 8000)) return;   // অ্যাপের নিজের নোটিফিকেশন আগেই দেখিয়েছে
+      await self.registration.showNotification(d.title || 'DavetChat', { body: d.body || '', icon: await avatarFor(d.avatarName || d.title, d.avatarKey),
+        badge: 'badge-96.png', tag, renotify: true, silent: false, timestamp: Date.now(), vibrate: [120, 60, 120], data: { id: tag, chatId: d.chatId || '' } });
+      return;
     }
-
-    for (const client of windows) {
-      if ('focus' in client) {
-        await client.focus();
-        return;
-      }
+    if (type === 'call') {
+      if (visible) return;                        // অ্যাপ সামনে খোলা: অ্যাপের নিজের কল স্ক্রিনই দেখাবে
+      const ts = +d.ts || 0; if (ts && Date.now() - ts > 60000) return;   // পুরনো কল দেখাবে না
+      const nm = d.fromName || 'অজানা', video = d.callType === 'video';
+      await self.registration.showNotification('📞 ' + (video ? 'ভিডিও' : 'অডিও') + ' কল', {
+        body: nm + ' আপনাকে কল করছে', icon: await avatarFor(nm, d.fromPhone), badge: 'badge-96.png',
+        tag: 'call', renotify: true, requireInteraction: true, silent: false, timestamp: Date.now(),
+        vibrate: [500, 250, 500, 250, 500, 250, 500, 250, 500],
+        data: { id: 'call', callId: d.callId || '' },
+        actions: [{ action: 'answer', title: 'ধরুন' }, { action: 'decline', title: 'কাটুন' }]
+      });
+      return;
     }
-    return self.clients.openWindow(new URL('./', self.registration.scope).href);
+    // call-cancel (মিসড/বাতিল) বা call-end (অন্য জায়গায় ধরা/কাটা হয়েছে)
+    const cur = (await self.registration.getNotifications({ tag: 'call' }))[0];
+    if (cur && cur.data && d.callId && cur.data.callId && cur.data.callId !== d.callId) return; // অন্য কলের Popup ছোঁব না
+    if (type === 'call-cancel' && !visible) {
+      const nm = d.fromName || 'অজানা';
+      await self.registration.showNotification('মিসড কল', { body: nm + ' আপনাকে কল করেছিলেন', icon: await avatarFor(nm, d.fromPhone),
+        badge: 'badge-96.png', tag: 'call', silent: true, timestamp: Date.now(), data: { id: 'call', callId: '' } });
+    } else if (!visible && !cur) {
+      // ব্রাউজার নিয়ম: পুশ এলে কিছু একটা দেখাতেই হয়; তাই নিঃশব্দে দেখিয়ে সাথে সাথে সরাই
+      await self.registration.showNotification('DavetChat', { tag: 'call', silent: true, data: { id: 'call', callId: '' } });
+      await closeCallNotifs();
+    } else if (cur) { await closeCallNotifs(); }
   })());
 });
